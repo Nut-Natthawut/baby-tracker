@@ -1,0 +1,268 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* New Color Palette - ATNN Design */
+    --background: 53 40% 95%; /* Linen */
+    --foreground: 0 29% 20%; /* Oxblood - darker for better contrast */
+
+    --card: 49 80% 97%; /* Banana Cream lighter */
+    --card-foreground: 0 29% 18%; /* Darker for readability */
+
+    --popover: 49 80% 97%;
+    --popover-foreground: 0 29% 18%;
+
+    --primary: 16 100% 58%; /* Papaya - slightly darker for better contrast */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 222 45% 88%; /* Sky - lighter for background */
+    --secondary-foreground: 0 29% 20%; /* Dark text on light bg */
+
+    --muted: 53 30% 90%;
+    --muted-foreground: 0 20% 35%; /* Darker for readability */
+
+    --accent: 60 45% 50%; /* Saguaro - slightly darker */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
+
+    --destructive: 0 84% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 30% 82%;
+    --input: 40 30% 82%;
+    --ring: 16 100% 58%;
+
+    --radius: 1rem;
+
+    /* Baby Tracker Feature Colors - darker for better contrast */
+    --feeding: 222 50% 65%; /* Sky - darker for icons */
+    --feeding-glow: 222 55% 80%;
+    --diaper: 60 50% 48%; /* Saguaro - darker for icons */
+    --diaper-glow: 60 45% 70%;
+    --sleep: 262 50% 55%;
+    --sleep-glow: 262 50% 70%;
+    --pump: 16 100% 58%; /* Papaya */
+    --pump-glow: 16 100% 75%;
+
+    /* Theme Accent Colors */
+    --papaya: 16 100% 58%;
+    --papaya-light: 16 100% 90%;
+    --sky: 222 50% 65%;
+    --sky-light: 222 55% 92%;
+    --saguaro: 60 50% 48%;
+    --saguaro-light: 60 45% 85%;
+    --banana-cream: 49 100% 89%;
+    --linen: 53 40% 95%;
+    --oxblood: 0 29% 17%;
+
+    /* Legacy compatibility */
+    --peach: 16 100% 58%;
+    --peach-light: 16 100% 92%;
+    --mint: 60 50% 48%;
+    --mint-light: 60 45% 90%;
+    --cream: 49 100% 89%;
+    --warm-brown: 0 29% 25%;
+
+    /* Gradients */
+    --gradient-feeding: linear-gradient(135deg, hsl(222 50% 65%), hsl(222 55% 55%));
+    --gradient-diaper: linear-gradient(135deg, hsl(60 50% 48%), hsl(60 55% 40%));
+    --gradient-sleep: linear-gradient(135deg, hsl(262 50% 55%), hsl(280 50% 48%));
+    --gradient-hero: linear-gradient(180deg, hsl(49 100% 92%) 0%, hsl(53 40% 95%) 100%);
+    --gradient-bottle: linear-gradient(180deg, hsl(222 55% 82%) 0%, hsl(222 50% 65%) 100%);
+    
+    /* Shadows */
+    --shadow-soft: 0 4px 24px -6px hsl(0 29% 17% / 0.12);
+    --shadow-glow-feeding: 0 0 24px hsl(222 50% 65% / 0.35);
+    --shadow-glow-diaper: 0 0 24px hsl(60 50% 48% / 0.3);
+    --shadow-glow-primary: 0 0 24px hsl(16 100% 58% / 0.4);
+
+    --sidebar-background: 49 80% 97%;
+    --sidebar-foreground: 0 29% 22%;
+    --sidebar-primary: 0 29% 17%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 53 30% 92%;
+    --sidebar-accent-foreground: 0 29% 17%;
+    --sidebar-border: 40 30% 85%;
+    --sidebar-ring: 16 100% 58%;
+  }
+
+  .dark {
+    --background: 0 25% 8%; /* Deep Oxblood */
+    --foreground: 53 35% 92%; /* Light Linen */
+
+    --card: 0 22% 12%;
+    --card-foreground: 53 35% 90%;
+
+    --popover: 0 22% 12%;
+    --popover-foreground: 53 35% 90%;
+
+    --primary: 16 100% 65%; /* Papaya - brighter for dark mode */
+    --primary-foreground: 0 29% 10%;
+
+    --secondary: 0 18% 18%;
+    --secondary-foreground: 53 30% 88%;
+
+    --muted: 0 18% 16%;
+    --muted-foreground: 53 20% 65%;
+
+    --accent: 60 45% 55%; /* Saguaro brighter */
+    --accent-foreground: 0 29% 10%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 18% 20%;
+    --input: 0 18% 20%;
+    --ring: 16 100% 65%;
+
+    /* Dark mode feature colors - brighter for visibility */
+    --feeding: 222 55% 72%;
+    --feeding-glow: 222 55% 65%;
+    --diaper: 60 50% 58%;
+    --diaper-glow: 60 45% 50%;
+    --sleep: 262 55% 65%;
+    --pump: 16 100% 68%;
+    
+    --papaya: 16 100% 65%;
+    --sky: 222 55% 72%;
+    --saguaro: 60 50% 58%;
+    --peach: 16 100% 65%;
+    --mint: 60 50% 58%;
+
+    --sidebar-background: 0 22% 10%;
+    --sidebar-foreground: 53 30% 88%;
+    --sidebar-primary: 16 100% 65%;
+    --sidebar-primary-foreground: 0 29% 10%;
+    --sidebar-accent: 0 18% 14%;
+    --sidebar-accent-foreground: 53 35% 90%;
+    --sidebar-border: 0 18% 18%;
+    --sidebar-ring: 16 100% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Nunito', sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .text-gradient-feeding {
+    background: linear-gradient(135deg, hsl(222 50% 65%), hsl(222 55% 55%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-diaper {
+    background: linear-gradient(135deg, hsl(60 50% 48%), hsl(60 55% 40%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-papaya {
+    background: linear-gradient(135deg, hsl(16 100% 58%), hsl(16 100% 48%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-glass {
+    @apply backdrop-blur-xl bg-card/80;
+  }
+
+  .shadow-glow-feeding {
+    box-shadow: 0 0 24px hsl(222 50% 65% / 0.35);
+  }
+
+  .shadow-glow-diaper {
+    box-shadow: 0 0 24px hsl(60 50% 48% / 0.3);
+  }
+
+  .shadow-glow-primary {
+    box-shadow: 0 0 24px hsl(16 100% 58% / 0.4);
+  }
+
+  .shadow-glow-papaya {
+    box-shadow: 0 0 24px hsl(16 100% 58% / 0.4);
+  }
+
+  .shadow-glow-sky {
+    box-shadow: 0 0 24px hsl(222 50% 65% / 0.35);
+  }
+
+  .shadow-glow-saguaro {
+    box-shadow: 0 0 24px hsl(60 50% 48% / 0.3);
+  }
+}
+
+/* Wave Animation */
+@keyframes wave-slide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-wave-slow {
+  animation: wave-slide 4s linear infinite;
+}
+
+.animate-wave-fast {
+  animation: wave-slide 2.5s linear infinite;
+}
+
+/* Pulse Animation */
+@keyframes soft-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+.animate-soft-pulse {
+  animation: soft-pulse 2s ease-in-out infinite;
+}
+
+/* Float Animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
