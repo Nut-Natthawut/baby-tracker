@@ -131,6 +131,29 @@ export const useBabyData = () => {
       return false;
     }
   };
+
+      if (result.success) {
+        setBabies(prev => {
+          if (isEdit) {
+            return prev.map(b => b.id === babyData.id ? result.data : b);
+          }
+          return [...prev, result.data];
+        });
+
+        // If this is the first baby, select it
+        if (!currentBabyId || (isEdit && currentBabyId === babyData.id)) {
+          setCurrentBabyId(result.data.id);
+          localStorage.setItem(STORAGE_KEYS.CURRENT_BABY_ID, result.data.id);
+        }
+        
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error saving baby profile:", error);
+      return false;
+    }
+  };
   // Switch to a different baby
   const switchBaby = (babyId: string) => {
     if (babies.some(b => b.id === babyId)) {
