@@ -51,13 +51,29 @@ const Index = () => {
     });
   };
 
-  const handleSaveBaby = (data: any) => {
-    saveBabyProfile(data);
-    setActiveModal(null);
-    toast({
-      title: "บันทึกสำเร็จ ✓",
-      description: `บันทึกข้อมูล ${data.name} เรียบร้อยแล้ว`,
-    });
+  const handleSaveBaby = async (data: any) => {
+    try {
+      const success = await saveBabyProfile(data);
+      if (success) {
+        setActiveModal('settings');
+        toast({
+          title: "บันทึกสำเร็จ ✓",
+          description: `บันทึกข้อมูล ${data.name} เรียบร้อยแล้ว`,
+        });
+      } else {
+        toast({
+          title: "บันทึกไม่สำเร็จ",
+          description: "ไม่สามารถเชื่อมต่อกับ Server ได้ กรุณาลองใหม่อีกครั้ง",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "ระบบขัดข้อง กรุณาลองใหม่ภายหลัง",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleClearData = () => {
@@ -117,7 +133,7 @@ const Index = () => {
             >
               Baby Tracker
             </motion.h1>
-            
+
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -177,7 +193,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <Header 
+      <Header
         baby={baby}
         babies={babies}
         onOpenSettings={() => setActiveModal('settings')}
@@ -188,9 +204,9 @@ const Index = () => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto no-scrollbar pb-24">
         {/* Stats Overview */}
-        <StatsOverview 
-          logs={logs} 
-          onOpenFeature={(type) => setActiveModal(type)} 
+        <StatsOverview
+          logs={logs}
+          onOpenFeature={(type) => setActiveModal(type)}
           onOpenDashboard={() => setActiveModal('dashboard')}
         />
 
