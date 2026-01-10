@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Baby, LogEntry, LogType } from '@/types/baby';
 import { generateId } from '@/lib/babyUtils';
 
-const API_BASE_URL = 'https://server.chonlakon.workers.dev/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://server.chonlakon.workers.dev/api';
 
 const STORAGE_KEYS = {
   BABIES: 'baby-tracker-babies',
@@ -91,8 +91,46 @@ export const useBabyData = () => {
   }, [currentBabyId]);
 
 
-  // ... (saveBabyProfile function remains the same) ...
+  // Save baby profile
+  const saveBabyProfile = async (babyData: Partial<Baby>) => {
+    try {
+      const isEdit = !!babyData.id;
+      const url = isEdit 
+        ? `${API_BASE_URL}/babies/${babyData.id}`
+        : `${API_BASE_URL}/babies`;
+        
+      const response = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(babyData),
+      });
 
+      const result = await response.json();
+
+      if (result.success) {
+        setBabies(prev => {
+          if (isEdit) {
+            return prev.map(b => b.id === babyData.id ? result.data : b);
+          }
+          return [...prev, result.data];
+        });
+
+        // If this is the first baby, select it
+        if (!currentBabyId || (isEdit && currentBabyId === babyData.id)) {
+          setCurrentBabyId(result.data.id);
+          localStorage.setItem(STORAGE_KEYS.CURRENT_BABY_ID, result.data.id);
+        }
+        
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error saving baby profile:", error);
+      return false;
+    }
+  };
   // Switch to a different baby
   const switchBaby = (babyId: string) => {
     if (babies.some(b => b.id === babyId)) {
