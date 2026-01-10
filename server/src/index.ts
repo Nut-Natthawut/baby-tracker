@@ -2,8 +2,6 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import babies from "./routes/babies";
 
-
-
 type Bindings = {
   baby_tracker_db: D1Database;
 };
@@ -14,7 +12,7 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use(
   "/api/*",
   cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin: "*",
     allowMethods: ["GET", "POST", "PUT", "DELETE"],
     allowHeaders: ["Content-Type"],
   })

@@ -47,7 +47,7 @@ babies.post("/" , async (c) => {
     .run();
 
     return c.json({
-        succes: true,
+        success: true,
         message: "เพิ่มข้อมูลสำเร็จ",
         data: { id, ...body, created_at: now }
     }, 201);

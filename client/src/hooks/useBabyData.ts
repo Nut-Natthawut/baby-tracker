@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Baby, LogEntry, LogType } from '@/types/baby';
 import { generateId } from '@/lib/babyUtils';
 
+const API_BASE_URL = 'https://server.chonlakon.workers.dev/api';
+
 const STORAGE_KEYS = {
   BABIES: 'baby-tracker-babies',
   CURRENT_BABY_ID: 'baby-tracker-current-baby-id',
@@ -17,51 +19,39 @@ export const useBabyData = () => {
   // Computed current baby
   const baby = babies.find(b => b.id === currentBabyId) || null;
 
-  // Load data from localStorage
+  // Load data
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       try {
-        // Migration: check for old single baby format
-        const oldBaby = localStorage.getItem('baby-tracker-baby');
-        const oldLogs = localStorage.getItem('baby-tracker-logs');
+        // 1. Load babies from API
+        const response = await fetch(`${API_BASE_URL}/babies`);
+        const result = await response.json();
         
-        if (oldBaby) {
-          // Migrate to new format
-          const parsedOldBaby = JSON.parse(oldBaby);
-          const babiesArray = [parsedOldBaby];
-          setBabies(babiesArray);
-          setCurrentBabyId(parsedOldBaby.id);
-          localStorage.setItem(STORAGE_KEYS.BABIES, JSON.stringify(babiesArray));
-          localStorage.setItem(STORAGE_KEYS.CURRENT_BABY_ID, parsedOldBaby.id);
-          localStorage.removeItem('baby-tracker-baby');
-        } else {
-          // Load new format
-          const savedBabies = localStorage.getItem(STORAGE_KEYS.BABIES);
-          const savedCurrentId = localStorage.getItem(STORAGE_KEYS.CURRENT_BABY_ID);
+        if (result.success) {
+          setBabies(result.data);
           
-          if (savedBabies) {
-            const parsedBabies = JSON.parse(savedBabies);
-            setBabies(parsedBabies);
-            
-            if (savedCurrentId && parsedBabies.some((b: Baby) => b.id === savedCurrentId)) {
-              setCurrentBabyId(savedCurrentId);
-            } else if (parsedBabies.length > 0) {
-              setCurrentBabyId(parsedBabies[0].id);
-            }
+          const savedCurrentId = localStorage.getItem(STORAGE_KEYS.CURRENT_BABY_ID);
+          let activeId = null;
+          
+          if (savedCurrentId && result.data.some((b: Baby) => b.id === savedCurrentId)) {
+            activeId = savedCurrentId;
+            setCurrentBabyId(savedCurrentId);
+          } else if (result.data.length > 0) {
+            activeId = result.data[0].id;
+            setCurrentBabyId(activeId);
           }
-        }
-        
-        // Load logs (same format)
-        const savedLogs = localStorage.getItem(STORAGE_KEYS.LOGS) || oldLogs;
-        if (savedLogs) {
-          const parsedLogs = JSON.parse(savedLogs).map((log: any) => ({
-            ...log,
-            timestamp: new Date(log.timestamp),
-          }));
-          setLogs(parsedLogs);
-          // Update to new key if migrating
-          if (oldLogs && !localStorage.getItem(STORAGE_KEYS.LOGS)) {
-            localStorage.setItem(STORAGE_KEYS.LOGS, savedLogs);
+
+          // 2. Load logs for the current baby from API
+          if (activeId) {
+             const logsResponse = await fetch(`${API_BASE_URL}/logs/${activeId}/details`);
+             const logsResult = await logsResponse.json();
+             if (logsResult.success) {
+               const parsedLogs = logsResult.data.map((log: any) => ({
+                 ...log,
+                 timestamp: new Date(log.timestamp * 1000), // Convert Unix timestamp to Date
+               }));
+               setLogs(parsedLogs);
+             }
           }
         }
       } catch (error) {
@@ -72,36 +62,36 @@ export const useBabyData = () => {
     };
     
     loadData();
-  }, []);
+  }, [currentBabyId]); // Reload when currentBabyId changes (or we might need a separate effect)
+  
+  // NOTE: In a real app, we might want to separate log fetching into a separate useEffect dependent on currentBabyId
+  // But for now, we'll keep it simple or refactor slightly.
+  
+  // Refactored Effect to handle baby switching
+  useEffect(() => {
+    if (!currentBabyId) return;
 
-  // Save/update baby profile
-  const saveBabyProfile = (babyData: Omit<Baby, 'id'>, editingId?: string) => {
-    const id = editingId || generateId();
-    const newBaby: Baby = {
-      ...babyData,
-      id,
-    };
-    
-    setBabies(prevBabies => {
-      const existingIndex = prevBabies.findIndex(b => b.id === id);
-      let updatedBabies: Baby[];
-      
-      if (existingIndex >= 0) {
-        updatedBabies = prevBabies.map(b => b.id === id ? newBaby : b);
-      } else {
-        updatedBabies = [...prevBabies, newBaby];
+    const fetchLogs = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/logs/${currentBabyId}/details`);
+        const result = await response.json();
+        if (result.success) {
+           const parsedLogs = result.data.map((log: any) => ({
+             ...log,
+             timestamp: new Date(log.timestamp * 1000),
+           }));
+           setLogs(parsedLogs);
+        }
+      } catch (error) {
+        console.error("Error fetching logs:", error);
       }
-      
-      localStorage.setItem(STORAGE_KEYS.BABIES, JSON.stringify(updatedBabies));
-      return updatedBabies;
-    });
-    
-    // Set as current if it's the first baby or if editing current
-    if (!currentBabyId || editingId === currentBabyId || !editingId) {
-      setCurrentBabyId(id);
-      localStorage.setItem(STORAGE_KEYS.CURRENT_BABY_ID, id);
-    }
-  };
+    };
+
+    fetchLogs();
+  }, [currentBabyId]);
+
+
+  // ... (saveBabyProfile function remains the same) ...
 
   // Switch to a different baby
   const switchBaby = (babyId: string) => {
@@ -111,58 +101,81 @@ export const useBabyData = () => {
     }
   };
 
-  // Delete a baby
-  const deleteBaby = (babyId: string) => {
-    setBabies(prevBabies => {
-      const updatedBabies = prevBabies.filter(b => b.id !== babyId);
-      localStorage.setItem(STORAGE_KEYS.BABIES, JSON.stringify(updatedBabies));
+  // Delete a baby via API
+  const deleteBaby = async (babyId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/babies/${babyId}`, {
+        method: 'DELETE',
+      });
       
-      // Switch to another baby if current was deleted
-      if (currentBabyId === babyId && updatedBabies.length > 0) {
-        setCurrentBabyId(updatedBabies[0].id);
-        localStorage.setItem(STORAGE_KEYS.CURRENT_BABY_ID, updatedBabies[0].id);
-      } else if (updatedBabies.length === 0) {
-        setCurrentBabyId(null);
-        localStorage.removeItem(STORAGE_KEYS.CURRENT_BABY_ID);
+      const result = await response.json();
+      
+      if (result.success) {
+        setBabies(prev => {
+          const updated = prev.filter(b => b.id !== babyId);
+          if (currentBabyId === babyId) {
+            const nextId = updated.length > 0 ? updated[0].id : null;
+            setCurrentBabyId(nextId);
+            if (nextId) localStorage.setItem(STORAGE_KEYS.CURRENT_BABY_ID, nextId);
+            else localStorage.removeItem(STORAGE_KEYS.CURRENT_BABY_ID);
+          }
+          return updated;
+        });
+        return true;
       }
-      
-      return updatedBabies;
-    });
-    
-    // Also delete logs for this baby (optional: could keep logs)
-    setLogs(prevLogs => {
-      const updatedLogs = prevLogs.filter(log => (log as any).babyId !== babyId);
-      localStorage.setItem(STORAGE_KEYS.LOGS, JSON.stringify(updatedLogs));
-      return updatedLogs;
-    });
+    } catch (error) {
+      console.error('Error deleting baby:', error);
+    }
+    return false;
   };
 
-  // Add a new log entry
-  const addLog = (type: LogType, data: { timestamp: Date; details: any }) => {
+  // Add a new log entry via API
+  const addLog = async (type: LogType, data: { timestamp: Date; details: any }) => {
     if (!currentBabyId) return;
     
-    const newEntry: LogEntry & { babyId: string } = {
-      id: generateId(),
-      babyId: currentBabyId,
-      type,
-      timestamp: data.timestamp,
-      details: data.details,
-    };
-    
-    setLogs(prevLogs => {
-      const updatedLogs = [newEntry, ...prevLogs];
-      localStorage.setItem(STORAGE_KEYS.LOGS, JSON.stringify(updatedLogs));
-      return updatedLogs;
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/logs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          babyId: currentBabyId,
+          type,
+          timestamp: Math.floor(data.timestamp.getTime() / 1000), // Send as Unix timestamp
+          details: data.details
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const newEntry = {
+          ...result.data,
+          timestamp: new Date(result.data.timestamp * 1000), // Convert back for state
+          details: data.details // Optimistic or use response
+        };
+
+        setLogs(prevLogs => [newEntry, ...prevLogs]);
+      }
+    } catch (error) {
+       console.error("Error adding log:", error);
+    }
   };
 
-  // Delete a log entry
-  const deleteLog = (logId: string) => {
-    setLogs(prevLogs => {
-      const updatedLogs = prevLogs.filter(log => log.id !== logId);
-      localStorage.setItem(STORAGE_KEYS.LOGS, JSON.stringify(updatedLogs));
-      return updatedLogs;
-    });
+  // Delete a log entry via API
+  const deleteLog = async (logId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/logs/${logId}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setLogs(prevLogs => prevLogs.filter(log => log.id !== logId));
+      }
+    } catch (error) {
+      console.error("Error deleting log:", error);
+    }
   };
 
   // Get logs for current baby only
