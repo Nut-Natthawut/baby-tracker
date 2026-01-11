@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Utensils, Baby, Droplets, Moon, Heart } from 'lucide-react';
+import { Utensils, Baby, Droplets, Moon, Droplet } from 'lucide-react';
 import { LogEntry, FeedingDetails, DiaperDetails, POO_COLORS } from '@/types/baby';
 import { formatTime, formatDate } from '@/lib/babyUtils';
 import LogDetailModal from './LogDetailModal';
@@ -59,7 +59,7 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ entry, onViewDetail }) => {
       }
     }
   } else if (entry.type === 'pump') {
-    icon = <Heart size={16} />;
+    icon = <Droplet size={16} />;
     color = 'text-pump';
     bgColor = 'bg-pump';
     title = 'ปั๊มนม';
