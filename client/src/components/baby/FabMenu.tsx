@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Utensils, Baby, Heart, Moon } from 'lucide-react';
+import { Plus, X, Utensils, Baby, Droplet, Moon } from 'lucide-react';
 
 interface FabMenuProps {
   onOpenFeeding: () => void;
@@ -38,7 +38,7 @@ const FabMenu: React.FC<FabMenuProps> = ({ onOpenFeeding, onOpenDiaper, onOpenPu
       onClick: () => { setIsOpen(false); onOpenSleep(); }
     },
     {
-      icon: Heart,
+      icon: Droplet,
       label: 'ปั๊มนม',
       color: 'bg-pump',
       glow: 'shadow-glow-pump',

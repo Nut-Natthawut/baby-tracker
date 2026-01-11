@@ -139,18 +139,44 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
               )}
 
               {(details as FeedingDetails).method === 'breast' && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-3">
                   <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">เต้าซ้าย</p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {Math.floor(((details as FeedingDetails).leftDurationSeconds || 0) / 60)} <span className="text-sm">นาที</span>
+                    <p className="text-sm text-muted-foreground mb-1">เวลารวม</p>
+                    <p className="text-3xl font-bold text-foreground">
+                      {(() => {
+                        const totalSeconds = ((details as FeedingDetails).leftDurationSeconds || 0) + ((details as FeedingDetails).rightDurationSeconds || 0);
+                        const m = Math.floor(totalSeconds / 60);
+                        const s = totalSeconds % 60;
+                        if (m === 0) return <>{s} <span className="text-sm">วินาที</span></>;
+                        return <>{m} <span className="text-sm">นาที</span> {s > 0 && <>{s} <span className="text-sm">วิ</span></>}</>;
+                      })()}
                     </p>
                   </div>
-                  <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">เต้าขวา</p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {Math.floor(((details as FeedingDetails).rightDurationSeconds || 0) / 60)} <span className="text-sm">นาที</span>
-                    </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+                      <p className="text-sm text-muted-foreground mb-1">เต้าซ้าย</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {(() => {
+                          const seconds = (details as FeedingDetails).leftDurationSeconds || 0;
+                          const m = Math.floor(seconds / 60);
+                          const s = seconds % 60;
+                          if (m === 0) return <>{s} <span className="text-sm">วินาที</span></>;
+                          return <>{m} <span className="text-sm">นาที</span> {s > 0 && <>{s} <span className="text-sm">วิ</span></>}</>;
+                        })()}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+                      <p className="text-sm text-muted-foreground mb-1">เต้าขวา</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {(() => {
+                          const seconds = (details as FeedingDetails).rightDurationSeconds || 0;
+                          const m = Math.floor(seconds / 60);
+                          const s = seconds % 60;
+                          if (m === 0) return <>{s} <span className="text-sm">วินาที</span></>;
+                          return <>{m} <span className="text-sm">นาที</span> {s > 0 && <>{s} <span className="text-sm">วิ</span></>}</>;
+                        })()}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
