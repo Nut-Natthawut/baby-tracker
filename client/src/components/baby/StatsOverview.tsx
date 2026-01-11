@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Utensils, Baby, BarChart3, Heart } from 'lucide-react';
+import { Utensils, Baby, BarChart3, Moon, Droplet } from 'lucide-react';
 import { LogEntry } from '@/types/baby';
 import { formatRelativeTime } from '@/lib/babyUtils';
 
@@ -36,16 +36,16 @@ const typeStyles = {
   },
 };
 
-const StatsWidget: React.FC<StatsWidgetProps> = ({ 
-  icon: Icon, 
-  title, 
-  time, 
-  subtext, 
+const StatsWidget: React.FC<StatsWidgetProps> = ({
+  icon: Icon,
+  title,
+  time,
+  subtext,
   type,
-  onClick 
+  onClick
 }) => {
   const styles = typeStyles[type];
-  
+
   return (
     <motion.button
       whileTap={{ scale: 0.97 }}
@@ -71,22 +71,23 @@ const StatsWidget: React.FC<StatsWidgetProps> = ({
 
 interface StatsOverviewProps {
   logs: LogEntry[];
-  onOpenFeature: (type: 'feeding' | 'diaper' | 'pumping') => void;
+  onOpenFeature: (type: 'feeding' | 'diaper' | 'pumping' | 'sleep') => void;
   onOpenDashboard: () => void;
 }
 
 const StatsOverview: React.FC<StatsOverviewProps> = ({ logs, onOpenFeature, onOpenDashboard }) => {
   const recentFeed = logs.find(log => log.type === 'feeding');
   const recentDiaper = logs.find(log => log.type === 'diaper');
+  const recentSleep = logs.find(log => log.type === 'sleep');
   const recentPump = logs.find(log => log.type === 'pump');
 
   const getFeedingTime = () => {
     if (!recentFeed) return { time: '--', subtext: 'ยังไม่มีข้อมูล' };
     const relative = formatRelativeTime(recentFeed.timestamp);
     const parts = relative.split('ที่แล้ว');
-    return { 
-      time: parts[0].trim(), 
-      subtext: parts.length > 1 ? 'ที่แล้ว' : '' 
+    return {
+      time: parts[0].trim(),
+      subtext: parts.length > 1 ? 'ที่แล้ว' : ''
     };
   };
 
@@ -94,9 +95,19 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ logs, onOpenFeature, onOp
     if (!recentDiaper) return { time: '--', subtext: 'ยังไม่มีข้อมูล' };
     const relative = formatRelativeTime(recentDiaper.timestamp);
     const parts = relative.split('ที่แล้ว');
-    return { 
-      time: parts[0].trim(), 
-      subtext: parts.length > 1 ? 'ที่แล้ว' : '' 
+    return {
+      time: parts[0].trim(),
+      subtext: parts.length > 1 ? 'ที่แล้ว' : ''
+    };
+  };
+
+  const getSleepTime = () => {
+    if (!recentSleep) return { time: '--', subtext: 'ยังไม่มีข้อมูล' };
+    const relative = formatRelativeTime(recentSleep.timestamp);
+    const parts = relative.split('ที่แล้ว');
+    return {
+      time: parts[0].trim(),
+      subtext: parts.length > 1 ? 'ที่แล้ว' : ''
     };
   };
 
@@ -104,19 +115,20 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ logs, onOpenFeature, onOp
     if (!recentPump) return { time: '--', subtext: 'ยังไม่มีข้อมูล' };
     const relative = formatRelativeTime(recentPump.timestamp);
     const parts = relative.split('ที่แล้ว');
-    return { 
-      time: parts[0].trim(), 
-      subtext: parts.length > 1 ? 'ที่แล้ว' : '' 
+    return {
+      time: parts[0].trim(),
+      subtext: parts.length > 1 ? 'ที่แล้ว' : ''
     };
   };
 
   const feedingData = getFeedingTime();
   const diaperData = getDiaperTime();
+  const sleepData = getSleepTime();
   const pumpData = getPumpTime();
 
   return (
     <div className="px-6 py-4 space-y-4">
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <StatsWidget
           icon={Utensils}
           title="กินนมล่าสุด"
@@ -134,7 +146,15 @@ const StatsOverview: React.FC<StatsOverviewProps> = ({ logs, onOpenFeature, onOp
           onClick={() => onOpenFeature('diaper')}
         />
         <StatsWidget
-          icon={Heart}
+          icon={Moon}
+          title="นอนหลับล่าสุด"
+          time={sleepData.time}
+          subtext={sleepData.subtext}
+          type="sleep"
+          onClick={() => onOpenFeature('sleep')}
+        />
+        <StatsWidget
+          icon={Droplet}
           title="ปั๊มนมล่าสุด"
           time={pumpData.time}
           subtext={pumpData.subtext}
