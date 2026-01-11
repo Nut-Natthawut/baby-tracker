@@ -28,7 +28,11 @@ export const useBabyData = () => {
         const result = await response.json();
 
         if (result.success) {
-          setBabies(result.data);
+          const mappedBabies = result.data.map((b: any) => ({
+            ...b,
+            birthDate: b.birth_date || b.birthDate,
+          }));
+          setBabies(mappedBabies);
 
           const savedCurrentId = localStorage.getItem(STORAGE_KEYS.CURRENT_BABY_ID);
           let activeId = null;

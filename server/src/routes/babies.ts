@@ -11,17 +11,26 @@ babies.get("/", async (c) => {
     const result = await c.env.baby_tracker_db
         .prepare("SELECT * FROM babies ORDER BY created_at DESC")
         .all();
+
+    const mappedBabies = result.results.map((b: any) => ({
+        ...b,
+        birthDate: b.birth_date,
+        createdAt: b.created_at,
+        birth_date: undefined,
+        created_at: undefined
+    }));
+
     return c.json({
         success: true,
         message: "ดึงข้อมูลสำเร็จ",
-        data: result.results
+        data: mappedBabies
     });
 })
 
 babies.get("/:id", async (c) => {
     const id = c.req.param("id");
 
-    const baby = await c.env.baby_tracker_db
+    const baby: any = await c.env.baby_tracker_db
         .prepare("SELECT * FROM babies WHERE id = ?")
         .bind(id)
         .first();
@@ -29,10 +38,19 @@ babies.get("/:id", async (c) => {
     if (!baby) {
         return c.json({ success: false, message: "ไม่พบข้อมูลเด็ก", error: "NOT_FOUND" }, 404);
     }
+
+    const mappedBaby = {
+        ...baby,
+        birthDate: baby.birth_date,
+        createdAt: baby.created_at,
+        birth_date: undefined,
+        created_at: undefined
+    };
+
     return c.json({
         success: true,
         message: "ดึงข้อมูลสำเร็จ",
-        data: baby
+        data: mappedBaby
     });
 })
 

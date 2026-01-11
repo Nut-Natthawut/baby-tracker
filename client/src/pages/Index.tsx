@@ -17,7 +17,7 @@ import DashboardModal from '@/components/baby/DashboardModal';
 import BabyCareLogo from '@/components/baby/BabyCareLogo';
 import { toast } from '@/hooks/use-toast';
 
-type ModalType = 'feeding' | 'diaper' | 'pumping' | 'sleep' | 'profile' | 'settings' | 'caregivers' | 'dashboard' | 'delete-confirm' | null;
+type ModalType = 'feeding' | 'diaper' | 'pumping' | 'sleep' | 'add-baby' | 'edit-baby' | 'settings' | 'caregivers' | 'dashboard' | 'delete-confirm' | null;
 
 const Index = () => {
   const { baby, babies, logs, loading, saveBabyProfile,
@@ -67,10 +67,17 @@ const Index = () => {
 
   const handleSaveBaby = async (data: any) => {
     try {
-      const payload = baby ? { ...data, id: baby.id } : data;
+      // If editing, merge id. If adding, data is fresh.
+      const payload = activeModal === 'edit-baby' && baby ? { ...data, id: baby.id } : data;
       const success = await saveBabyProfile(payload);
       if (success) {
-        setActiveModal('settings');
+        // Return to settings if editing, or close if adding
+        if (activeModal === 'edit-baby') {
+          setActiveModal('settings');
+        } else {
+          setActiveModal(null);
+        }
+
         toast({
           title: "บันทึกสำเร็จ ✓",
           description: `บันทึกข้อมูล ${data.name} เรียบร้อยแล้ว`,
@@ -208,7 +215,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              onClick={() => setActiveModal('profile')}
+              onClick={() => setActiveModal('add-baby')}
               className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-glow-primary active:scale-[0.98] transition-transform"
             >
               เริ่มต้นใช้งาน
@@ -218,7 +225,7 @@ const Index = () => {
 
         {/* Profile Modal */}
         <AnimatePresence>
-          {activeModal === 'profile' && (
+          {activeModal === 'add-baby' && (
             <BabyProfileModal
               baby={null}
               onClose={() => setActiveModal(null)}
@@ -238,7 +245,7 @@ const Index = () => {
         babies={babies}
         onOpenSettings={() => setActiveModal('settings')}
         onSelectBaby={(b) => switchBaby(b.id)}
-        onAddBaby={() => setActiveModal('profile')}
+        onAddBaby={() => setActiveModal('add-baby')}
       />
 
       {/* Main Content */}
@@ -288,10 +295,17 @@ const Index = () => {
             onSave={handleSavePumping}
           />
         )}
-        {activeModal === 'profile' && (
+        {activeModal === 'add-baby' && (
+          <BabyProfileModal
+            baby={null}
+            onClose={() => setActiveModal(null)}
+            onSave={handleSaveBaby}
+          />
+        )}
+        {activeModal === 'edit-baby' && (
           <BabyProfileModal
             baby={baby}
-            onClose={() => setActiveModal(null)}
+            onClose={() => setActiveModal('settings')}
             onSave={handleSaveBaby}
           />
         )}
@@ -299,7 +313,7 @@ const Index = () => {
           <SettingsModal
             baby={baby}
             onClose={() => setActiveModal(null)}
-            onEditBaby={() => setActiveModal('profile')}
+            onEditBaby={() => setActiveModal('edit-baby')}
             onClearData={handleClearData}
             onOpenCaregivers={() => setActiveModal('caregivers')}
             onDeleteBaby={handleDeleteBaby}

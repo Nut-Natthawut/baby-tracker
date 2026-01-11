@@ -55,24 +55,15 @@ logs.get("/:babyId/details", async (c) => {
         // Remove log_id from details to keep it clean, optional
         const { log_id, id: detailId, ...cleanDetails } = details as any;
 
-        // Map snake_case to camelCase manually if needed?
-        // The frontend seems to expect whatever came from DB or use standard JS.
-        // The schema uses snake_case for DB columns (e.g. amount_ml).
-        // The frontend code `useBabyData` line 49 just spreads `...log`.
-        // But `addLog` sends camelCase in `details: data.details`.
-        // The DB schema `schema.ts` defines snake_case columns.
-        // We should probably normalize to camelCase for frontend consistency, 
-        // OR ensure frontend handles snake_case.
-        // Looking at useBabyData, it doesn't seem to do conversion.
-        // Let's check `useBabyData` usages... not visible.
-        // SAFEST: Convert snake_case from DB back to camelCase for the frontend response.
+        // Map snake_case to camelCase
+        const camelCaseDetails = convertKeysToCamelCase(cleanDetails);
 
         return {
             id: log.id,
             babyId: log.baby_id,
             type: log.type,
             timestamp: log.timestamp,
-            details: convertKeysToCamelCase(cleanDetails)
+            details: camelCaseDetails
         };
     });
 
