@@ -136,7 +136,6 @@ export const useBabyData = () => {
     }
   };
 
-
   // Switch to a different baby
   const switchBaby = (babyId: string) => {
     if (babies.some(b => b.id === babyId)) {
