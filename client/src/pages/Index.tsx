@@ -8,17 +8,22 @@ import FabMenu from '@/components/baby/FabMenu';
 import FeedingModal from '@/components/baby/FeedingModal';
 import DiaperModal from '@/components/baby/DiaperModal';
 import PumpingModal from '@/components/baby/PumpingModal';
+import SleepModal from '@/components/baby/SleepModal';
 import BabyProfileModal from '@/components/baby/BabyProfileModal';
 import SettingsModal from '@/components/baby/SettingsModal';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import CaregiversModal from '@/components/baby/CaregiversModal';
 import DashboardModal from '@/components/baby/DashboardModal';
 import BabyCareLogo from '@/components/baby/BabyCareLogo';
 import { toast } from '@/hooks/use-toast';
 
-type ModalType = 'feeding' | 'diaper' | 'pumping' | 'profile' | 'settings' | 'caregivers' | 'dashboard' | null;
+type ModalType = 'feeding' | 'diaper' | 'pumping' | 'sleep' | 'profile' | 'settings' | 'caregivers' | 'dashboard' | 'delete-confirm' | null;
 
 const Index = () => {
-  const { baby, babies, logs, loading, saveBabyProfile, switchBaby, addLog, clearData } = useBabyData();
+  const { baby, babies, logs, loading, saveBabyProfile,
+    switchBaby,
+    deleteBaby,
+    addLog, clearData } = useBabyData();
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
   // Show onboarding if no baby profile
@@ -51,9 +56,19 @@ const Index = () => {
     });
   };
 
+  const handleSaveSleep = (data: any) => {
+    addLog('sleep', data);
+    setActiveModal(null);
+    toast({
+      title: "บันทึกสำเร็จ ✓",
+      description: "บันทึกการนอนเรียบร้อยแล้ว",
+    });
+  };
+
   const handleSaveBaby = async (data: any) => {
     try {
-      const success = await saveBabyProfile(data);
+      const payload = baby ? { ...data, id: baby.id } : data;
+      const success = await saveBabyProfile(payload);
       if (success) {
         setActiveModal('settings');
         toast({
@@ -71,6 +86,31 @@ const Index = () => {
       toast({
         title: "เกิดข้อผิดพลาด",
         description: "ระบบขัดข้อง กรุณาลองใหม่ภายหลัง",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteBaby = async () => {
+    setActiveModal('delete-confirm');
+  };
+
+  const confirmDeleteBaby = async () => {
+    if (!baby) return;
+
+    setActiveModal(null);
+
+    const success = await deleteBaby(baby.id);
+    if (success) {
+      toast({
+        title: "ลบข้อมูลสำเร็จ",
+        description: "ลบข้อมูลเรียบร้อยแล้ว",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่สามารถลบข้อมูลได้",
         variant: "destructive",
       });
     }
@@ -218,6 +258,7 @@ const Index = () => {
       <FabMenu
         onOpenFeeding={() => setActiveModal('feeding')}
         onOpenDiaper={() => setActiveModal('diaper')}
+        onOpenSleep={() => setActiveModal('sleep')}
         onOpenPumping={() => setActiveModal('pumping')}
       />
 
@@ -233,6 +274,12 @@ const Index = () => {
           <DiaperModal
             onClose={() => setActiveModal(null)}
             onSave={handleSaveDiaper}
+          />
+        )}
+        {activeModal === 'sleep' && (
+          <SleepModal
+            onClose={() => setActiveModal(null)}
+            onSave={handleSaveSleep}
           />
         )}
         {activeModal === 'pumping' && (
@@ -255,6 +302,7 @@ const Index = () => {
             onEditBaby={() => setActiveModal('profile')}
             onClearData={handleClearData}
             onOpenCaregivers={() => setActiveModal('caregivers')}
+            onDeleteBaby={handleDeleteBaby}
           />
         )}
         {activeModal === 'caregivers' && (
@@ -268,6 +316,16 @@ const Index = () => {
             onClose={() => setActiveModal(null)}
           />
         )}
+
+        <ConfirmModal
+          isOpen={activeModal === 'delete-confirm'}
+          title="ยืนยันการลบข้อมูล"
+          description={`คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลของ ${baby?.name || 'เด็กคนนี้'}? การกระทำนี้ไม่สามารถย้อนกลับได้ ข้อมูลบันทึกและประวัติทั้งหมดจะถูกลบถาวร`}
+          confirmLabel="ลบข้อมูล"
+          variant="destructive"
+          onConfirm={confirmDeleteBaby}
+          onCancel={() => setActiveModal('settings')}
+        />
       </AnimatePresence>
     </div>
   );

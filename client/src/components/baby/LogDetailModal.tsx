@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Utensils, Baby, Clock, Calendar, AlertTriangle } from 'lucide-react';
-import { LogEntry, FeedingDetails, DiaperDetails, POO_COLORS } from '@/types/baby';
+import { X, Utensils, Baby, Clock, Calendar, AlertTriangle, Heart, Moon } from 'lucide-react';
+import { LogEntry, FeedingDetails, DiaperDetails, PumpingDetails, SleepDetails, POO_COLORS } from '@/types/baby';
 import { formatTime, formatDate } from '@/lib/babyUtils';
 
 interface LogDetailModalProps {
@@ -10,9 +10,45 @@ interface LogDetailModalProps {
 }
 
 const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
-  const isFeedingLog = entry.type === 'feeding';
-  const details = entry.details as FeedingDetails | DiaperDetails;
-  
+  const isFeeding = entry.type === 'feeding';
+  const isDiaper = entry.type === 'diaper';
+  const isPump = entry.type === 'pump';
+  const isSleep = entry.type === 'sleep';
+
+  const details = entry.details as any;
+
+  let bgClass = 'bg-secondary/20';
+  let iconBgClass = 'bg-secondary/30';
+  let iconColor = 'text-foreground';
+  let title = 'รายละเอียด';
+  let Icon = Clock;
+
+  if (isFeeding) {
+    bgClass = 'bg-feeding/20';
+    iconBgClass = 'bg-feeding/30';
+    iconColor = 'text-feeding';
+    title = 'กินนม';
+    Icon = Utensils;
+  } else if (isDiaper) {
+    bgClass = 'bg-diaper/20';
+    iconBgClass = 'bg-diaper/30';
+    iconColor = 'text-diaper';
+    title = 'เปลี่ยนผ้าอ้อม';
+    Icon = Baby;
+  } else if (isPump) {
+    bgClass = 'bg-pump/20';
+    iconBgClass = 'bg-pump/30';
+    iconColor = 'text-pump';
+    title = 'ปั๊มนม';
+    Icon = Heart;
+  } else if (isSleep) {
+    bgClass = 'bg-sleep/20';
+    iconBgClass = 'bg-sleep/30';
+    iconColor = 'text-sleep';
+    title = 'การนอน';
+    Icon = Moon;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -29,19 +65,15 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`px-6 py-5 ${isFeedingLog ? 'bg-feeding/20' : 'bg-diaper/20'}`}>
+        <div className={`px-6 py-5 ${bgClass}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-2xl ${isFeedingLog ? 'bg-feeding/30' : 'bg-diaper/30'}`}>
-                {isFeedingLog ? (
-                  <Utensils size={24} className="text-feeding" />
-                ) : (
-                  <Baby size={24} className="text-diaper" />
-                )}
+              <div className={`p-3 rounded-2xl ${iconBgClass}`}>
+                <Icon size={24} className={iconColor} />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-foreground">
-                  {isFeedingLog ? 'กินนม' : 'เปลี่ยนผ้าอ้อม'}
+                  {title}
                 </h3>
                 <p className="text-sm text-muted-foreground">รายละเอียดบันทึก</p>
               </div>
@@ -76,7 +108,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
           </div>
 
           {/* Feeding Details */}
-          {isFeedingLog && (
+          {isFeeding && (
             <div className="space-y-4">
               <div className="bg-feeding/10 rounded-2xl p-4 border border-feeding/20">
                 <p className="text-sm text-muted-foreground mb-2">วิธีการให้นม</p>
@@ -133,7 +165,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
           )}
 
           {/* Diaper Details */}
-          {!isFeedingLog && (
+          {isDiaper && (
             <div className="space-y-4">
               <div className="bg-diaper/10 rounded-2xl p-4 border border-diaper/20">
                 <p className="text-sm text-muted-foreground mb-3">สถานะผ้าอ้อม</p>
@@ -167,7 +199,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
                       const colorInfo = POO_COLORS.find(c => c.id === (details as DiaperDetails).pooColor);
                       return colorInfo ? (
                         <>
-                          <div 
+                          <div
                             className="w-8 h-8 rounded-full border-2 border-white shadow-md"
                             style={{ backgroundColor: colorInfo.color }}
                           />
@@ -176,6 +208,62 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
                       ) : null;
                     })()}
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Pump Details */}
+          {isPump && (
+            <div className="space-y-4">
+              <div className="bg-pump/10 rounded-2xl p-4 border border-pump/20">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-muted-foreground">ปริมาณรวม</span>
+                  <span className="text-sm text-muted-foreground">{details.durationMinutes} นาที</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-pump">{details.amountTotalMl}</span>
+                  <span className="text-xl text-muted-foreground">ml</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+                  <p className="text-sm text-muted-foreground mb-1">ซ้าย</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {details.amountLeftMl || 0} <span className="text-sm">ml</span>
+                  </p>
+                </div>
+                <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+                  <p className="text-sm text-muted-foreground mb-1">ขวา</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {details.amountRightMl || 0} <span className="text-sm">ml</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Sleep Details */}
+          {isSleep && (
+            <div className="space-y-4">
+              <div className="bg-sleep/10 rounded-2xl p-4 border border-sleep/20">
+                <p className="text-sm text-muted-foreground mb-2">ระยะเวลาการนอน</p>
+                <div className="flex items-baseline gap-2">
+                  {Math.floor(details.durationMinutes / 60) > 0 && (
+                    <span className="text-4xl font-bold text-sleep">{Math.floor(details.durationMinutes / 60)} <span className="text-xl text-muted-foreground">ชม.</span></span>
+                  )}
+                  <span className="text-4xl font-bold text-sleep">{details.durationMinutes % 60}</span>
+                  <span className="text-xl text-muted-foreground">นาที</span>
+                </div>
+              </div>
+
+              {details.endTime && (
+                <div className="bg-secondary/50 rounded-2xl p-4">
+                  <p className="text-sm text-muted-foreground mb-2">ตื่นเวลา</p>
+                  <p className="text-xl font-bold text-foreground">
+                    {formatTime(new Date(details.endTime))}
+                  </p>
                 </div>
               )}
             </div>

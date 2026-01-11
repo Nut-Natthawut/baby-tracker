@@ -1,37 +1,46 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Utensils, Baby, Heart } from 'lucide-react';
+import { Plus, X, Utensils, Baby, Heart, Moon } from 'lucide-react';
 
 interface FabMenuProps {
   onOpenFeeding: () => void;
   onOpenDiaper: () => void;
   onOpenPumping: () => void;
+  onOpenSleep: () => void;
 }
 
-const FabMenu: React.FC<FabMenuProps> = ({ onOpenFeeding, onOpenDiaper, onOpenPumping }) => {
+const FabMenu: React.FC<FabMenuProps> = ({ onOpenFeeding, onOpenDiaper, onOpenPumping, onOpenSleep }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
-    { 
-      icon: Utensils, 
-      label: 'กินนม', 
-      color: 'bg-feeding', 
+    {
+      icon: Utensils,
+      label: 'กินนม',
+      color: 'bg-feeding',
       glow: 'shadow-glow-feeding',
       iconSize: 22,
       onClick: () => { setIsOpen(false); onOpenFeeding(); }
     },
-    { 
-      icon: Baby, 
-      label: 'เปลี่ยนผ้าอ้อม', 
-      color: 'bg-diaper', 
+    {
+      icon: Baby,
+      label: 'เปลี่ยนผ้าอ้อม',
+      color: 'bg-diaper',
       glow: 'shadow-glow-diaper',
       iconSize: 20,
       onClick: () => { setIsOpen(false); onOpenDiaper(); }
     },
-    { 
-      icon: Heart, 
-      label: 'ปั๊มนม', 
-      color: 'bg-pump', 
+    {
+      icon: Moon,
+      label: 'การนอน',
+      color: 'bg-sleep',
+      glow: 'shadow-glow-sleep',
+      iconSize: 22,
+      onClick: () => { setIsOpen(false); onOpenSleep(); }
+    },
+    {
+      icon: Heart,
+      label: 'ปั๊มนม',
+      color: 'bg-pump',
       glow: 'shadow-glow-pump',
       iconSize: 22,
       onClick: () => { setIsOpen(false); onOpenPumping(); }
@@ -58,15 +67,15 @@ const FabMenu: React.FC<FabMenuProps> = ({ onOpenFeeding, onOpenDiaper, onOpenPu
                 <motion.button
                   key={item.label}
                   initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                  animate={{ 
-                    opacity: 1, 
-                    y: 0, 
+                  animate={{
+                    opacity: 1,
+                    y: 0,
                     scale: 1,
                     transition: { delay: index * 0.05 }
                   }}
-                  exit={{ 
-                    opacity: 0, 
-                    y: 20, 
+                  exit={{
+                    opacity: 0,
+                    y: 20,
                     scale: 0.8,
                     transition: { delay: (menuItems.length - index - 1) * 0.05 }
                   }}

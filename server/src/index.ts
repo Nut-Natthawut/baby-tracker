@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import babies from "./routes/babies";
+import logs from "./routes/logs";
 
 type Bindings = {
   baby_tracker_db: D1Database;
@@ -25,5 +26,6 @@ app.get("/", (c) => {
 
 // Mount routes
 app.route("/api/babies", babies);
+app.route("/api/logs", logs);
 
 export default app;

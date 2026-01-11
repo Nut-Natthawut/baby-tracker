@@ -26,13 +26,13 @@ export const useBabyData = () => {
         // 1. Load babies from API
         const response = await fetch(`${API_BASE_URL}/babies`);
         const result = await response.json();
-        
+
         if (result.success) {
           setBabies(result.data);
-          
+
           const savedCurrentId = localStorage.getItem(STORAGE_KEYS.CURRENT_BABY_ID);
           let activeId = null;
-          
+
           if (savedCurrentId && result.data.some((b: Baby) => b.id === savedCurrentId)) {
             activeId = savedCurrentId;
             setCurrentBabyId(savedCurrentId);
@@ -43,15 +43,15 @@ export const useBabyData = () => {
 
           // 2. Load logs for the current baby from API
           if (activeId) {
-             const logsResponse = await fetch(`${API_BASE_URL}/logs/${activeId}/details`);
-             const logsResult = await logsResponse.json();
-             if (logsResult.success) {
-               const parsedLogs = logsResult.data.map((log: any) => ({
-                 ...log,
-                 timestamp: new Date(log.timestamp * 1000), // Convert Unix timestamp to Date
-               }));
-               setLogs(parsedLogs);
-             }
+            const logsResponse = await fetch(`${API_BASE_URL}/logs/${activeId}/details`);
+            const logsResult = await logsResponse.json();
+            if (logsResult.success) {
+              const parsedLogs = logsResult.data.map((log: any) => ({
+                ...log,
+                timestamp: new Date(log.timestamp * 1000), // Convert Unix timestamp to Date
+              }));
+              setLogs(parsedLogs);
+            }
           }
         }
       } catch (error) {
@@ -60,13 +60,13 @@ export const useBabyData = () => {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, [currentBabyId]); // Reload when currentBabyId changes (or we might need a separate effect)
-  
+
   // NOTE: In a real app, we might want to separate log fetching into a separate useEffect dependent on currentBabyId
   // But for now, we'll keep it simple or refactor slightly.
-  
+
   // Refactored Effect to handle baby switching
   useEffect(() => {
     if (!currentBabyId) return;
@@ -76,11 +76,11 @@ export const useBabyData = () => {
         const response = await fetch(`${API_BASE_URL}/logs/${currentBabyId}/details`);
         const result = await response.json();
         if (result.success) {
-           const parsedLogs = result.data.map((log: any) => ({
-             ...log,
-             timestamp: new Date(log.timestamp * 1000),
-           }));
-           setLogs(parsedLogs);
+          const parsedLogs = result.data.map((log: any) => ({
+            ...log,
+            timestamp: new Date(log.timestamp * 1000),
+          }));
+          setLogs(parsedLogs);
         }
       } catch (error) {
         console.error("Error fetching logs:", error);
@@ -95,10 +95,10 @@ export const useBabyData = () => {
   const saveBabyProfile = async (babyData: Partial<Baby>) => {
     try {
       const isEdit = !!babyData.id;
-      const url = isEdit 
+      const url = isEdit
         ? `${API_BASE_URL}/babies/${babyData.id}`
         : `${API_BASE_URL}/babies`;
-        
+
       const response = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
         headers: {
@@ -122,7 +122,7 @@ export const useBabyData = () => {
           setCurrentBabyId(result.data.id);
           localStorage.setItem(STORAGE_KEYS.CURRENT_BABY_ID, result.data.id);
         }
-        
+
         return true;
       }
       return false;
@@ -146,9 +146,9 @@ export const useBabyData = () => {
       const response = await fetch(`${API_BASE_URL}/babies/${babyId}`, {
         method: 'DELETE',
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         setBabies(prev => {
           const updated = prev.filter(b => b.id !== babyId);
@@ -171,7 +171,7 @@ export const useBabyData = () => {
   // Add a new log entry via API
   const addLog = async (type: LogType, data: { timestamp: Date; details: any }) => {
     if (!currentBabyId) return;
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/logs`, {
         method: 'POST',
@@ -196,7 +196,7 @@ export const useBabyData = () => {
         setLogs(prevLogs => [newEntry, ...prevLogs]);
       }
     } catch (error) {
-       console.error("Error adding log:", error);
+      console.error("Error adding log:", error);
     }
   };
 
@@ -218,7 +218,7 @@ export const useBabyData = () => {
   };
 
   // Get logs for current baby only
-  const currentBabyLogs = logs.filter(log => 
+  const currentBabyLogs = logs.filter(log =>
     (log as any).babyId === currentBabyId || !(log as any).babyId
   );
 
