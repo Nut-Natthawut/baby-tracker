@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Utensils, Baby, Droplets, Moon } from 'lucide-react';
+import { Utensils, Baby, Droplets, Moon, Heart } from 'lucide-react';
 import { LogEntry, FeedingDetails, DiaperDetails, POO_COLORS } from '@/types/baby';
 import { formatTime, formatDate } from '@/lib/babyUtils';
 import LogDetailModal from './LogDetailModal';
@@ -24,7 +24,7 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ entry, onViewDetail }) => {
     bgColor = 'bg-feeding';
     title = 'กินนม';
     const d = entry.details as FeedingDetails;
-    
+
     if (d.method === 'bottle') {
       const content = d.bottleContent === 'breastmilk' ? 'นมแม่' : 'นมผง';
       details = `ขวด • ${content} • ${d.amountMl || 0} ml`;
@@ -33,7 +33,7 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ entry, onViewDetail }) => {
       const rightMins = Math.floor((d.rightDurationSeconds || 0) / 60);
       details = `เข้าเต้า • ซ้าย ${leftMins}น. ขวา ${rightMins}น.`;
     }
-    
+
     if (d.hasSpitUp) {
       subDetails = '⚠️ แหวะนม';
     }
@@ -43,7 +43,7 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ entry, onViewDetail }) => {
     bgColor = 'bg-diaper';
     title = 'เปลี่ยนผ้าอ้อม';
     const d = entry.details as DiaperDetails;
-    
+
     const statusMap: Record<string, string> = {
       clean: 'สะอาด',
       pee: 'ฉี่',
@@ -51,13 +51,29 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ entry, onViewDetail }) => {
       mixed: 'ฉี่ + อึ',
     };
     details = statusMap[d.status] || d.status;
-    
+
     if (d.pooColor) {
       const colorInfo = POO_COLORS.find(c => c.id === d.pooColor);
       if (colorInfo) {
         subDetails = `สี${colorInfo.label}`;
       }
     }
+  } else if (entry.type === 'pump') {
+    icon = <Heart size={16} />;
+    color = 'text-pump';
+    bgColor = 'bg-pump';
+    title = 'ปั๊มนม';
+    const d = entry.details as any;
+    details = `${d.amountTotalMl} ml • ${d.durationMinutes} นาที`;
+  } else if (entry.type === 'sleep') {
+    icon = <Moon size={16} />;
+    color = 'text-sleep';
+    bgColor = 'bg-sleep';
+    title = 'การนอน';
+    const d = entry.details as any;
+    const hrs = Math.floor(d.durationMinutes / 60);
+    const mins = d.durationMinutes % 60;
+    details = `${hrs > 0 ? `${hrs}ชม. ` : ''}${mins}นาที`;
   }
 
   return (
@@ -105,7 +121,7 @@ interface TimelineSectionProps {
 
 const TimelineSection: React.FC<TimelineSectionProps> = ({ logs }) => {
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
-  
+
   if (logs.length === 0) {
     return (
       <div className="px-6 py-12 text-center">
@@ -128,21 +144,21 @@ const TimelineSection: React.FC<TimelineSectionProps> = ({ logs }) => {
         <h3 className="text-lg font-bold text-foreground mb-4">ประวัติกิจกรรม</h3>
         <div>
           {logs.slice(0, 20).map((entry) => (
-            <TimelineItem 
-              key={entry.id} 
-              entry={entry} 
+            <TimelineItem
+              key={entry.id}
+              entry={entry}
               onViewDetail={setSelectedLog}
             />
           ))}
         </div>
       </div>
-      
+
       {/* Detail Modal */}
       <AnimatePresence>
         {selectedLog && (
-          <LogDetailModal 
-            entry={selectedLog} 
-            onClose={() => setSelectedLog(null)} 
+          <LogDetailModal
+            entry={selectedLog}
+            onClose={() => setSelectedLog(null)}
           />
         )}
       </AnimatePresence>

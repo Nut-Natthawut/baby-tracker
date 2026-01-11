@@ -12,14 +12,16 @@ interface SettingsModalProps {
   onEditBaby: () => void;
   onClearData: () => void;
   onOpenCaregivers: () => void;
+  onDeleteBaby: () => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ 
-  baby, 
-  onClose, 
-  onEditBaby, 
+const SettingsModal: React.FC<SettingsModalProps> = ({
+  baby,
+  onClose,
+  onEditBaby,
   onClearData,
   onOpenCaregivers,
+  onDeleteBaby,
 }) => {
   return (
     <motion.div
@@ -71,9 +73,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="bg-card rounded-2xl border border-border overflow-hidden">
             {/* Theme Toggle */}
             <ThemeToggle />
-            
+
             <div className="border-t border-border" />
-            
+
             {/* Caregivers */}
             <button
               onClick={onOpenCaregivers}
@@ -89,18 +91,19 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </button>
 
             <div className="border-t border-border" />
-            
+
             {/* Clear Data */}
+            {/* Delete Baby (Was Clear Data) */}
             <button
-              onClick={onClearData}
+              onClick={onDeleteBaby}
               className="w-full flex items-center gap-4 px-4 py-4 hover:bg-secondary/50 transition-colors text-left"
             >
               <div className="p-2 rounded-xl bg-destructive/20">
                 <Trash2 size={20} className="text-destructive" />
               </div>
               <div>
-                <p className="font-semibold text-destructive">ล้างข้อมูลทั้งหมด</p>
-                <p className="text-xs text-muted-foreground">ลบข้อมูลลูกและบันทึกทั้งหมด</p>
+                <p className="font-semibold text-destructive">ลบข้อมูลเด็กคนนี้</p>
+                <p className="text-xs text-muted-foreground">ข้อมูลจะถูกลบถาวรจากระบบ</p>
               </div>
             </button>
           </div>

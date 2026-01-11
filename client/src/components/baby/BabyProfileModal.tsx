@@ -12,13 +12,21 @@ interface BabyProfileModalProps {
 
 const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSave }) => {
   const [name, setName] = useState(baby?.name || '');
-  const [birthDate, setBirthDate] = useState(baby?.birthDate || '');
+  // Ensure birthDate is strictly YYYY-MM-DD for input[type="date"]
+  const [birthDate, setBirthDate] = useState(() => {
+    if (!baby?.birthDate) return '';
+    try {
+      return new Date(baby.birthDate).toISOString().split('T')[0];
+    } catch (e) {
+      return baby.birthDate;
+    }
+  });
   const [gender, setGender] = useState<'boy' | 'girl'>(baby?.gender || 'boy');
   const [weight, setWeight] = useState(baby?.weight || '');
 
   const handleSave = () => {
     if (!name.trim() || !birthDate) return;
-    
+
     onSave({
       name: name.trim(),
       birthDate,
@@ -50,7 +58,7 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
       <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6">
         {/* Avatar Preview */}
         <div className="flex justify-center mb-8">
-          <CuteBabyAvatar 
+          <CuteBabyAvatar
             gender={gender}
             size="lg"
             mood="happy"
@@ -65,11 +73,10 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => setGender('boy')}
-              className={`py-6 px-4 rounded-3xl font-semibold flex flex-col items-center gap-3 transition-all border-2 ${
-                gender === 'boy'
+              className={`py-6 px-4 rounded-3xl font-semibold flex flex-col items-center gap-3 transition-all border-2 ${gender === 'boy'
                   ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-500/30'
                   : 'bg-card border-border text-muted-foreground hover:border-blue-300'
-              }`}
+                }`}
             >
               {/* Boy Avatar */}
               <svg width="48" height="48" viewBox="0 0 100 100">
@@ -90,11 +97,10 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
             </button>
             <button
               onClick={() => setGender('girl')}
-              className={`py-6 px-4 rounded-3xl font-semibold flex flex-col items-center gap-3 transition-all border-2 ${
-                gender === 'girl'
+              className={`py-6 px-4 rounded-3xl font-semibold flex flex-col items-center gap-3 transition-all border-2 ${gender === 'girl'
                   ? 'bg-pink-500 text-white border-pink-400 shadow-lg shadow-pink-500/30'
                   : 'bg-card border-border text-muted-foreground hover:border-pink-300'
-              }`}
+                }`}
             >
               {/* Girl Avatar */}
               <svg width="48" height="48" viewBox="0 0 100 100">
@@ -177,11 +183,10 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
         <button
           onClick={handleSave}
           disabled={!isValid}
-          className={`w-full py-4 rounded-2xl font-bold text-lg transition-all active:scale-[0.98] ${
-            isValid 
-              ? 'bg-primary text-primary-foreground shadow-glow-primary' 
+          className={`w-full py-4 rounded-2xl font-bold text-lg transition-all active:scale-[0.98] ${isValid
+              ? 'bg-primary text-primary-foreground shadow-glow-primary'
               : 'bg-muted text-muted-foreground cursor-not-allowed'
-          }`}
+            }`}
         >
           บันทึก
         </button>
