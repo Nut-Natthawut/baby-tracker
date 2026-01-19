@@ -1,8 +1,19 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Droplets, Baby } from 'lucide-react';
-import { LogEntry, FeedingDetails, DiaperDetails } from '@/types/baby';
-import { format, startOfDay, endOfDay, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, subMonths, addMonths } from 'date-fns';
+import { ChevronLeft, ChevronRight, Droplets, Milk, Moon, Utensils, X } from 'lucide-react';
+import { LogEntry } from '@/types/baby';
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfDay,
+  endOfMonth,
+  format,
+  isSameDay,
+  isToday,
+  startOfDay,
+  startOfMonth,
+  subMonths,
+} from 'date-fns';
 import { th } from 'date-fns/locale';
 
 interface DashboardModalProps {
@@ -10,314 +21,640 @@ interface DashboardModalProps {
   onClose: () => void;
 }
 
+type NormalizedLog = {
+  type: 'feeding' | 'diaper' | 'sleep' | 'pump' | 'unknown';
+  at: Date;
+  details: Record<string, any>;
+};
+
+const toNumber = (value: unknown, fallback = 0) => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  return fallback;
+};
+
+const toDate = (value: unknown): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  if (typeof value === 'number') {
+    const ms = value < 1e12 ? value * 1000 : value;
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const parsed = Number(trimmed);
+    if (!Number.isNaN(parsed)) return toDate(parsed);
+    const d = new Date(trimmed);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+};
+
+const normalizeType = (value: unknown): NormalizedLog['type'] => {
+  const raw = String(value ?? '').toLowerCase();
+  if (raw.includes('feed')) return 'feeding';
+  if (raw.includes('diaper')) return 'diaper';
+  if (raw.includes('sleep')) return 'sleep';
+  if (raw.includes('pump')) return 'pump';
+  return 'unknown';
+};
+
+const getDetails = (log: any): Record<string, any> => {
+  if (!log) return {};
+  const raw = log.details ?? log.detail ?? log.data ?? log;
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+  return raw ?? {};
+};
+
+const normalizeLog = (log: any): NormalizedLog | null => {
+  const at = toDate(log?.timestamp ?? log?.time ?? log?.date ?? log?.createdAt ?? log?.created_at);
+  if (!at) return null;
+  const type = normalizeType(log?.type ?? log?.logType ?? log?.category ?? log?.kind ?? log?.event);
+  if (type === 'unknown') return null;
+  return {
+    type,
+    at,
+    details: getDetails(log),
+  };
+};
+
+const computeStats = (entries: NormalizedLog[]) => {
+  const feedingLogs = entries.filter((log) => log.type === 'feeding');
+  const diaperLogs = entries.filter((log) => log.type === 'diaper');
+  const sleepLogs = entries.filter((log) => log.type === 'sleep');
+  const pumpLogs = entries.filter((log) => log.type === 'pump');
+
+  let totalBottleMl = 0;
+  let totalBreastMinutes = 0;
+  let bottleCount = 0;
+  let breastCount = 0;
+
+  feedingLogs.forEach((log) => {
+    const details = log.details ?? {};
+    const method = String(details.method ?? details.feedingType ?? details.source ?? '').toLowerCase();
+    const amountMl = toNumber(details.amountMl ?? details.amount_ml ?? details.amount);
+    const leftSec = toNumber(details.leftDurationSeconds ?? details.left_duration_seconds ?? details.leftSeconds);
+    const rightSec = toNumber(details.rightDurationSeconds ?? details.right_duration_seconds ?? details.rightSeconds);
+    const hasBreastDuration = leftSec > 0 || rightSec > 0;
+
+    const isBreast = method.includes('breast') || hasBreastDuration;
+    const isBottle = method.includes('bottle') || method.includes('formula') || (!isBreast && amountMl > 0);
+
+    if (isBottle) {
+      totalBottleMl += amountMl;
+      bottleCount += 1;
+    }
+    if (isBreast) {
+      totalBreastMinutes += Math.round((leftSec + rightSec) / 60);
+      breastCount += 1;
+    }
+  });
+
+  const peeCount = diaperLogs.filter((log) => {
+    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
+    return status.includes('pee') || status.includes('wet') || status.includes('mixed');
+  }).length;
+
+  const pooCount = diaperLogs.filter((log) => {
+    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
+    return status.includes('poo') || status.includes('dirty') || status.includes('mixed');
+  }).length;
+
+  const sleepMinutes = sleepLogs.reduce((sum, log) => {
+    return sum + toNumber(log.details?.durationMinutes ?? log.details?.duration_minutes ?? log.details?.duration);
+  }, 0);
+
+  const pumpMinutes = pumpLogs.reduce((sum, log) => {
+    return sum + toNumber(log.details?.durationMinutes ?? log.details?.duration_minutes ?? log.details?.duration);
+  }, 0);
+
+  const pumpMl = pumpLogs.reduce((sum, log) => {
+    const details = log.details ?? {};
+    const total = toNumber(details.amountTotalMl ?? details.amount_total_ml);
+    if (total > 0) return sum + total;
+    return (
+      sum +
+      toNumber(details.amountLeftMl ?? details.amount_left_ml) +
+      toNumber(details.amountRightMl ?? details.amount_right_ml)
+    );
+  }, 0);
+
+  return {
+    feedingCount: feedingLogs.length,
+    diaperCount: diaperLogs.length,
+    sleepCount: sleepLogs.length,
+    pumpCount: pumpLogs.length,
+    totalBottleMl: Math.round(totalBottleMl),
+    totalBreastMinutes,
+    bottleCount,
+    breastCount,
+    peeCount,
+    pooCount,
+    sleepMinutes,
+    pumpMinutes,
+    pumpMl: Math.round(pumpMl),
+  };
+};
+
 const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  // Daily stats
+  const normalizedLogs = useMemo(() => {
+    if (!Array.isArray(logs)) return [];
+    return logs
+      .map((log) => normalizeLog(log))
+      .filter((log): log is NormalizedLog => Boolean(log));
+  }, [logs]);
+
   const dailyStats = useMemo(() => {
     const dayStart = startOfDay(selectedDate);
     const dayEnd = endOfDay(selectedDate);
-    
-    const dayLogs = logs.filter(log => {
-      const logDate = new Date(log.timestamp);
-      return logDate >= dayStart && logDate <= dayEnd;
-    });
 
-    const feedingLogs = dayLogs.filter(l => l.type === 'feeding');
-    const diaperLogs = dayLogs.filter(l => l.type === 'diaper');
-
-    // Feeding stats
-    const totalBottleMl = feedingLogs.reduce((sum, log) => {
-      const details = log.details as FeedingDetails;
-      return sum + (details.amountMl || 0);
-    }, 0);
-
-    const totalBreastMinutes = feedingLogs.reduce((sum, log) => {
-      const details = log.details as FeedingDetails;
-      const leftSec = details.leftDurationSeconds || 0;
-      const rightSec = details.rightDurationSeconds || 0;
-      return sum + Math.round((leftSec + rightSec) / 60);
-    }, 0);
-
-    const bottleCount = feedingLogs.filter(l => (l.details as FeedingDetails).method === 'bottle').length;
-    const breastCount = feedingLogs.filter(l => (l.details as FeedingDetails).method === 'breast').length;
-
-    // Diaper stats
-    const peeCount = diaperLogs.filter(l => {
-      const d = l.details as DiaperDetails;
-      return d.status === 'pee' || d.status === 'mixed';
-    }).length;
-
-    const pooCount = diaperLogs.filter(l => {
-      const d = l.details as DiaperDetails;
-      return d.status === 'poo' || d.status === 'mixed';
-    }).length;
-
+    const dayLogs = normalizedLogs.filter((log) => log.at >= dayStart && log.at <= dayEnd);
     return {
-      totalBottleMl,
-      totalBreastMinutes,
-      bottleCount,
-      breastCount,
-      peeCount,
-      pooCount,
-      feedingCount: feedingLogs.length,
-      diaperCount: diaperLogs.length,
+      totalEntries: dayLogs.length,
+      ...computeStats(dayLogs),
     };
-  }, [logs, selectedDate]);
+  }, [normalizedLogs, selectedDate]);
 
-  // Monthly stats
   const monthlyStats = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-    return days.map(day => {
-      const dayStart = startOfDay(day);
-      const dayEnd = endOfDay(day);
-      
-      const dayLogs = logs.filter(log => {
-        const logDate = new Date(log.timestamp);
-        return logDate >= dayStart && logDate <= dayEnd;
-      });
+    const dayMap = new Map<string, { feedingCount: number; diaperCount: number; sleepCount: number; pumpCount: number }>();
 
-      const feedingCount = dayLogs.filter(l => l.type === 'feeding').length;
-      const diaperCount = dayLogs.filter(l => l.type === 'diaper').length;
+    normalizedLogs.forEach((log) => {
+      if (log.at < monthStart || log.at > monthEnd) return;
+      const key = format(log.at, 'yyyy-MM-dd');
+      const current = dayMap.get(key) ?? { feedingCount: 0, diaperCount: 0, sleepCount: 0, pumpCount: 0 };
 
+      if (log.type === 'feeding') current.feedingCount += 1;
+      if (log.type === 'diaper') current.diaperCount += 1;
+      if (log.type === 'sleep') current.sleepCount += 1;
+      if (log.type === 'pump') current.pumpCount += 1;
+
+      dayMap.set(key, current);
+    });
+
+    return days.map((day) => {
+      const key = format(day, 'yyyy-MM-dd');
+      const stats = dayMap.get(key) ?? { feedingCount: 0, diaperCount: 0, sleepCount: 0, pumpCount: 0 };
       return {
         date: day,
-        feedingCount,
-        diaperCount,
-        hasData: feedingCount > 0 || diaperCount > 0,
+        ...stats,
+        hasData: stats.feedingCount + stats.diaperCount + stats.sleepCount + stats.pumpCount > 0,
       };
     });
-  }, [logs, currentMonth]);
+  }, [normalizedLogs, currentMonth]);
+
+  const monthlyTotals = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const monthLogs = normalizedLogs.filter((log) => log.at >= monthStart && log.at <= monthEnd);
+    return {
+      totalEntries: monthLogs.length,
+      ...computeStats(monthLogs),
+    };
+  }, [normalizedLogs, currentMonth]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentMonth(prev => direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1));
+    setCurrentMonth((prev) => (direction === 'prev' ? subMonths(prev, 1) : addMonths(prev, 1)));
   };
 
   const navigateDay = (direction: 'prev' | 'next') => {
-    setSelectedDate(prev => {
+    setSelectedDate((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(newDate.getDate() + (direction === 'prev' ? -1 : 1));
       return newDate;
     });
   };
 
+  const handleViewModeChange = (mode: 'daily' | 'monthly') => {
+    setViewMode(mode);
+    if (mode === 'monthly') {
+      setCurrentMonth(selectedDate);
+    }
+  };
+
+  const sleepHours = Math.floor(dailyStats.sleepMinutes / 60);
+  const sleepMins = dailyStats.sleepMinutes % 60;
+  const pumpHours = Math.floor(dailyStats.pumpMinutes / 60);
+  const pumpMins = dailyStats.pumpMinutes % 60;
+
+  const monthSleepHours = Math.floor(monthlyTotals.sleepMinutes / 60);
+  const monthSleepMins = monthlyTotals.sleepMinutes % 60;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-background flex flex-col"
+      className="fixed inset-0 z-50 bg-[#f7f7f5] dark:bg-[#0f172a] text-[#111418] dark:text-gray-100 overflow-hidden"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-        <button onClick={onClose} className="p-2 -ml-2">
-          <X size={24} className="text-foreground" />
-        </button>
-        <h2 className="text-lg font-bold text-foreground">📊 Dashboard</h2>
-        <div className="w-10" />
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <motion.div
+          className="absolute -top-24 -right-24 h-[320px] w-[320px] rounded-full bg-papaya/25 blur-3xl"
+          animate={{ y: [0, 16, 0], x: [0, -10, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute top-[22%] -left-28 h-[360px] w-[360px] rounded-full bg-sky/25 blur-3xl"
+          animate={{ y: [0, -12, 0], x: [0, 10, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-0 right-[8%] h-[240px] w-[240px] rounded-full bg-saguaro/20 blur-3xl"
+          animate={{ y: [0, 12, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+        />
       </div>
 
-      {/* View Mode Toggle */}
-      <div className="px-6 py-4">
-        <div className="flex gap-2 bg-secondary rounded-xl p-1">
-          <button
-            onClick={() => setViewMode('daily')}
-            className={`flex-1 py-2 rounded-lg font-semibold text-sm transition-all ${
-              viewMode === 'daily'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground'
-            }`}
-          >
-            รายวัน
-          </button>
-          <button
-            onClick={() => setViewMode('monthly')}
-            className={`flex-1 py-2 rounded-lg font-semibold text-sm transition-all ${
-              viewMode === 'monthly'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground'
-            }`}
-          >
-            รายเดือน
-          </button>
-        </div>
-      </div>
+      <div className="relative z-10 flex h-full flex-col">
+        <header className="sticky top-0 z-20 border-b border-white/70 dark:border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur-xl">
+          <div className="mx-auto flex items-center justify-between gap-4 px-4 md:px-8 py-4 max-w-[1200px]">
+            <button
+              onClick={onClose}
+              className="flex items-center justify-center size-10 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 text-gray-700 dark:text-gray-200 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all"
+            >
+              <X size={20} />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-xl bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 flex items-center justify-center shadow-sm">
+                <span className="text-lg">📊</span>
+              </div>
+              <div className="leading-tight">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Dashboard</p>
+                <h2 className="text-lg md:text-xl font-black tracking-[-0.02em] text-foreground">สรุปการดูแล</h2>
+              </div>
+            </div>
+            <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+              <span className="size-2 rounded-full bg-emerald-400" />
+              {viewMode === 'daily'
+                ? `${dailyStats.totalEntries} บันทึก`
+                : `${monthlyTotals.totalEntries} บันทึก`}
+            </div>
+          </div>
+        </header>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar px-6 pb-6">
-        {viewMode === 'daily' ? (
-          <>
-            {/* Date Navigator */}
-            <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={() => navigateDay('prev')}
-                className="p-2 rounded-lg bg-secondary"
-              >
-                <ChevronLeft size={20} className="text-foreground" />
-              </button>
-              <div className="text-center">
-                <p className="text-lg font-bold text-foreground">
-                  {isToday(selectedDate) ? 'วันนี้' : format(selectedDate, 'd MMMM yyyy', { locale: th })}
-                </p>
-                {!isToday(selectedDate) && (
+        <div className="flex-1 overflow-y-auto no-scrollbar">
+          <div className="mx-auto w-full max-w-[1200px] px-4 md:px-8 pb-10">
+            <div className="mt-6 flex flex-col gap-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="inline-flex items-center gap-2 rounded-full px-2 py-2 bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/70 dark:border-white/10 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
                   <button
-                    onClick={() => setSelectedDate(new Date())}
-                    className="text-xs text-primary mt-1"
+                    onClick={() => handleViewModeChange('daily')}
+                    className={`px-5 py-2.5 rounded-full font-bold text-sm transition-colors ${
+                      viewMode === 'daily'
+                        ? 'bg-primary/15 text-primary'
+                        : 'text-gray-600 dark:text-gray-200 hover:bg-white/80 dark:hover:bg-white/10'
+                    }`}
                   >
-                    กลับไปวันนี้
+                    รายวัน
                   </button>
-                )}
-              </div>
-              <button
-                onClick={() => navigateDay('next')}
-                className="p-2 rounded-lg bg-secondary"
-                disabled={isToday(selectedDate)}
-              >
-                <ChevronRight size={20} className={isToday(selectedDate) ? 'text-muted-foreground' : 'text-foreground'} />
-              </button>
-            </div>
+                  <button
+                    onClick={() => handleViewModeChange('monthly')}
+                    className={`px-5 py-2.5 rounded-full font-bold text-sm transition-colors ${
+                      viewMode === 'monthly'
+                        ? 'bg-primary/15 text-primary'
+                        : 'text-gray-600 dark:text-gray-200 hover:bg-white/80 dark:hover:bg-white/10'
+                    }`}
+                  >
+                    รายเดือน
+                  </button>
+                </div>
 
-            {/* Daily Stats Cards */}
-            <div className="space-y-4">
-              {/* Feeding Summary */}
-              <div className="bg-card rounded-2xl border border-border p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-feeding/20 flex items-center justify-center">
-                    <span className="text-xl">🍼</span>
-                  </div>
-                  <h3 className="font-bold text-foreground">การกินนม</h3>
-                  <span className="ml-auto text-sm text-muted-foreground">{dailyStats.feedingCount} ครั้ง</span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-secondary/50 rounded-xl p-4 text-center">
-                    <p className="text-3xl font-bold text-feeding">{dailyStats.totalBottleMl}</p>
-                    <p className="text-xs text-muted-foreground mt-1">มล. (ขวด)</p>
-                    <p className="text-xs text-muted-foreground">{dailyStats.bottleCount} ครั้ง</p>
-                  </div>
-                  <div className="bg-secondary/50 rounded-xl p-4 text-center">
-                    <p className="text-3xl font-bold text-feeding">{dailyStats.totalBreastMinutes}</p>
-                    <p className="text-xs text-muted-foreground mt-1">นาที (เข้าเต้า)</p>
-                    <p className="text-xs text-muted-foreground">{dailyStats.breastCount} ครั้ง</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Diaper Summary */}
-              <div className="bg-card rounded-2xl border border-border p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-diaper/20 flex items-center justify-center">
-                    <Baby size={20} className="text-diaper" />
-                  </div>
-                  <h3 className="font-bold text-foreground">ผ้าอ้อม</h3>
-                  <span className="ml-auto text-sm text-muted-foreground">{dailyStats.diaperCount} ครั้ง</span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-secondary/50 rounded-xl p-4 text-center">
-                    <p className="text-3xl font-bold text-diaper">{dailyStats.peeCount}</p>
-                    <p className="text-xs text-muted-foreground mt-1">💧 ฉี่</p>
-                  </div>
-                  <div className="bg-secondary/50 rounded-xl p-4 text-center">
-                    <p className="text-3xl font-bold text-diaper">{dailyStats.pooCount}</p>
-                    <p className="text-xs text-muted-foreground mt-1">💩 อึ</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Month Navigator */}
-            <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={() => navigateMonth('prev')}
-                className="p-2 rounded-lg bg-secondary"
-              >
-                <ChevronLeft size={20} className="text-foreground" />
-              </button>
-              <p className="text-lg font-bold text-foreground">
-                {format(currentMonth, 'MMMM yyyy', { locale: th })}
-              </p>
-              <button
-                onClick={() => navigateMonth('next')}
-                className="p-2 rounded-lg bg-secondary"
-              >
-                <ChevronRight size={20} className="text-foreground" />
-              </button>
-            </div>
-
-            {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-1 mb-4">
-              {['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map(day => (
-                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-7 gap-1">
-              {/* Empty cells for offset */}
-              {Array.from({ length: startOfMonth(currentMonth).getDay() }).map((_, i) => (
-                <div key={`empty-${i}`} className="aspect-square" />
-              ))}
-              
-              {monthlyStats.map((day, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setSelectedDate(day.date);
-                    setViewMode('daily');
-                  }}
-                  className={`aspect-square rounded-lg flex flex-col items-center justify-center relative transition-all ${
-                    isToday(day.date)
-                      ? 'bg-primary text-primary-foreground'
-                      : isSameDay(day.date, selectedDate)
-                      ? 'bg-primary/20 border border-primary'
-                      : 'bg-card border border-border hover:bg-secondary'
-                  }`}
-                >
-                  <span className="text-sm font-medium">{format(day.date, 'd')}</span>
-                  {day.hasData && (
-                    <div className="flex gap-0.5 mt-0.5">
-                      {day.feedingCount > 0 && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-feeding" />
-                      )}
-                      {day.diaperCount > 0 && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-diaper" />
+                {viewMode === 'daily' ? (
+                  <div className="flex items-center gap-3 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-3 py-2 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
+                    <button
+                      onClick={() => navigateDay('prev')}
+                      className="size-9 rounded-full bg-white/90 dark:bg-white/10 flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white transition"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <div className="text-center">
+                      <p className="text-sm font-black text-foreground">
+                        {isToday(selectedDate) ? 'วันนี้' : format(selectedDate, 'd MMMM yyyy', { locale: th })}
+                      </p>
+                      {!isToday(selectedDate) && (
+                        <button
+                          onClick={() => setSelectedDate(new Date())}
+                          className="text-xs text-primary font-semibold"
+                        >
+                          กลับไปวันนี้
+                        </button>
                       )}
                     </div>
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Monthly Total */}
-            <div className="mt-6 bg-card rounded-2xl border border-border p-5">
-              <h3 className="font-bold text-foreground mb-4">สรุปเดือน {format(currentMonth, 'MMMM', { locale: th })}</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-feeding/10 rounded-xl p-4 text-center">
-                  <span className="text-2xl">🍼</span>
-                  <p className="text-2xl font-bold text-feeding mt-2">
-                    {monthlyStats.reduce((sum, d) => sum + d.feedingCount, 0)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">ครั้งที่กินนม</p>
-                </div>
-                <div className="bg-diaper/10 rounded-xl p-4 text-center">
-                  <span className="text-2xl">👶</span>
-                  <p className="text-2xl font-bold text-diaper mt-2">
-                    {monthlyStats.reduce((sum, d) => sum + d.diaperCount, 0)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">ครั้งเปลี่ยนผ้าอ้อม</p>
-                </div>
+                    <button
+                      onClick={() => navigateDay('next')}
+                      className="size-9 rounded-full bg-white/90 dark:bg-white/10 flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white transition disabled:opacity-40 disabled:cursor-not-allowed"
+                      disabled={isToday(selectedDate)}
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-3 py-2 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
+                    <button
+                      onClick={() => navigateMonth('prev')}
+                      className="size-9 rounded-full bg-white/90 dark:bg-white/10 flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white transition"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <p className="text-sm font-black text-foreground">
+                      {format(currentMonth, 'MMMM yyyy', { locale: th })}
+                    </p>
+                    <button
+                      onClick={() => navigateMonth('next')}
+                      className="size-9 rounded-full bg-white/90 dark:bg-white/10 flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white transition"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {viewMode === 'daily' ? (
+                <div className="flex flex-col gap-6">
+                  {dailyStats.totalEntries === 0 && (
+                    <div className="rounded-[28px] border border-dashed border-white/70 dark:border-white/10 bg-white/60 dark:bg-white/5 text-center text-sm text-muted-foreground py-10">
+                      ยังไม่มีบันทึกในวันนี้
+                    </div>
+                  )}
+
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-100/70 via-white/80 to-white/60 opacity-90" />
+                      <div className="relative p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="size-11 rounded-2xl bg-amber-100/80 dark:bg-amber-900/20 flex items-center justify-center">
+                              <Utensils className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Feeding</p>
+                              <h3 className="text-lg font-black text-foreground">การกินนม</h3>
+                            </div>
+                          </div>
+                          <span className="text-xs font-semibold text-muted-foreground">{dailyStats.feedingCount} ครั้ง</span>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-xs font-semibold text-muted-foreground">ขวดนม</p>
+                            <p className="text-2xl font-black text-amber-600">{dailyStats.totalBottleMl}</p>
+                            <p className="text-xs text-muted-foreground">มล. • {dailyStats.bottleCount} ครั้ง</p>
+                          </div>
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-xs font-semibold text-muted-foreground">เข้าเต้า</p>
+                            <p className="text-2xl font-black text-amber-600">{dailyStats.totalBreastMinutes}</p>
+                            <p className="text-xs text-muted-foreground">นาที • {dailyStats.breastCount} ครั้ง</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/70 via-white/80 to-white/60 opacity-90" />
+                      <div className="relative p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="size-11 rounded-2xl bg-emerald-100/80 dark:bg-emerald-900/30 flex items-center justify-center">
+                              <Droplets className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Diaper</p>
+                              <h3 className="text-lg font-black text-foreground">ผ้าอ้อม</h3>
+                            </div>
+                          </div>
+                          <span className="text-xs font-semibold text-muted-foreground">{dailyStats.diaperCount} ครั้ง</span>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
+                            <p className="text-2xl font-black text-emerald-600">{dailyStats.peeCount}</p>
+                            <p className="text-xs text-muted-foreground mt-1">💧 ฉี่</p>
+                          </div>
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
+                            <p className="text-2xl font-black text-emerald-600">{dailyStats.pooCount}</p>
+                            <p className="text-xs text-muted-foreground mt-1">💩 อึ</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/70 via-white/80 to-white/60 opacity-90" />
+                      <div className="relative p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="size-11 rounded-2xl bg-indigo-100/80 dark:bg-indigo-900/30 flex items-center justify-center">
+                              <Moon className="w-5 h-5 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Sleep</p>
+                              <h3 className="text-lg font-black text-foreground">การนอน</h3>
+                            </div>
+                          </div>
+                          <span className="text-xs font-semibold text-muted-foreground">{dailyStats.sleepCount} ครั้ง</span>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-xs font-semibold text-muted-foreground">เวลารวม</p>
+                            <p className="text-2xl font-black text-indigo-600">
+                              {sleepHours}h {sleepMins}m
+                            </p>
+                            <p className="text-xs text-muted-foreground">วันนี้</p>
+                          </div>
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-xs font-semibold text-muted-foreground">เฉลี่ย/ครั้ง</p>
+                            <p className="text-2xl font-black text-indigo-600">
+                              {dailyStats.sleepCount > 0
+                                ? Math.round(dailyStats.sleepMinutes / dailyStats.sleepCount)
+                                : 0}
+                            </p>
+                            <p className="text-xs text-muted-foreground">นาที</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                      <div className="absolute inset-0 bg-gradient-to-br from-rose-100/70 via-white/80 to-white/60 opacity-90" />
+                      <div className="relative p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="size-11 rounded-2xl bg-rose-100/80 dark:bg-rose-900/30 flex items-center justify-center">
+                              <Milk className="w-5 h-5 text-rose-500" />
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Pumping</p>
+                              <h3 className="text-lg font-black text-foreground">ปั๊มนม</h3>
+                            </div>
+                          </div>
+                          <span className="text-xs font-semibold text-muted-foreground">{dailyStats.pumpCount} ครั้ง</span>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-xs font-semibold text-muted-foreground">ปริมาณรวม</p>
+                            <p className="text-2xl font-black text-rose-500">{dailyStats.pumpMl}</p>
+                            <p className="text-xs text-muted-foreground">มล.</p>
+                          </div>
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-xs font-semibold text-muted-foreground">เวลาปั๊ม</p>
+                            <p className="text-2xl font-black text-rose-500">
+                              {pumpHours > 0 ? `${pumpHours}h ${pumpMins}m` : `${pumpMins}m`}
+                            </p>
+                            <p className="text-xs text-muted-foreground">รวมทั้งหมด</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid gap-6 lg:grid-cols-3">
+                  <div className="lg:col-span-2 rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] p-6">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Calendar</p>
+                        <h3 className="text-lg font-black text-foreground">ปฏิทินกิจกรรม</h3>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <span className="size-2 rounded-full bg-amber-400" />
+                          กินนม
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <span className="size-2 rounded-full bg-emerald-400" />
+                          ผ้าอ้อม
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <span className="size-2 rounded-full bg-indigo-400" />
+                          นอน
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <span className="size-2 rounded-full bg-rose-400" />
+                          ปั๊มนม
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1 mb-3">
+                      {['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'].map((day) => (
+                        <div key={day} className="text-center text-xs font-semibold text-muted-foreground py-2">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1">
+                      {Array.from({ length: startOfMonth(currentMonth).getDay() }).map((_, i) => (
+                        <div key={`empty-${i}`} className="aspect-square" />
+                      ))}
+
+                      {monthlyStats.map((day, i) => {
+                        const isSelected = isSameDay(day.date, selectedDate);
+                        const baseClass =
+                          'aspect-square rounded-2xl flex flex-col items-center justify-center border text-xs font-semibold transition-all';
+                        const stateClass = isToday(day.date)
+                          ? 'bg-primary text-primary-foreground border-primary/60 shadow-lg'
+                          : isSelected
+                            ? 'bg-primary/15 border-primary/40 text-primary'
+                            : 'bg-white/80 dark:bg-white/5 border-white/70 dark:border-white/10 text-foreground hover:bg-white/90 dark:hover:bg-white/10';
+
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              setSelectedDate(day.date);
+                              setViewMode('daily');
+                            }}
+                            className={`${baseClass} ${stateClass}`}
+                          >
+                            <span className="text-sm font-bold">{format(day.date, 'd')}</span>
+                            {day.hasData && (
+                              <div className="flex gap-0.5 mt-1">
+                                {day.feedingCount > 0 && <span className="size-1.5 rounded-full bg-amber-400" />}
+                                {day.diaperCount > 0 && <span className="size-1.5 rounded-full bg-emerald-400" />}
+                                {day.sleepCount > 0 && <span className="size-1.5 rounded-full bg-indigo-400" />}
+                                {day.pumpCount > 0 && <span className="size-1.5 rounded-full bg-rose-400" />}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] p-6">
+                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Summary</p>
+                    <h3 className="text-lg font-black text-foreground">
+                      สรุปเดือน {format(currentMonth, 'MMMM', { locale: th })}
+                    </h3>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="rounded-2xl bg-amber-50/70 dark:bg-amber-900/20 p-3">
+                        <p className="text-xs text-muted-foreground">กินนม</p>
+                        <p className="text-2xl font-black text-amber-600">{monthlyTotals.feedingCount}</p>
+                        <p className="text-xs text-muted-foreground">ครั้ง</p>
+                      </div>
+                      <div className="rounded-2xl bg-emerald-50/70 dark:bg-emerald-900/20 p-3">
+                        <p className="text-xs text-muted-foreground">ผ้าอ้อม</p>
+                        <p className="text-2xl font-black text-emerald-600">{monthlyTotals.diaperCount}</p>
+                        <p className="text-xs text-muted-foreground">ครั้ง</p>
+                      </div>
+                      <div className="rounded-2xl bg-indigo-50/70 dark:bg-indigo-900/20 p-3">
+                        <p className="text-xs text-muted-foreground">การนอน</p>
+                        <p className="text-2xl font-black text-indigo-600">
+                          {monthSleepHours}h {monthSleepMins}m
+                        </p>
+                        <p className="text-xs text-muted-foreground">รวม</p>
+                      </div>
+                      <div className="rounded-2xl bg-rose-50/70 dark:bg-rose-900/20 p-3">
+                        <p className="text-xs text-muted-foreground">ปั๊มนม</p>
+                        <p className="text-2xl font-black text-rose-500">{monthlyTotals.pumpMl}</p>
+                        <p className="text-xs text-muted-foreground">มล.</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-2xl bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 p-4 text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between">
+                        <span>นมขวดรวม</span>
+                        <span className="font-semibold text-foreground">{monthlyTotals.totalBottleMl} มล.</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <span>เข้าเต้ารวม</span>
+                        <span className="font-semibold text-foreground">{monthlyTotals.totalBreastMinutes} นาที</span>
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <span>จำนวนบันทึก</span>
+                        <span className="font-semibold text-foreground">{monthlyTotals.totalEntries} รายการ</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </motion.div>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, AlertTriangle, Play, Pause, RotateCcw } from 'lucide-react';
 import { FeedingDetails } from '@/types/baby';
 import { roundToNearest30, formatTime } from '@/lib/babyUtils';
@@ -101,6 +101,29 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
 
   // Bottle fill calculation
   const fillPercent = Math.min((amount / 300) * 100, 100);
+  const milkPalette =
+    bottleContent === 'formula'
+      ? {
+          base: '#FFF3BF',
+          mid: '#FDE68A',
+          foam: '#FFF7D6',
+          bubble: '#FFE9A3',
+          highlight: '#FFFDF6',
+        }
+      : {
+          base: '#FFE8D6',
+          mid: '#FAD2B0',
+          foam: '#FFF1E2',
+          bubble: '#FDCBA8',
+          highlight: '#FFF7ED',
+        };
+  const bottleTilt = dragDirection === 'up' ? -3 : dragDirection === 'down' ? 3 : 0;
+  const dragHint =
+    dragDirection === 'up'
+      ? 'เพิ่มปริมาณ'
+      : dragDirection === 'down'
+        ? 'ลดปริมาณ'
+        : 'ลากขึ้น-ลงเพื่อปรับปริมาณ';
 
   return (
     <motion.div
@@ -199,8 +222,14 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                 </motion.div>
 
                 {/* Cute Cartoon Bottle Container with Drag */}
-                <div 
+                <motion.div 
                   className="relative touch-none select-none cursor-ns-resize"
+                  animate={isDragging ? { y: 0 } : { y: [0, -6, 0] }}
+                  transition={
+                    isDragging
+                      ? { type: 'spring', stiffness: 220, damping: 18 }
+                      : { duration: 4, repeat: Infinity, ease: 'easeInOut' }
+                  }
                   onMouseDown={(e) => {
                     const startY = e.clientY;
                     const startAmount = amount;
@@ -240,6 +269,7 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                     setIsDragging(true);
                     
                     const handleTouchMove = (moveEvent: TouchEvent) => {
+                      moveEvent.preventDefault();
                       const currentY = moveEvent.touches[0].clientY;
                       const deltaY = startY - currentY;
                       const deltaAmount = Math.round(deltaY * 1.5);
@@ -266,34 +296,47 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                     document.addEventListener('touchend', handleTouchEnd);
                   }}
                 >
-                  <svg 
-                    width="180" 
-                    height="320" 
-                    viewBox="0 0 120 240" 
-                    className="drop-shadow-2xl"
+                  <motion.div
+                    className="origin-bottom"
+                    animate={{ rotate: bottleTilt, scale: isDragging ? 1.03 : 1 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 20 }}
                   >
+                    <svg 
+                      width="180" 
+                      height="320" 
+                      viewBox="0 0 120 240" 
+                      className="drop-shadow-2xl"
+                    >
                     <defs>
                       {/* Mask สำหรับ clip น้ำ */}
                       <clipPath id="bottleBodyClip">
                         <rect x="25" y="65" width="70" height="155" rx="12" />
                       </clipPath>
                       
-                      {/* สีน้ำนมแบบชั้นเดียว */}
-                      <linearGradient id="cuteMillkGradient" x1="0%" y1="0%" x2="0%" y2="0%">
-                        <stop offset="0%" stopColor={bottleContent === 'formula' ? '#FDE68A' : '#FFEDD5'} />
+                      {/* Milk gradient */}
+                      <linearGradient id="milkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor={milkPalette.highlight} />
+                        <stop offset="55%" stopColor={milkPalette.base} />
+                        <stop offset="100%" stopColor={milkPalette.mid} />
+                      </linearGradient>
+
+                      {/* Glass highlight */}
+                      <linearGradient id="glassHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.55" />
+                        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
                       </linearGradient>
 
                       {/* Gradient ขวด - ATNN Sky Color */}
                       <linearGradient id="bottleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#C5D5F0" />
-                        <stop offset="50%" stopColor="#A5B7E5" />
+                        <stop offset="0%" stopColor="#E3ECFF" />
+                        <stop offset="50%" stopColor="#B9C7F2" />
                         <stop offset="100%" stopColor="#8BA3D9" />
                       </linearGradient>
 
-                      {/* Gradient จุกนม - ATNN Sky Color darker */}
+                      {/* Gradient จุกนม - warm silicone */}
                       <linearGradient id="nippleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#A5B7E5" />
-                        <stop offset="100%" stopColor="#7A94CC" />
+                        <stop offset="0%" stopColor="#F7D2B8" />
+                        <stop offset="100%" stopColor="#E6A983" />
                       </linearGradient>
 
                       {/* Bubble animation */}
@@ -320,6 +363,16 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                       stroke="#7A94CC"
                       strokeWidth="3"
                     />
+                    {/* Glass highlight */}
+                    <rect 
+                      x="32" 
+                      y="72" 
+                      width="10" 
+                      height="130" 
+                      rx="6" 
+                      fill="url(#glassHighlight)"
+                      opacity="0.6"
+                    />
 
                     {/* น้ำนมใน Bottle - Animated */}
                     <g clipPath="url(#bottleBodyClip)">
@@ -328,29 +381,30 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                         const bottleHeight = 155;
                         const liquidHeight = (fillPercent / 100) * bottleHeight;
                         const liquidY = bottleTop + bottleHeight - liquidHeight;
-                        const milkColor = bottleContent === 'formula' ? '#FFFEF8' : '#FFFBF5';
-                        const waveColor = bottleContent === 'formula' ? '#FFF9E6' : '#FFF7ED';
+                        const milkTop = liquidY + 3;
+                        const foamColor = milkPalette.foam;
+                        const bubbleColor = milkPalette.bubble;
                         
                         return (
                           <>
-                            {/* น้ำนมหลัก พร้อม wave สมจริง */}
-                            <rect
+                            {/* น้ำนมหลัก */}
+                            <motion.rect
                               x="25"
-                              y={liquidY + 3}
                               width="70"
-                              height={liquidHeight}
-                              fill={milkColor}
+                              animate={{ y: milkTop, height: Math.max(0, liquidHeight) }}
+                              transition={{ type: 'spring', stiffness: 180, damping: 20 }}
+                              fill="url(#milkGradient)"
                             />
                             {/* คลื่นผิวน้ำนม - สมจริง */}
                             <motion.path 
-                              fill={milkColor}
+                              fill={foamColor}
                               initial={false}
                               animate={{
                                 d: [
-                                  `M25 ${liquidY + 3} C32 ${liquidY + 1} 38 ${liquidY + 4} 45 ${liquidY + 2} S55 ${liquidY + 5} 60 ${liquidY + 3} S72 ${liquidY + 1} 80 ${liquidY + 4} S90 ${liquidY + 2} 95 ${liquidY + 3} L95 ${liquidY + 8} L25 ${liquidY + 8} Z`,
-                                  `M25 ${liquidY + 2} C30 ${liquidY + 4} 40 ${liquidY + 1} 50 ${liquidY + 3} S58 ${liquidY} 65 ${liquidY + 4} S78 ${liquidY + 2} 85 ${liquidY + 1} S92 ${liquidY + 3} 95 ${liquidY + 2} L95 ${liquidY + 8} L25 ${liquidY + 8} Z`,
-                                  `M25 ${liquidY + 4} C35 ${liquidY + 2} 42 ${liquidY + 5} 48 ${liquidY + 1} S60 ${liquidY + 4} 68 ${liquidY + 2} S75 ${liquidY + 5} 82 ${liquidY + 3} S88 ${liquidY + 1} 95 ${liquidY + 4} L95 ${liquidY + 8} L25 ${liquidY + 8} Z`,
-                                  `M25 ${liquidY + 3} C32 ${liquidY + 1} 38 ${liquidY + 4} 45 ${liquidY + 2} S55 ${liquidY + 5} 60 ${liquidY + 3} S72 ${liquidY + 1} 80 ${liquidY + 4} S90 ${liquidY + 2} 95 ${liquidY + 3} L95 ${liquidY + 8} L25 ${liquidY + 8} Z`
+                                  `M25 ${milkTop} C32 ${milkTop - 2} 38 ${milkTop + 1} 45 ${milkTop - 1} S55 ${milkTop + 2} 60 ${milkTop} S72 ${milkTop - 2} 80 ${milkTop + 1} S90 ${milkTop - 1} 95 ${milkTop} L95 ${milkTop + 6} L25 ${milkTop + 6} Z`,
+                                  `M25 ${milkTop - 1} C30 ${milkTop + 1} 40 ${milkTop - 2} 50 ${milkTop} S58 ${milkTop - 3} 65 ${milkTop + 2} S78 ${milkTop} 85 ${milkTop - 2} S92 ${milkTop + 1} 95 ${milkTop - 1} L95 ${milkTop + 6} L25 ${milkTop + 6} Z`,
+                                  `M25 ${milkTop + 1} C35 ${milkTop - 1} 42 ${milkTop + 2} 48 ${milkTop - 2} S60 ${milkTop + 1} 68 ${milkTop - 1} S75 ${milkTop + 2} 82 ${milkTop} S88 ${milkTop - 2} 95 ${milkTop + 1} L95 ${milkTop + 6} L25 ${milkTop + 6} Z`,
+                                  `M25 ${milkTop} C32 ${milkTop - 2} 38 ${milkTop + 1} 45 ${milkTop - 1} S55 ${milkTop + 2} 60 ${milkTop} S72 ${milkTop - 2} 80 ${milkTop + 1} S90 ${milkTop - 1} 95 ${milkTop} L95 ${milkTop + 6} L25 ${milkTop + 6} Z`
                                 ]
                               }}
                               transition={{ 
@@ -367,7 +421,8 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                                   cx="42"
                                   cy={liquidY + liquidHeight * 0.4}
                                   r="6"
-                                  fill={waveColor}
+                                  fill={bubbleColor}
+                                  filter="url(#glow)"
                                   opacity="0.5"
                                   animate={{ 
                                     y: [-8, 8, -8],
@@ -383,7 +438,8 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                                   cx="72"
                                   cy={liquidY + liquidHeight * 0.6}
                                   r="4"
-                                  fill={waveColor}
+                                  fill={bubbleColor}
+                                  filter="url(#glow)"
                                   opacity="0.4"
                                   animate={{ 
                                     y: [-5, 10, -5],
@@ -400,7 +456,8 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                                   cx="55"
                                   cy={liquidY + liquidHeight * 0.75}
                                   r="5"
-                                  fill={waveColor}
+                                  fill={bubbleColor}
+                                  filter="url(#glow)"
                                   opacity="0.45"
                                   animate={{ 
                                     y: [-6, 6, -6],
@@ -421,7 +478,7 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                     </g>
 
                     {/* ขีดวัดระดับ (Cute rounded) */}
-                    <g stroke="#92400E" strokeWidth="2" strokeLinecap="round" opacity="0.4">
+                    <g stroke="#7C8FB8" strokeWidth="2" strokeLinecap="round" opacity="0.45">
                       <line x1="35" y1="200" x2="55" y2="200" />
                       <line x1="40" y1="175" x2="50" y2="175" />
                       <line x1="35" y1="150" x2="55" y2="150" />
@@ -445,11 +502,11 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                       height="16" 
                       rx="4" 
                       fill="url(#bottleGradient)"
-                      stroke="#D97706"
+                      stroke="#7C8FB8"
                       strokeWidth="2"
                     />
                     {/* ลายเส้นบนฝา */}
-                    <g stroke="#D97706" strokeWidth="1.5" opacity="0.5">
+                    <g stroke="#7C8FB8" strokeWidth="1.5" opacity="0.5">
                       <line x1="35" y1="56" x2="35" y2="64" />
                       <line x1="45" y1="56" x2="45" y2="64" />
                       <line x1="55" y1="56" x2="55" y2="64" />
@@ -462,30 +519,32 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                     <path 
                       d="M42 52 Q45 42 52 35 Q60 25 68 35 Q75 42 78 52 Z" 
                       fill="url(#nippleGradient)"
-                      stroke="#B45309"
+                      stroke="#C07A52"
                       strokeWidth="2"
                     />
                     {/* รูจุกนม */}
-                    <ellipse cx="60" cy="32" rx="4" ry="2" fill="#92400E" opacity="0.6" />
+                    <ellipse cx="60" cy="32" rx="4" ry="2" fill="#B4683F" opacity="0.6" />
 
                     {/* Shine effect on bottle */}
-                    <rect 
+                    <motion.rect 
                       x="32" 
                       y="75" 
                       width="8" 
                       height="40" 
                       rx="4" 
                       fill="white" 
-                      opacity="0.25"
+                      animate={{ x: [32, 36, 32], opacity: [0.15, 0.3, 0.15] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                     />
-                    <rect 
+                    <motion.rect 
                       x="32" 
                       y="130" 
                       width="6" 
                       height="20" 
                       rx="3" 
                       fill="white" 
-                      opacity="0.2"
+                      animate={{ x: [34, 30, 34], opacity: [0.12, 0.25, 0.12] }}
+                      transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
                     />
 
                     {/* Cute face on bottle (optional kawaii style) */}
@@ -495,16 +554,21 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
                       <path d="M55 150 Q60 155 65 150" stroke="hsl(var(--foreground))" strokeWidth="2" fill="none" strokeLinecap="round" />
                     </g>
                   </svg>
+                  </motion.div>
                   
                   {/* Drag hint with animation */}
                   <motion.div 
-                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground bg-card/80 px-3 py-1 rounded-full border border-border"
+                    className={`absolute -bottom-2 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full border ${
+                      isDragging
+                        ? 'text-foreground bg-feeding/15 border-feeding/30'
+                        : 'text-muted-foreground bg-card/80 border-border'
+                    }`}
                     animate={{ y: [0, -3, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    ลากขึ้น-ลงเพื่อปรับปริมาณ
+                    {dragHint}
                   </motion.div>
-                </div>
+                </motion.div>
               </div>
             </div>
           </>
