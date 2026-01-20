@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Droplets, CircleDot, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { DiaperDetails, POO_COLORS, POO_TEXTURES } from '@/types/baby';
 import { roundToNearest30, formatTime } from '@/lib/babyUtils';
 
@@ -10,6 +10,60 @@ interface DiaperModalProps {
 }
 
 type DiaperStatus = 'clean' | 'pee' | 'poo' | 'mixed';
+
+const getPooFillColor = (pooColor: string) => {
+  return POO_COLORS.find((color) => color.id === pooColor)?.color || '#8B4513';
+};
+
+const getTextureVisual = (id: string, fillColor: string) => {
+  switch (id) {
+    case 'runny':
+      return (
+        <svg viewBox="0 0 40 40" className="w-10 h-10">
+          <ellipse cx="20" cy="28" rx="16" ry="6" fill={fillColor} opacity="0.6" />
+          <ellipse cx="20" cy="26" rx="12" ry="4" fill={fillColor} opacity="0.8" />
+          <circle cx="12" cy="24" r="2" fill={fillColor} opacity="0.5" />
+          <circle cx="28" cy="25" r="1.5" fill={fillColor} opacity="0.5" />
+        </svg>
+      );
+    case 'mushy':
+      return (
+        <svg viewBox="0 0 40 40" className="w-10 h-10">
+          <ellipse cx="20" cy="28" rx="14" ry="8" fill={fillColor} />
+          <ellipse cx="18" cy="22" rx="8" ry="5" fill={fillColor} />
+          <ellipse cx="24" cy="20" rx="5" ry="4" fill={fillColor} />
+        </svg>
+      );
+    case 'sticky':
+      return (
+        <svg viewBox="0 0 40 40" className="w-10 h-10">
+          <path d="M10 32 Q12 20 20 18 Q28 20 30 32 Z" fill={fillColor} />
+          <ellipse cx="20" cy="16" rx="6" ry="4" fill={fillColor} />
+          <circle cx="20" cy="12" r="3" fill={fillColor} />
+        </svg>
+      );
+    case 'solid':
+      return (
+        <svg viewBox="0 0 40 40" className="w-10 h-10">
+          <path d="M12 32 C12 28 14 24 20 22 C26 24 28 28 28 32 Z" fill={fillColor} />
+          <ellipse cx="20" cy="20" rx="7" ry="5" fill={fillColor} />
+          <ellipse cx="20" cy="14" rx="5" ry="4" fill={fillColor} />
+          <circle cx="20" cy="10" r="3" fill={fillColor} />
+        </svg>
+      );
+    case 'hard':
+      return (
+        <svg viewBox="0 0 40 40" className="w-10 h-10">
+          <circle cx="14" cy="28" r="5" fill={fillColor} />
+          <circle cx="26" cy="28" r="5" fill={fillColor} />
+          <circle cx="20" cy="20" r="5" fill={fillColor} />
+          <circle cx="20" cy="12" r="4" fill={fillColor} />
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
 
 const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
   const [status, setStatus] = useState<DiaperStatus>('clean');
@@ -41,6 +95,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
   };
 
   const showPooOptions = status === 'poo' || status === 'mixed';
+  const pooFillColor = getPooFillColor(pooColor);
 
   return (
     <motion.div
@@ -50,64 +105,64 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
       className="fixed inset-0 z-50 bg-background flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-border">
         <button onClick={onClose} className="p-2 -ml-2">
           <X size={24} className="text-foreground" />
         </button>
-        <h2 className="text-lg font-bold text-foreground">เปลี่ยนผ้าอ้อม</h2>
+        <h2 className="text-xl font-bold text-foreground">เปลี่ยนผ้าอ้อม</h2>
         <div className="w-10" />
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6">
         {/* Status Selection */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-muted-foreground mb-3 block">
+          <p className="text-base font-semibold text-muted-foreground mb-3 block">
             สถานะ
-          </label>
-          <div className="grid grid-cols-4 gap-2">
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <button
               onClick={() => setStatus('clean')}
-              className={`py-4 rounded-2xl font-semibold flex flex-col items-center gap-2 transition-all ${
+              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${
                 status === 'clean'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
                   : 'bg-card border border-border text-muted-foreground'
               }`}
             >
               <span className="text-2xl">✨</span>
-              <span className="text-xs">สะอาด</span>
+              <span className="text-sm">สะอาด</span>
             </button>
             <button
               onClick={() => setStatus('pee')}
-              className={`py-4 rounded-2xl font-semibold flex flex-col items-center gap-2 transition-all ${
+              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${
                 status === 'pee'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
                   : 'bg-card border border-border text-muted-foreground'
               }`}
             >
               <span className="text-2xl">💧</span>
-              <span className="text-xs">ฉี่</span>
+              <span className="text-sm">ฉี่</span>
             </button>
             <button
               onClick={() => setStatus('poo')}
-              className={`py-4 rounded-2xl font-semibold flex flex-col items-center gap-2 transition-all ${
+              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${
                 status === 'poo'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
                   : 'bg-card border border-border text-muted-foreground'
               }`}
             >
               <span className="text-2xl">💩</span>
-              <span className="text-xs">อึ</span>
+              <span className="text-sm">อึ</span>
             </button>
             <button
               onClick={() => setStatus('mixed')}
-              className={`py-4 rounded-2xl font-semibold flex flex-col items-center gap-2 transition-all ${
+              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${
                 status === 'mixed'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
                   : 'bg-card border border-border text-muted-foreground'
               }`}
             >
               <span className="text-2xl">💧💩</span>
-              <span className="text-xs">ฉี่+อึ</span>
+              <span className="text-sm">ฉี่+อึ</span>
             </button>
           </div>
         </div>
@@ -119,9 +174,9 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
             animate={{ opacity: 1, height: 'auto' }}
             className="mb-6"
           >
-            <label className="text-sm font-medium text-muted-foreground mb-3 block">
+            <p className="text-base font-semibold text-muted-foreground mb-3 block">
               สีอุจจาระ
-            </label>
+            </p>
             <div className="flex gap-3 flex-wrap">
               {POO_COLORS.map((color) => (
                 <button
@@ -134,7 +189,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
                   }`}
                 >
                   <div
-                    className="w-10 h-10 rounded-full border-2 border-border"
+                    className="w-12 h-12 rounded-full border-2 border-border"
                     style={{ backgroundColor: color.color }}
                   />
                   {pooColor === color.id && (
@@ -145,7 +200,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
                 </button>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               {pooColor && POO_COLORS.find(c => c.id === pooColor)?.label}
             </p>
           </motion.div>
@@ -158,76 +213,25 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
             animate={{ opacity: 1, height: 'auto' }}
             className="mb-6"
           >
-            <label className="text-sm font-medium text-muted-foreground mb-3 block">
+            <p className="text-base font-semibold text-muted-foreground mb-3 block">
               ลักษณะ
-            </label>
-            <div className="grid grid-cols-5 gap-3">
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {POO_TEXTURES.map((texture) => {
-                // Visual representation of poo texture
-                const getTextureVisual = (id: string) => {
-                  switch (id) {
-                    case 'runny':
-                      return (
-                        <svg viewBox="0 0 40 40" className="w-10 h-10">
-                          <ellipse cx="20" cy="28" rx="16" ry="6" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} opacity="0.6" />
-                          <ellipse cx="20" cy="26" rx="12" ry="4" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} opacity="0.8" />
-                          <circle cx="12" cy="24" r="2" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} opacity="0.5" />
-                          <circle cx="28" cy="25" r="1.5" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} opacity="0.5" />
-                        </svg>
-                      );
-                    case 'mushy':
-                      return (
-                        <svg viewBox="0 0 40 40" className="w-10 h-10">
-                          <ellipse cx="20" cy="28" rx="14" ry="8" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <ellipse cx="18" cy="22" rx="8" ry="5" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <ellipse cx="24" cy="20" rx="5" ry="4" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                        </svg>
-                      );
-                    case 'sticky':
-                      return (
-                        <svg viewBox="0 0 40 40" className="w-10 h-10">
-                          <path d="M10 32 Q12 20 20 18 Q28 20 30 32 Z" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <ellipse cx="20" cy="16" rx="6" ry="4" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <circle cx="20" cy="12" r="3" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                        </svg>
-                      );
-                    case 'solid':
-                      return (
-                        <svg viewBox="0 0 40 40" className="w-10 h-10">
-                          <path d="M12 32 C12 28 14 24 20 22 C26 24 28 28 28 32 Z" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <ellipse cx="20" cy="20" rx="7" ry="5" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <ellipse cx="20" cy="14" rx="5" ry="4" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <circle cx="20" cy="10" r="3" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                        </svg>
-                      );
-                    case 'hard':
-                      return (
-                        <svg viewBox="0 0 40 40" className="w-10 h-10">
-                          <circle cx="14" cy="28" r="5" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <circle cx="26" cy="28" r="5" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <circle cx="20" cy="20" r="5" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                          <circle cx="20" cy="12" r="4" fill={pooColor ? POO_COLORS.find(c => c.id === pooColor)?.color || '#8B4513' : '#8B4513'} />
-                        </svg>
-                      );
-                    default:
-                      return null;
-                  }
-                };
-
                 return (
                   <button
                     key={texture.id}
                     onClick={() => setPooTexture(texture.id)}
-                    className={`flex flex-col items-center py-3 px-2 rounded-xl transition-all ${
+                    className={`flex flex-col items-center py-4 px-3 rounded-xl transition-all ${
                       pooTexture === texture.id
                         ? 'bg-diaper/20 border-2 border-diaper'
                         : 'bg-card border border-border'
                     }`}
                   >
                     <div className="mb-2">
-                      {getTextureVisual(texture.id)}
+                      {getTextureVisual(texture.id, pooFillColor)}
                     </div>
-                    <span className={`text-xs font-medium text-center ${
+                    <span className={`text-sm font-medium text-center ${
                       pooTexture === texture.id ? 'text-foreground' : 'text-muted-foreground'
                     }`}>
                       {texture.label}
@@ -241,24 +245,24 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
 
         {/* Time Adjuster */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-muted-foreground mb-2 block">
+          <p className="text-base font-semibold text-muted-foreground mb-2 block">
             เวลา
-          </label>
+          </p>
           <div className="flex items-center gap-3 bg-card rounded-2xl border border-border p-3">
             <button
               onClick={() => adjustTime(-30)}
-              className="px-3 py-1.5 rounded-lg bg-secondary text-sm font-medium text-muted-foreground"
+              className="px-4 py-2.5 rounded-xl bg-secondary text-base font-semibold text-muted-foreground"
             >
               -30น.
             </button>
             <div className="flex-1 text-center">
-              <span className="text-xl font-bold text-foreground">
+              <span className="text-2xl font-bold text-foreground">
                 {formatTime(startTime)}
               </span>
             </div>
             <button
               onClick={() => adjustTime(30)}
-              className="px-3 py-1.5 rounded-lg bg-secondary text-sm font-medium text-muted-foreground"
+              className="px-4 py-2.5 rounded-xl bg-secondary text-base font-semibold text-muted-foreground"
             >
               +30น.
             </button>
@@ -266,7 +270,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
           {/* Start Now Button */}
           <button
             onClick={() => setStartTime(new Date())}
-            className="w-full mt-3 py-2.5 rounded-xl bg-diaper/20 text-diaper font-medium text-sm hover:bg-diaper/30 transition-all"
+            className="w-full mt-3 py-3 rounded-xl bg-diaper/20 text-diaper font-semibold text-base hover:bg-diaper/30 transition-all"
           >
             ⏱️ เริ่มตอนนี้
           </button>
@@ -274,15 +278,16 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
 
         {/* Notes */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-muted-foreground mb-2 block">
+          <label htmlFor="diaper-notes" className="text-base font-semibold text-muted-foreground mb-2 block">
             หมายเหตุ (ไม่บังคับ)
           </label>
           <textarea
+            id="diaper-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="เพิ่มบันทึกเพิ่มเติม..."
-            className="w-full bg-card border border-border rounded-2xl p-4 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-diaper/50"
-            rows={3}
+            className="w-full bg-card border border-border rounded-2xl p-4 text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-diaper/50"
+            rows={4}
           />
         </div>
       </div>
@@ -291,7 +296,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
       <div className="p-6 border-t border-border bg-card">
         <button
           onClick={handleSave}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-glow-primary active:scale-[0.98] transition-transform"
+          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-xl shadow-glow-primary active:scale-[0.98] transition-transform"
         >
           บันทึก
         </button>

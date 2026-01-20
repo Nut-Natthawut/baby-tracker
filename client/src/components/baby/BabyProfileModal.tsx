@@ -45,11 +45,11 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
       className="fixed inset-0 z-50 bg-background flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-border">
         <button onClick={onClose} className="p-2 -ml-2">
           <X size={24} className="text-foreground" />
         </button>
-        <h2 className="text-lg font-bold text-foreground">
+        <h2 className="text-xl font-bold text-foreground">
           {baby ? 'แก้ไขข้อมูลลูก' : 'เพิ่มข้อมูลลูก'}
         </h2>
         <div className="w-10" />
@@ -67,13 +67,13 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
 
         {/* Gender Selection */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-muted-foreground mb-3 block">
+          <p className="text-base font-semibold text-muted-foreground mb-3 block">
             เพศ
-          </label>
-          <div className="grid grid-cols-2 gap-4">
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
               onClick={() => setGender('boy')}
-              className={`py-6 px-4 rounded-3xl font-semibold flex flex-col items-center gap-3 transition-all border-2 ${gender === 'boy'
+              className={`py-7 px-4 rounded-3xl text-base font-semibold flex flex-col items-center gap-3 transition-all border-2 ${gender === 'boy'
                   ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-500/30'
                   : 'bg-card border-border text-muted-foreground hover:border-blue-300'
                 }`}
@@ -93,11 +93,11 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
                 <ellipse cx="72" cy="56" rx="6" ry="4" fill="#93C5FD" opacity="0.6" />
                 <path d="M42 62 Q50 70 58 62" stroke="#D4A574" strokeWidth="2.5" fill="none" strokeLinecap="round" />
               </svg>
-              <span className="text-base">ผู้ชาย</span>
+              <span className="text-lg">ผู้ชาย</span>
             </button>
             <button
               onClick={() => setGender('girl')}
-              className={`py-6 px-4 rounded-3xl font-semibold flex flex-col items-center gap-3 transition-all border-2 ${gender === 'girl'
+              className={`py-7 px-4 rounded-3xl text-base font-semibold flex flex-col items-center gap-3 transition-all border-2 ${gender === 'girl'
                   ? 'bg-pink-500 text-white border-pink-400 shadow-lg shadow-pink-500/30'
                   : 'bg-card border-border text-muted-foreground hover:border-pink-300'
                 }`}
@@ -121,58 +121,61 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
                 <ellipse cx="72" cy="56" rx="6" ry="4" fill="#FBCFE8" opacity="0.7" />
                 <path d="M42 62 Q50 70 58 62" stroke="#D4A574" strokeWidth="2.5" fill="none" strokeLinecap="round" />
               </svg>
-              <span className="text-base">ผู้หญิง</span>
+              <span className="text-lg">ผู้หญิง</span>
             </button>
           </div>
         </div>
 
         {/* Name Input */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-muted-foreground mb-2 block">
+          <label htmlFor="baby-name" className="text-base font-semibold text-muted-foreground mb-2 block">
             ชื่อ *
           </label>
           <div className="relative">
             <User size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
+              id="baby-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="ชื่อลูกน้อย"
-              className="w-full bg-card border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full bg-card border border-border rounded-2xl py-4 pl-12 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
         </div>
 
         {/* Birth Date Input */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-muted-foreground mb-2 block">
+          <label htmlFor="baby-birthdate" className="text-base font-semibold text-muted-foreground mb-2 block">
             วันเกิด *
           </label>
           <div className="relative">
             <Calendar size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
+              id="baby-birthdate"
               type="date"
               value={birthDate}
               onChange={(e) => setBirthDate(e.target.value)}
-              className="w-full bg-card border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full bg-card border border-border rounded-2xl py-4 pl-12 pr-4 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
         </div>
 
         {/* Weight Input */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-muted-foreground mb-2 block">
+          <label htmlFor="baby-weight" className="text-base font-semibold text-muted-foreground mb-2 block">
             น้ำหนัก (กก.) - ไม่บังคับ
           </label>
           <div className="relative">
             <Scale size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
+              id="baby-weight"
               type="number"
               step="0.1"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
               placeholder="เช่น 3.5"
-              className="w-full bg-card border border-border rounded-2xl py-4 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full bg-card border border-border rounded-2xl py-4 pl-12 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
         </div>
@@ -183,7 +186,7 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
         <button
           onClick={handleSave}
           disabled={!isValid}
-          className={`w-full py-4 rounded-2xl font-bold text-lg transition-all active:scale-[0.98] ${isValid
+          className={`w-full py-4 rounded-2xl font-bold text-xl transition-all active:scale-[0.98] ${isValid
               ? 'bg-primary text-primary-foreground shadow-glow-primary'
               : 'bg-muted text-muted-foreground cursor-not-allowed'
             }`}

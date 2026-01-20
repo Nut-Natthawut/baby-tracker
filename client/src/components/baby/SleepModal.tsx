@@ -103,18 +103,18 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
         ))}
       </div>
 
-      <header className="relative z-10 flex items-center justify-between px-6 py-4">
+      <header className="relative z-10 flex items-center justify-between px-6 py-5">
         <button
           onClick={onClose}
-          className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
+          className="flex size-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
         >
           <X size={20} />
         </button>
         <div className="flex items-center gap-3 text-white">
-          <div className="size-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg">
+          <div className="size-11 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg">
             <Moon className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-white text-lg font-bold tracking-wide">Sleep & Dream</h2>
+          <h2 className="text-white text-xl font-bold tracking-wide">Sleep & Dream</h2>
         </div>
         <div className="w-10" />
       </header>
@@ -131,7 +131,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
             </h1>
             <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/10 w-fit mx-auto">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-white text-sm font-medium tracking-wide">กำลังบันทึกการนอน</span>
+              <span className="text-white text-base font-medium tracking-wide">กำลังบันทึกการนอน</span>
             </div>
           </motion.div>
 
@@ -142,11 +142,11 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
             style={clayCardStyle}
             className="p-6 md:p-8 flex flex-col items-center gap-4 w-full max-w-[520px]"
           >
-            <div className="flex items-center justify-center gap-2 md:gap-4 w-full">
+            <div className="flex items-center justify-center gap-3 md:gap-4 w-full">
               <div className="flex flex-col items-center gap-2">
                 <div
                   style={clayInsetStyle}
-                  className="relative w-20 h-24 md:w-24 md:h-32 rounded-2xl flex items-center justify-center overflow-hidden"
+                  className="relative w-24 h-28 md:w-28 md:h-36 rounded-2xl flex items-center justify-center overflow-hidden"
                 >
                   <div className="absolute inset-0 z-10 pointer-events-none" style={slotFadeStyle} />
                   <div className="flex flex-col items-center">
@@ -166,7 +166,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                     </span>
                   </div>
                 </div>
-                <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">Hours</span>
+                <span className="text-slate-500 font-bold text-sm uppercase tracking-wider">Hours</span>
               </div>
 
               <div className="text-slate-300 text-4xl font-bold mb-6">:</div>
@@ -174,7 +174,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
               <div className="flex flex-col items-center gap-2">
                 <div
                   style={clayInsetStyle}
-                  className="relative w-20 h-24 md:w-24 md:h-32 rounded-2xl flex items-center justify-center overflow-hidden"
+                  className="relative w-24 h-28 md:w-28 md:h-36 rounded-2xl flex items-center justify-center overflow-hidden"
                 >
                   <div className="absolute inset-0 z-10 pointer-events-none" style={slotFadeStyle} />
                   <div className="flex flex-col items-center">
@@ -194,7 +194,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                     </span>
                   </div>
                 </div>
-                <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">Mins</span>
+                <span className="text-slate-500 font-bold text-sm uppercase tracking-wider">Mins</span>
               </div>
 
               <div className="text-slate-300 text-4xl font-bold mb-6">:</div>
@@ -202,7 +202,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
               <div className="flex flex-col items-center gap-2">
                 <div
                   style={clayInsetStyle}
-                  className="relative w-20 h-24 md:w-24 md:h-32 rounded-2xl flex items-center justify-center overflow-hidden"
+                  className="relative w-24 h-28 md:w-28 md:h-36 rounded-2xl flex items-center justify-center overflow-hidden"
                 >
                   <div className="absolute inset-0 z-10 pointer-events-none" style={slotFadeStyle} />
                   <div className="flex flex-col items-center">
@@ -222,7 +222,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                     </span>
                   </div>
                 </div>
-                <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">Secs</span>
+                <span className="text-slate-500 font-bold text-sm uppercase tracking-wider">Secs</span>
               </div>
             </div>
 
@@ -230,7 +230,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
               <button
                 onClick={() => setDurationMinutes(Math.max(15, durationMinutes - 15))}
                 style={clayButtonStyle}
-                className="size-12 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
+                className="size-14 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
                 aria-label="ลดเวลา 15 นาที"
               >
                 <Minus size={20} />
@@ -238,13 +238,13 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
               <button
                 onClick={() => setDurationMinutes(Math.min(720, durationMinutes + 15))}
                 style={clayButtonStyle}
-                className="size-12 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
+                className="size-14 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
                 aria-label="เพิ่มเวลา 15 นาที"
               >
                 <Plus size={20} />
               </button>
             </div>
-            <p className="text-sm font-semibold text-slate-500">ระยะเวลาการนอน</p>
+            <p className="text-base font-semibold text-slate-500">ระยะเวลาการนอน</p>
           </motion.div>
 
           <motion.div
@@ -257,10 +257,10 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
             <button
               onClick={() => setEndTime(new Date())}
               style={clayButtonStyle}
-              className="relative z-10 size-36 md:size-40 rounded-full flex flex-col items-center justify-center gap-2 text-slate-700 active:scale-95 transition-transform"
+              className="relative z-10 size-40 md:size-44 rounded-full flex flex-col items-center justify-center gap-2 text-slate-700 active:scale-95 transition-transform"
             >
               <Moon className="w-12 h-12 text-primary drop-shadow-sm" />
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-500 group-hover:text-primary transition-colors">
+              <span className="text-sm font-bold uppercase tracking-widest text-slate-500 group-hover:text-primary transition-colors">
                 ตื่นแล้ว
               </span>
             </button>
@@ -272,19 +272,19 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                 <Moon className="w-6 h-6" />
               </div>
               <div className="flex-1">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">เวลาตื่น</span>
+                <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">เวลาตื่น</span>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-2xl font-extrabold text-slate-800">{formatTime(endTime)}</span>
+                  <span className="text-3xl font-extrabold text-slate-800">{formatTime(endTime)}</span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => adjustTime(-30)}
-                      className="px-3 py-1.5 rounded-full bg-white/90 text-slate-500 text-xs font-bold shadow-sm hover:bg-white transition"
+                      className="px-4 py-2 rounded-full bg-white/90 text-slate-500 text-sm font-bold shadow-sm hover:bg-white transition"
                     >
                       -30น.
                     </button>
                     <button
                       onClick={() => adjustTime(30)}
-                      className="px-3 py-1.5 rounded-full bg-white/90 text-slate-500 text-xs font-bold shadow-sm hover:bg-white transition"
+                      className="px-4 py-2 rounded-full bg-white/90 text-slate-500 text-sm font-bold shadow-sm hover:bg-white transition"
                     >
                       +30น.
                     </button>
@@ -299,16 +299,16 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                   <Moon className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">หมายเหตุ</span>
-                  <p className="text-sm font-medium text-slate-500">เพิ่มรายละเอียดการนอน</p>
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">หมายเหตุ</span>
+                  <p className="text-base font-medium text-slate-500">เพิ่มรายละเอียดการนอน</p>
                 </div>
               </div>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="เช่น หลับปุ๋ย, ตื่นมาร้อง..."
-                className="w-full bg-white/80 border border-white/60 rounded-2xl p-3 text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
-                rows={3}
+                className="w-full bg-white/80 border border-white/60 rounded-2xl p-3 text-base text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+                rows={4}
               />
             </div>
           </div>
@@ -318,7 +318,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
       <div className="relative z-10 px-6 pb-6">
         <button
           onClick={handleSave}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-lg active:scale-[0.98] transition-transform"
+          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-xl shadow-lg active:scale-[0.98] transition-transform"
         >
           บันทึก
         </button>

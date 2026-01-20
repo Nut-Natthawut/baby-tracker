@@ -75,8 +75,29 @@ function greeting() {
   return "สวัสดีตอนเย็น";
 }
 
+
 function mlToOz(ml: number) {
-  return ml / 29.5735;
+  // Removed as we are using ML now
+  return ml;
+}
+
+const DIAPER_BAR_KEYS = ["bar-1", "bar-2", "bar-3", "bar-4", "bar-5"];
+
+function getAmountMl(details: any) {
+  if (typeof details?.amountMl === "number") return details.amountMl;
+  if (typeof details?.amountOz === "number") return Math.round(details.amountOz * 29.5735);
+  return null;
+}
+
+function getRecentToneClass(tone: string) {
+  const map: Record<string, string> = {
+    blue: "bg-blue-100 dark:bg-blue-900/30 text-primary",
+    purple: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600",
+    orange: "bg-amber-100 dark:bg-amber-900/30 text-amber-600",
+    pink: "bg-rose-100 dark:bg-rose-900/30 text-rose-500",
+  };
+
+  return map[tone] ?? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600";
 }
 
 function formatDiaperType(input: any) {
@@ -206,6 +227,7 @@ const Index = () => {
         });
       }
     } catch (error) {
+      console.error("Error saving baby profile:", error);
       toast({
         title: "เกิดข้อผิดพลาด",
         description: "ระบบขัดข้อง กรุณาลองใหม่ภายหลัง",
@@ -237,7 +259,7 @@ const Index = () => {
   };
 
   const handleClearData = () => {
-    if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลทั้งหมด?")) {
+    if (globalThis.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลทั้งหมด?")) {
       clearData();
       setActiveModal(null);
       toast({
@@ -253,44 +275,97 @@ const Index = () => {
     const arr = Array.isArray(logs) ? [...logs] : [];
     // try sorting by createdAt / time / date
     arr.sort((a: any, b: any) => {
-      const da = safeDate(a?.createdAt ?? a?.time ?? a?.date) ?? new Date(0);
-      const db = safeDate(b?.createdAt ?? b?.time ?? b?.date) ?? new Date(0);
+      const da = safeDate(a?.timestamp ?? a?.createdAt ?? a?.time ?? a?.date) ?? new Date(0);
+      const db = safeDate(b?.timestamp ?? b?.createdAt ?? b?.time ?? b?.date) ?? new Date(0);
       return db.getTime() - da.getTime();
     });
 
     return arr.slice(0, 4).map((l: any) => {
       const type = (l?.type ?? l?.logType ?? l?.category ?? "unknown") as string;
-      const at = safeDate(l?.createdAt ?? l?.time ?? l?.date) ?? new Date();
+      const at = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date) ?? new Date();
       const details = l?.details ?? l ?? {};
+      const key = String(l?.id ?? l?._id ?? l?.logId ?? `${type}-${at.getTime()}`);
 
       // label + icon
       if (type.includes("diaper")) {
         const diaperType = formatDiaperType(details?.status ?? details?.diaperType ?? details?.kind ?? details?.type);
         const label = diaperType ? `ผ้าอ้อม (${diaperType})` : "ผ้าอ้อม";
-        return { type: "diaper", label, sub: `${fmtTime(at)} • ${timeAgo(at)}`, icon: Droplets, tone: "blue" as const };
+        return {
+          type: "diaper",
+          label,
+          sub: `${fmtTime(at)} • ${timeAgo(at)}`,
+          icon: Droplets,
+          tone: "blue" as const,
+          key,
+        };
       }
       if (type.includes("sleep")) {
-        const label = details?.action === "end" ? "ตื่นนอน" : "เริ่มหลับ";
-        return { type: "sleep", label, sub: `${fmtTime(at)} • ${timeAgo(at)}`, icon: Moon, tone: "purple" as const };
+        const duration = typeof details?.durationMinutes === "number" ? details.durationMinutes : 0;
+        let label = details?.action === "end" ? "ตื่นนอน" : "เริ่มหลับ";
+
+        if (duration > 0) {
+          const h = Math.floor(duration / 60);
+          const m = duration % 60;
+          label = `นอนหลับ (${h > 0 ? h + "ชม. " : ""}${m}น.)`;
+        }
+
+        return {
+          type: "sleep",
+          label,
+          sub: `${fmtTime(at)} • ${timeAgo(at)}`,
+          icon: Moon,
+          tone: "purple" as const,
+          key,
+        };
       }
       if (type.includes("feeding")) {
-        const amountOz =
-          typeof details?.amountOz === "number"
-            ? details.amountOz
-            : typeof details?.amountMl === "number"
-              ? mlToOz(details.amountMl)
-              : null;
+        const amountMl = getAmountMl(details);
+        let label = "การกินนม";
 
-        const label = amountOz ? `ขวดนม (${Math.round(amountOz)} ออนซ์)` : "การกินนม";
+        if (amountMl) {
+          label = `ขวดนม (${amountMl} มล.)`;
+        } else {
+          // Breastfeeding logic
+          const leftSec = details?.leftDurationSeconds || 0;
+          const rightSec = details?.rightDurationSeconds || 0;
+          const totalMin = Math.round((leftSec + rightSec) / 60);
+
+          if (totalMin > 0) {
+            label = `เข้าเต้า (${totalMin} นาที)`;
+          } else if (details?.method === 'breast' || details?.method === 'nursing' || details?.source === 'breast') {
+            label = "เข้าเต้า";
+          }
+        }
         const method = formatFeedingMethod(details?.method ?? details?.feedingType ?? details?.source);
-        return { type: "feeding", label, sub: `${fmtTime(at)} • ${method}`, icon: Coffee, tone: "orange" as const };
+        return {
+          type: "feeding",
+          label,
+          sub: `${fmtTime(at)} • ${method}`,
+          icon: Coffee,
+          tone: "orange" as const,
+          key,
+        };
       }
       if (type.includes("pump")) {
         const label = "ปั๊มนม";
-        return { type: "pump", label, sub: `${fmtTime(at)} • ${timeAgo(at)}`, icon: Milk, tone: "pink" as const };
+        return {
+          type: "pump",
+          label,
+          sub: `${fmtTime(at)} • ${timeAgo(at)}`,
+          icon: Milk,
+          tone: "pink" as const,
+          key,
+        };
       }
 
-      return { type: "unknown", label: "กิจกรรม", sub: `${fmtTime(at)} • ${timeAgo(at)}`, icon: Ruler, tone: "green" as const };
+      return {
+        type: "unknown",
+        label: "กิจกรรม",
+        sub: `${fmtTime(at)} • ${timeAgo(at)}`,
+        icon: Ruler,
+        tone: "green" as const,
+        key,
+      };
     });
   }, [logs]);
 
@@ -302,30 +377,31 @@ const Index = () => {
     const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 
     const today = arr.filter((l: any) => {
-      const d = safeDate(l?.createdAt ?? l?.time ?? l?.date);
+      const d = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date);
       return d ? d.getTime() >= start.getTime() : false;
     });
 
     // diapers count
     const diaperCount = today.filter((l: any) => String(l?.type ?? l?.logType ?? "").includes("diaper")).length;
 
-    // feeding volume oz
+    // feeding volume ml
     const feeds = today.filter((l: any) => String(l?.type ?? l?.logType ?? "").includes("feeding"));
-    let totalOz = 0;
+    let totalMl = 0;
     for (const f of feeds as any[]) {
       const details = f?.details ?? f ?? {};
-      if (typeof details?.amountOz === "number") totalOz += details.amountOz;
-      else if (typeof details?.amountMl === "number") totalOz += mlToOz(details.amountMl);
+      if (typeof details?.amountMl === "number") totalMl += details.amountMl;
+      else if (typeof details?.amountOz === "number") totalMl += Math.round(details.amountOz * 29.5735);
     }
 
     // sleep minutes: best-effort pairing start/end
     const sleepLogs = today
       .filter((l: any) => String(l?.type ?? l?.logType ?? "").includes("sleep"))
       .map((l: any) => {
-        const at = safeDate(l?.createdAt ?? l?.time ?? l?.date) ?? new Date();
+        const at = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date) ?? new Date();
         const details = l?.details ?? l ?? {};
         const action = details?.action ?? details?.event ?? details?.type ?? "start"; // start/end if exists
-        return { at, action: String(action) };
+        const duration = typeof details?.durationMinutes === "number" ? details.durationMinutes : 0;
+        return { at, action: String(action), duration };
       })
       .sort((a: any, b: any) => a.at.getTime() - b.at.getTime());
 
@@ -333,6 +409,11 @@ const Index = () => {
     let currentStart: Date | null = null;
 
     for (const s of sleepLogs) {
+      if (s.duration > 0) {
+        sleepMins += s.duration;
+        continue;
+      }
+
       const isEnd = s.action.includes("end") || s.action.includes("wake") || s.action.includes("woke");
       const isStart = s.action.includes("start") || s.action.includes("sleep") || !isEnd;
 
@@ -351,13 +432,17 @@ const Index = () => {
 
     return {
       diaperCount,
-      totalOz: Math.round(totalOz),
+      totalMl,
       sleepH,
       sleepR,
       babyStatus: (() => {
         // show “Sleeping” if latest sleep start not ended (best-effort)
         const lastSleep = [...sleepLogs].reverse()[0];
         if (!lastSleep) return { text: "ตื่นอยู่", tone: "awake" as const };
+
+        // If last sleep has duration, it means it's a completed sleep record -> Awake
+        if (lastSleep.duration > 0) return { text: "ตื่นอยู่", tone: "awake" as const };
+
         const isEnd = lastSleep.action.includes("end") || lastSleep.action.includes("wake") || lastSleep.action.includes("woke");
         return isEnd ? { text: "ตื่นอยู่", tone: "awake" as const } : { text: "กำลังนอน", tone: "sleep" as const };
       })(),
@@ -498,7 +583,7 @@ const Index = () => {
                 </span>
               </div>
               <div className="leading-tight">
-                <p className="text-[10px] md:text-xs uppercase tracking-[0.28em] text-muted-foreground">แดชบอร์ด</p>
+                <p className="text-sm md:text-base uppercase tracking-[0.28em] text-muted-foreground">แดชบอร์ด</p>
                 <h2 className="text-lg md:text-xl font-black tracking-[-0.02em]">Baby Tracker</h2>
               </div>
             </div>
@@ -511,7 +596,7 @@ const Index = () => {
           </div>
 
           {/* pill nav (desktop) */}
-          
+
 
           <div className="flex gap-3 items-center">
             <button
@@ -544,56 +629,58 @@ const Index = () => {
             <div className="relative rounded-[32px] border border-white/70 dark:border-white/10 bg-white/75 dark:bg-white/5 backdrop-blur-xl p-6 md:p-8 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)]">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                 <div className="space-y-3 text-center lg:text-left">
-                  <div className="inline-flex items-center justify-center lg:justify-start gap-2 rounded-full bg-white/80 dark:bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.25em] text-muted-foreground border border-white/70 dark:border-white/10">
+                  <div className="inline-flex items-center justify-center lg:justify-start gap-2 rounded-full bg-white/80 dark:bg-white/10 px-3 py-1 text-sm font-bold uppercase tracking-[0.25em] text-muted-foreground border border-white/70 dark:border-white/10">
                     <span className={`size-2 rounded-full ${statusDot}`} />
-                    วันนี้
+                    <span>วันนี้</span>
                   </div>
                   <h1 className="text-3xl md:text-5xl font-black leading-tight tracking-[-0.035em]">
                     {greeting()}, {babyName}
                   </h1>
                   <p className="text-[#5a6b7f] dark:text-gray-300 text-lg font-semibold flex flex-wrap items-center justify-center lg:justify-start gap-2">
                     <span className={`inline-flex size-2.5 rounded-full ${statusDot} animate-pulse`} />
-                    ตอนนี้ {babyName} <span className="text-primary font-extrabold">{statusText}</span>
+                    <span>
+                      ตอนนี้ {babyName} <span className="text-primary font-extrabold">{statusText}</span>
+                    </span>
                   </p>
                   {lastActivity ? (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 px-3 py-1 text-xs font-semibold text-muted-foreground border border-white/70 dark:border-white/10">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 px-3 py-1 text-sm font-semibold text-muted-foreground border border-white/70 dark:border-white/10">
                       <span className="size-2 rounded-full bg-sky-400" />
-                      ล่าสุด: {lastActivity.label}
+                      <span>ล่าสุด: {lastActivity.label}</span>
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 px-3 py-1 text-xs font-semibold text-muted-foreground border border-white/70 dark:border-white/10">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 px-3 py-1 text-sm font-semibold text-muted-foreground border border-white/70 dark:border-white/10">
                       <span className="size-2 rounded-full bg-sky-200" />
-                      ยังไม่มีบันทึก
+                      <span>ยังไม่มีบันทึก</span>
                     </div>
                   )}
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full lg:w-auto">
                   <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 shadow-[0_12px_25px_-20px_rgba(15,23,42,0.35)]">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                       <span className="size-2 rounded-full bg-indigo-400" />
-                      นอน
+                      <span>นอน</span>
                     </div>
                     <p className="text-lg font-black text-foreground mt-1">
                       {dailySummary.sleepH}ชม. {dailySummary.sleepR}น.
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 shadow-[0_12px_25px_-20px_rgba(15,23,42,0.35)]">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                       <span className="size-2 rounded-full bg-emerald-400" />
-                      ผ้าอ้อม
+                      <span>ผ้าอ้อม</span>
                     </div>
                     <p className="text-lg font-black text-foreground mt-1">
                       {dailySummary.diaperCount} ครั้ง
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 shadow-[0_12px_25px_-20px_rgba(15,23,42,0.35)]">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                       <span className="size-2 rounded-full bg-rose-400" />
-                      นม
+                      <span>นม</span>
                     </div>
                     <p className="text-lg font-black text-foreground mt-1">
-                      {dailySummary.totalOz} ออนซ์
+                      {dailySummary.totalMl} มล.
                     </p>
                   </div>
                 </div>
@@ -609,7 +696,7 @@ const Index = () => {
                 <div className="flex items-start justify-between mb-6">
                   <div>
                     <h3 className="text-lg font-extrabold">กิจกรรมล่าสุด</h3>
-                    <p className="text-xs text-muted-foreground mt-1">24 ชั่วโมงล่าสุด</p>
+                    <p className="text-sm text-muted-foreground mt-1">24 ชั่วโมงล่าสุด</p>
                   </div>
                   <button
                     className="text-primary text-sm font-extrabold hover:underline"
@@ -629,20 +716,11 @@ const Index = () => {
 
                     {recent.map((item, idx) => {
                       const Icon = item.icon;
-                      const tone =
-                        item.tone === "blue"
-                          ? "bg-blue-100 dark:bg-blue-900/30 text-primary"
-                          : item.tone === "purple"
-                            ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600"
-                            : item.tone === "orange"
-                              ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600"
-                              : item.tone === "pink"
-                                ? "bg-rose-100 dark:bg-rose-900/30 text-rose-500"
-                                : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600";
+                      const toneClass = getRecentToneClass(item.tone);
 
                       return (
                         <motion.div
-                          key={`${item.type}-${idx}`}
+                          key={item.key}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.08 * idx }}
@@ -650,7 +728,7 @@ const Index = () => {
                         >
                           <div className="relative flex-none">
                             <div
-                              className={`size-10 rounded-full flex items-center justify-center z-10 border-4 border-white/90 dark:border-white/10 ${tone}`}
+                              className={`size-10 rounded-full flex items-center justify-center z-10 border-4 border-white/90 dark:border-white/10 ${toneClass}`}
                             >
                               <Icon className="w-5 h-5" />
                             </div>
@@ -658,7 +736,7 @@ const Index = () => {
 
                           <div className="pt-1">
                             <p className="font-extrabold text-sm text-gray-900 dark:text-white">{item.label}</p>
-                            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{item.sub}</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{item.sub}</p>
                           </div>
                         </motion.div>
                       );
@@ -763,7 +841,7 @@ const Index = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-extrabold">สรุปประจำวัน</h3>
-                    <p className="text-xs text-muted-foreground mt-1">วันนี้</p>
+                    <p className="text-sm text-muted-foreground mt-1">วันนี้</p>
                   </div>
                   <button
                     className="size-8 rounded-full bg-white/80 dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-gray-300 hover:bg-white transition"
@@ -815,12 +893,11 @@ const Index = () => {
                   </div>
 
                   <div className="flex gap-1 mt-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
+                    {DIAPER_BAR_KEYS.map((key, i) => (
                       <div
-                        key={i}
-                        className={`h-2 flex-1 rounded-full ${
-                          i < Math.min(5, dailySummary.diaperCount) ? "bg-emerald-400" : "bg-slate-100/80 dark:bg-white/10"
-                        }`}
+                        key={key}
+                        className={`h-2 flex-1 rounded-full ${i < Math.min(5, dailySummary.diaperCount) ? "bg-emerald-400" : "bg-slate-100/80 dark:bg-white/10"
+                          }`}
                       />
                     ))}
                   </div>
@@ -832,19 +909,19 @@ const Index = () => {
                     <div className="size-8 rounded-full bg-rose-100/80 dark:bg-rose-900/30 text-rose-500 flex items-center justify-center">
                       <Coffee className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-500 dark:text-gray-300">ปริมาณนม</span>
+                    <span className="text-sm font-semibold text-gray-500 dark:text-gray-300">ปริมาณการกินนม</span>
                   </div>
 
                   <div className="flex items-end justify-between">
                     <span className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
-                      {dailySummary.totalOz} <span className="text-lg text-gray-400 font-medium">ออนซ์</span>
+                      {dailySummary.totalMl} <span className="text-lg text-gray-400 font-medium">มล.</span>
                     </span>
                   </div>
 
                   <div className="w-full bg-slate-100/80 dark:bg-white/10 h-2 rounded-full mt-3 overflow-hidden">
                     <div
                       className="bg-rose-400 h-full rounded-full"
-                      style={{ width: `${Math.min(100, Math.round((dailySummary.totalOz / 20) * 100))}%` }}
+                      style={{ width: `${Math.min(100, Math.round((dailySummary.totalMl / 600) * 100))}%` }}
                     />
                   </div>
                 </div>
@@ -855,13 +932,13 @@ const Index = () => {
           {/* Mobile quick nav (optional) */}
           <div className="md:hidden mt-8 flex gap-2 justify-center">
             <button
-              className="px-4 py-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10"
+              className="px-5 py-3 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 text-base font-semibold"
               onClick={() => setActiveModal("settings")}
             >
               ตั้งค่า
             </button>
             <button
-              className="px-4 py-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10"
+              className="px-5 py-3 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 text-base font-semibold"
               onClick={() => setActiveModal("dashboard")}
             >
               ประวัติ

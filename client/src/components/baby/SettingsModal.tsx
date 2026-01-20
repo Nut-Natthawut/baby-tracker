@@ -60,8 +60,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               <ArrowLeft size={20} />
             </button>
             <div className="leading-tight">
-              <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground">Settings</p>
-              <h2 className="text-lg md:text-xl font-black tracking-[-0.02em] text-foreground">ตั้งค่า</h2>
+              <p className="text-xs md:text-sm uppercase tracking-[0.3em] text-muted-foreground">Settings</p>
+              <h2 className="text-xl md:text-2xl font-black tracking-[-0.02em] text-foreground">ตั้งค่า</h2>
             </div>
           </div>
         </div>
@@ -82,9 +82,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         </span>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Profile</p>
-                        <h3 className="text-2xl font-black text-foreground">{baby.name}</h3>
-                        <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-foreground">
+                        <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Profile</p>
+                        <h3 className="text-2xl md:text-3xl font-black text-foreground">{baby.name}</h3>
+                        <div className="mt-2 flex flex-wrap gap-2 text-sm font-semibold text-foreground">
                           <span className="rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-3 py-1">
                             อายุ {calculateAge(baby.birthDate)}
                           </span>
@@ -98,7 +98,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                     <button
                       onClick={onEditBaby}
-                      className="w-full md:w-auto px-5 py-3 rounded-full bg-primary text-primary-foreground font-bold shadow-glow-primary hover:brightness-95 active:scale-[0.98] transition"
+                      className="w-full md:w-auto px-6 py-3.5 rounded-full bg-primary text-primary-foreground text-base font-bold shadow-glow-primary hover:brightness-95 active:scale-[0.98] transition"
                     >
                       แก้ไขข้อมูล
                     </button>
@@ -110,21 +110,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="grid gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2 rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                   <div className="px-6 pt-6">
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Preferences</p>
-                    <h3 className="text-lg font-black text-foreground">การตั้งค่า</h3>
+                    <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Preferences</p>
+                    <h3 className="text-xl font-black text-foreground">การตั้งค่า</h3>
                   </div>
                   <div className="p-2 md:p-3 flex flex-col gap-2">
                     <ThemeToggle />
                     <button
                       onClick={onOpenCaregivers}
-                      className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-white/70 dark:hover:bg-white/10 transition-colors text-left"
+                      className="w-full flex items-center gap-4 px-4 py-5 rounded-2xl hover:bg-white/70 dark:hover:bg-white/10 transition-colors text-left"
                     >
                       <div className="p-2 rounded-2xl bg-emerald-100/80 dark:bg-emerald-900/30">
                         <Users size={20} className="text-emerald-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground">ผู้ดูแลร่วม</p>
-                        <p className="text-xs text-muted-foreground">จัดการสมาชิกครอบครัว</p>
+                        <p className="text-base font-semibold text-foreground">ผู้ดูแลร่วม</p>
+                        <p className="text-sm text-muted-foreground">จัดการสมาชิกครอบครัว</p>
                       </div>
                     </button>
                   </div>
@@ -132,21 +132,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 <div className="rounded-[28px] border border-rose-200/60 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-500/10 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                   <div className="px-6 pt-6">
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-rose-400">Danger Zone</p>
-                    <h3 className="text-lg font-black text-rose-600">ลบข้อมูล</h3>
-                    <p className="text-xs text-rose-400 mt-1">การลบข้อมูลจะไม่สามารถกู้คืนได้</p>
+                    <p className="text-sm uppercase tracking-[0.3em] text-rose-400">Danger Zone</p>
+                    <h3 className="text-xl font-black text-rose-600">ลบข้อมูล</h3>
+                    <p className="text-sm text-rose-400 mt-1">การลบข้อมูลจะไม่สามารถกู้คืนได้</p>
                   </div>
                   <div className="p-2 md:p-3">
                     <button
                       onClick={onDeleteBaby}
-                      className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-rose-100/80 dark:hover:bg-rose-500/10 transition-colors text-left"
+                      className="w-full flex items-center gap-4 px-4 py-5 rounded-2xl hover:bg-rose-100/80 dark:hover:bg-rose-500/10 transition-colors text-left"
                     >
                       <div className="p-2 rounded-2xl bg-rose-200/70 dark:bg-rose-500/20">
                         <Trash2 size={20} className="text-rose-500" />
                       </div>
                       <div>
-                        <p className="font-semibold text-rose-600">ลบข้อมูลเด็กคนนี้</p>
-                        <p className="text-xs text-rose-400">ข้อมูลจะถูกลบถาวรจากระบบ</p>
+                        <p className="text-base font-semibold text-rose-600">ลบข้อมูลเด็กคนนี้</p>
+                        <p className="text-sm text-rose-400">ข้อมูลจะถูกลบถาวรจากระบบ</p>
                       </div>
                     </button>
                   </div>
@@ -155,8 +155,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
               {/* App Info */}
               <div className="pt-2 text-center">
-                <p className="text-sm text-muted-foreground">Baby Tracker v1.0</p>
-                <p className="text-xs text-muted-foreground mt-1">ระบบบันทึกการดูแลทารก</p>
+                <p className="text-base text-muted-foreground">Baby Tracker v1.0</p>
+                <p className="text-sm text-muted-foreground mt-1">ระบบบันทึกการดูแลทารก</p>
               </div>
             </div>
           </div>

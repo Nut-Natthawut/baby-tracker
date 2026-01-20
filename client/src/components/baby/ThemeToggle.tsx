@@ -30,21 +30,21 @@ const ThemeToggle: React.FC = () => {
         </motion.div>
       </div>
       <div className="flex-1">
-        <p className="font-semibold text-foreground">ธีมสี</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-base font-semibold text-foreground">ธีมสี</p>
+        <p className="text-sm text-muted-foreground">
           {isDark ? 'โหมดมืด' : 'โหมดสว่าง'}
         </p>
       </div>
       
       {/* Toggle Switch */}
       <div 
-        className={`w-12 h-7 rounded-full p-1 transition-colors border border-white/70 dark:border-white/10 ${
+        className={`w-14 h-8 rounded-full p-1 transition-colors border border-white/70 dark:border-white/10 ${
           isDark ? 'bg-indigo-500/70' : 'bg-amber-200/80'
         }`}
       >
         <motion.div
-          className="w-5 h-5 rounded-full bg-white shadow-md"
-          animate={{ x: isDark ? 20 : 0 }}
+          className="w-6 h-6 rounded-full bg-white shadow-md"
+          animate={{ x: isDark ? 24 : 0 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
         />
       </div>

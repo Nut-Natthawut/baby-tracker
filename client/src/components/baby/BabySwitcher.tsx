@@ -25,14 +25,14 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card/50 border border-border/50 hover:bg-card transition-colors"
+        className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card/50 border border-border/50 hover:bg-card transition-colors"
       >
         <BabyAvatar baby={currentBaby} size="sm" />
-        <span className="font-semibold text-foreground text-sm max-w-[100px] truncate">
+        <span className="font-semibold text-foreground text-base max-w-[140px] truncate">
           {currentBaby.name}
         </span>
         <ChevronDown 
-          size={16} 
+          size={18} 
           className={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
@@ -55,10 +55,10 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute top-full left-0 mt-2 w-56 bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden"
+              className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden"
             >
               <div className="p-2">
-                <p className="text-xs text-muted-foreground px-3 py-2 font-medium">
+                <p className="text-sm text-muted-foreground px-3 py-2 font-medium">
                   เลือกลูกน้อย
                 </p>
                 
@@ -77,15 +77,15 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
                   >
                     <BabyAvatar baby={baby} size="sm" />
                     <div className="flex-1 text-left">
-                      <p className="font-semibold text-foreground text-sm">
+                      <p className="font-semibold text-foreground text-base">
                         {baby.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         {baby.gender === 'boy' ? '👦 เด็กชาย' : '👧 เด็กหญิง'}
                       </p>
                     </div>
                     {currentBaby.id === baby.id && (
-                      <Check size={18} className="text-primary" />
+                      <Check size={20} className="text-primary" />
                     )}
                   </button>
                 ))}
@@ -99,10 +99,10 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
                   }}
                   className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-secondary transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Plus size={16} className="text-primary" />
+                  <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Plus size={18} className="text-primary" />
                   </div>
-                  <span className="text-sm font-medium text-primary">
+                  <span className="text-base font-medium text-primary">
                     เพิ่มลูกน้อยใหม่
                   </span>
                 </button>
