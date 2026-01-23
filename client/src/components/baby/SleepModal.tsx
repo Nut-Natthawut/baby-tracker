@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Minus, Plus, Moon } from 'lucide-react';
 import { SleepDetails } from '@/types/baby';
@@ -25,19 +25,28 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [endTime, setEndTime] = useState<Date>(roundToNearest30(new Date()));
   const [notes, setNotes] = useState('');
-  const [secondsTick, setSecondsTick] = useState(() => new Date().getSeconds());
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSecondsTick((prev) => (prev + 1) % 60);
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const hours = Math.floor(durationMinutes / 60);
   const minutes = durationMinutes % 60;
   const pad2 = (value: number) => value.toString().padStart(2, '0');
-  const wrap = (value: number, max: number) => (value + max) % max;
+  const sleepTargetMinutes = 12 * 60;
+  const sleepTargetHours = sleepTargetMinutes / 60;
+  const minDuration = 15;
+  const maxDuration = sleepTargetMinutes;
+  const durationStep = 15;
+  const quickDurations = [30, 60, 90, 120, 180, 240];
+
+  const clampDuration = (value: number) => Math.min(maxDuration, Math.max(minDuration, value));
+  const startTime = new Date(endTime.getTime() - durationMinutes * 60000);
+  const sleepPercent = Math.min(100, Math.round((durationMinutes / sleepTargetMinutes) * 100));
+  const endTimeValue = `${pad2(endTime.getHours())}:${pad2(endTime.getMinutes())}`;
+
+  const formatDurationLabel = (totalMinutes: number) => {
+    if (totalMinutes < 60) return `${totalMinutes}น.`;
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return m === 0 ? `${h}ชม.` : `${h}ชม. ${m}น.`;
+  };
 
   const clayCardStyle: React.CSSProperties = {
     backgroundColor: 'rgba(245, 247, 250, 0.95)',
@@ -47,20 +56,10 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
     borderRadius: '2rem',
   };
 
-  const clayInsetStyle: React.CSSProperties = {
-    backgroundColor: '#e6e9ef',
-    boxShadow: 'inset 6px 6px 12px rgba(0, 0, 0, 0.15), inset -6px -6px 12px rgba(255, 255, 255, 0.8)',
-  };
-
   const clayButtonStyle: React.CSSProperties = {
     backgroundColor: '#f0f2f4',
     boxShadow:
       '12px 12px 24px rgba(0, 0, 0, 0.3), -12px -12px 24px rgba(255, 255, 255, 0.1), inset 4px 4px 8px rgba(255, 255, 255, 1), inset -4px -4px 8px rgba(0, 0, 0, 0.1)',
-  };
-
-  const slotFadeStyle: React.CSSProperties = {
-    background:
-      'linear-gradient(180deg, rgba(230,233,239,1) 0%, rgba(230,233,239,0) 20%, rgba(230,233,239,0) 80%, rgba(230,233,239,1) 100%)',
   };
 
   const handleSave = () => {
@@ -77,9 +76,23 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
     });
   };
 
+  const handleDurationChange = (value: number) => {
+    setDurationMinutes(clampDuration(value));
+  };
+
   const adjustTime = (minutesOffset: number) => {
     const newTime = new Date(endTime.getTime() + minutesOffset * 60000);
     setEndTime(newTime);
+  };
+
+  const handleEndTimeChange = (value: string) => {
+    const [hourStr, minuteStr] = value.split(':');
+    const nextHour = Number(hourStr);
+    const nextMinute = Number(minuteStr);
+    if (Number.isNaN(nextHour) || Number.isNaN(nextMinute)) return;
+    const nextTime = new Date(endTime);
+    nextTime.setHours(nextHour, nextMinute, 0, 0);
+    setEndTime(nextTime);
   };
 
   return (
@@ -135,165 +148,147 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            style={clayCardStyle}
-            className="p-6 md:p-8 flex flex-col items-center gap-4 w-full max-w-[520px]"
-          >
-            <div className="flex items-center justify-center gap-3 md:gap-4 w-full">
-              <div className="flex flex-col items-center gap-2">
-                <div
-                  style={clayInsetStyle}
-                  className="relative w-24 h-28 md:w-28 md:h-36 rounded-2xl flex items-center justify-center overflow-hidden"
-                >
-                  <div className="absolute inset-0 z-10 pointer-events-none" style={slotFadeStyle} />
-                  <div className="flex flex-col items-center">
-                    <span className="text-gray-300 text-2xl font-bold opacity-40 blur-[0.5px]">
-                      {pad2(Math.max(0, hours - 1))}
-                    </span>
-                    <motion.span
-                      key={hours}
-                      initial={{ scale: 0.96, opacity: 0.6 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-[#111418] text-5xl md:text-6xl font-black leading-none py-2"
-                    >
-                      {pad2(hours)}
-                    </motion.span>
-                    <span className="text-gray-300 text-2xl font-bold opacity-40 blur-[0.5px]">
-                      {pad2(Math.min(99, hours + 1))}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-slate-500 font-bold text-sm uppercase tracking-wider">Hours</span>
-              </div>
-
-              <div className="text-slate-300 text-4xl font-bold mb-6">:</div>
-
-              <div className="flex flex-col items-center gap-2">
-                <div
-                  style={clayInsetStyle}
-                  className="relative w-24 h-28 md:w-28 md:h-36 rounded-2xl flex items-center justify-center overflow-hidden"
-                >
-                  <div className="absolute inset-0 z-10 pointer-events-none" style={slotFadeStyle} />
-                  <div className="flex flex-col items-center">
-                    <span className="text-gray-300 text-2xl font-bold opacity-40 blur-[0.5px]">
-                      {pad2(wrap(minutes - 1, 60))}
-                    </span>
-                    <motion.span
-                      key={minutes}
-                      initial={{ scale: 0.96, opacity: 0.6 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-[#111418] text-5xl md:text-6xl font-black leading-none py-2"
-                    >
-                      {pad2(minutes)}
-                    </motion.span>
-                    <span className="text-gray-300 text-2xl font-bold opacity-40 blur-[0.5px]">
-                      {pad2(wrap(minutes + 1, 60))}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-slate-500 font-bold text-sm uppercase tracking-wider">Mins</span>
-              </div>
-
-              <div className="text-slate-300 text-4xl font-bold mb-6">:</div>
-
-              <div className="flex flex-col items-center gap-2">
-                <div
-                  style={clayInsetStyle}
-                  className="relative w-24 h-28 md:w-28 md:h-36 rounded-2xl flex items-center justify-center overflow-hidden"
-                >
-                  <div className="absolute inset-0 z-10 pointer-events-none" style={slotFadeStyle} />
-                  <div className="flex flex-col items-center">
-                    <span className="text-gray-300 text-2xl font-bold opacity-40 blur-[0.5px]">
-                      {pad2(wrap(secondsTick - 1, 60))}
-                    </span>
-                    <motion.span
-                      key={secondsTick}
-                      initial={{ scale: 0.96, opacity: 0.6 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-primary text-5xl md:text-6xl font-black leading-none py-2"
-                    >
-                      {pad2(secondsTick)}
-                    </motion.span>
-                    <span className="text-gray-300 text-2xl font-bold opacity-40 blur-[0.5px]">
-                      {pad2(wrap(secondsTick + 1, 60))}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-slate-500 font-bold text-sm uppercase tracking-wider">Secs</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={() => setDurationMinutes(Math.max(15, durationMinutes - 15))}
-                style={clayButtonStyle}
-                className="size-14 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
-                aria-label="ลดเวลา 15 นาที"
-              >
-                <Minus size={20} />
-              </button>
-              <button
-                onClick={() => setDurationMinutes(Math.min(720, durationMinutes + 15))}
-                style={clayButtonStyle}
-                className="size-14 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
-                aria-label="เพิ่มเวลา 15 นาที"
-              >
-                <Plus size={20} />
-              </button>
-            </div>
-            <p className="text-base font-semibold text-slate-500">ระยะเวลาการนอน</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.12 }}
-            className="relative group py-2"
-          >
-            <div className="absolute inset-0 bg-primary/30 rounded-full blur-3xl group-hover:bg-primary/50 transition-all duration-500" />
-            <button
-              onClick={() => setEndTime(new Date())}
-              style={clayButtonStyle}
-              className="relative z-10 size-40 md:size-44 rounded-full flex flex-col items-center justify-center gap-2 text-slate-700 active:scale-95 transition-transform"
+          <div className="w-full max-w-[820px] flex flex-col gap-5">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              style={clayCardStyle}
+              className="p-6 md:p-8"
             >
-              <Moon className="w-12 h-12 text-primary drop-shadow-sm" />
-              <span className="text-sm font-bold uppercase tracking-widest text-slate-500 group-hover:text-primary transition-colors">
-                ตื่นแล้ว
-              </span>
-            </button>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-[760px]">
-            <div style={clayCardStyle} className="p-5 flex items-center gap-4">
-              <div className="size-12 rounded-full bg-blue-100 flex items-center justify-center shadow-inner text-blue-600">
-                <Moon className="w-6 h-6" />
-              </div>
-              <div className="flex-1">
-                <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">เวลาตื่น</span>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-3xl font-extrabold text-slate-800">{formatTime(endTime)}</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => adjustTime(-30)}
-                      className="px-4 py-2 rounded-full bg-white/90 text-slate-500 text-sm font-bold shadow-sm hover:bg-white transition"
-                    >
-                      -30น.
-                    </button>
-                    <button
-                      onClick={() => adjustTime(30)}
-                      className="px-4 py-2 rounded-full bg-white/90 text-slate-500 text-sm font-bold shadow-sm hover:bg-white transition"
-                    >
-                      +30น.
-                    </button>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">ระยะเวลาการนอน</span>
+                  <div className="flex items-end gap-2 mt-2">
+                    <span className="text-4xl md:text-5xl font-black text-slate-800">{hours}</span>
+                    <span className="text-base font-bold text-slate-400">ชม.</span>
+                    <span className="text-4xl md:text-5xl font-black text-slate-800">{pad2(minutes)}</span>
+                    <span className="text-base font-bold text-slate-400">น.</span>
                   </div>
+                  <p className="text-sm text-slate-500 mt-2">เริ่มหลับประมาณ {formatTime(startTime)}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleDurationChange(durationMinutes - durationStep)}
+                    style={clayButtonStyle}
+                    className="size-12 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
+                    aria-label={`ลดเวลา ${durationStep} นาที`}
+                  >
+                    <Minus size={18} />
+                  </button>
+                  <button
+                    onClick={() => handleDurationChange(durationMinutes + durationStep)}
+                    style={clayButtonStyle}
+                    className="size-12 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
+                    aria-label={`เพิ่มเวลา ${durationStep} นาที`}
+                  >
+                    <Plus size={18} />
+                  </button>
                 </div>
               </div>
-            </div>
 
-            <div style={clayCardStyle} className="p-5">
+              <div className="mt-5">
+                <input
+                  type="range"
+                  min={minDuration}
+                  max={maxDuration}
+                  step={durationStep}
+                  value={durationMinutes}
+                  onChange={(event) => handleDurationChange(Number(event.target.value))}
+                  className="w-full accent-primary"
+                  aria-label="ปรับระยะเวลาการนอน"
+                />
+                <div className="flex justify-between text-xs text-slate-400 font-semibold mt-2">
+                  <span>{formatDurationLabel(minDuration)}</span>
+                  <span>{formatDurationLabel(maxDuration)}</span>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {quickDurations.map((value) => {
+                  const isActive = durationMinutes === value;
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => handleDurationChange(value)}
+                      className={`px-3 py-2 rounded-full text-sm font-bold transition ${isActive
+                        ? "bg-primary text-white shadow-md"
+                        : "bg-white/80 text-slate-500 hover:bg-white"
+                        }`}
+                    >
+                      {formatDurationLabel(value)}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-5">
+                <div className="flex items-center justify-between text-sm font-semibold text-slate-500">
+                  <span>เป้าหมาย {sleepTargetHours} ชม.</span>
+                  <span className="text-primary font-black">{sleepPercent}%</span>
+                </div>
+                <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary"
+                    style={{ width: `${sleepPercent}%` }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              style={clayCardStyle}
+              className="p-5 md:p-6 flex flex-col gap-4"
+            >
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">เวลาตื่น</span>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <input
+                      type="time"
+                      value={endTimeValue}
+                      onChange={(event) => handleEndTimeChange(event.target.value)}
+                      className="rounded-2xl border border-white/60 bg-white/80 px-4 py-3 text-2xl font-black text-slate-800 shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                    <span className="text-sm font-semibold text-slate-500">แตะเพื่อเลือกเวลา</span>
+                  </div>
+                  <p className="text-sm text-slate-500 mt-2">หรือปรับทีละ 30 นาทีด้วยปุ่มด้านล่าง</p>
+                </div>
+                <button
+                  onClick={() => setEndTime(new Date())}
+                  style={clayButtonStyle}
+                  className="px-5 py-3 rounded-2xl text-slate-600 font-bold shadow-sm active:scale-95 transition-transform"
+                >
+                  ตอนนี้
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => adjustTime(-30)}
+                  className="px-4 py-2 rounded-full bg-white/90 text-slate-500 text-sm font-bold shadow-sm hover:bg-white transition"
+                >
+                  -30น.
+                </button>
+                <button
+                  onClick={() => adjustTime(30)}
+                  className="px-4 py-2 rounded-full bg-white/90 text-slate-500 text-sm font-bold shadow-sm hover:bg-white transition"
+                >
+                  +30น.
+                </button>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              style={clayCardStyle}
+              className="p-5 md:p-6"
+            >
               <div className="flex items-center gap-3 mb-3">
                 <div className="size-12 rounded-full bg-indigo-100 flex items-center justify-center shadow-inner text-indigo-600">
                   <Moon className="w-6 h-6" />
@@ -310,7 +305,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                 className="w-full bg-white/80 border border-white/60 rounded-2xl p-3 text-base text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
                 rows={4}
               />
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>

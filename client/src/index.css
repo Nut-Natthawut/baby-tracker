@@ -7,26 +7,36 @@
 @layer base {
   :root {
     /* New Color Palette - ATNN Design */
-    --background: 53 40% 95%; /* Linen */
-    --foreground: 0 29% 20%; /* Oxblood - darker for better contrast */
+    --background: 53 40% 95%;
+    /* Linen */
+    --foreground: 0 29% 20%;
+    /* Oxblood - darker for better contrast */
 
-    --card: 49 80% 97%; /* Banana Cream lighter */
-    --card-foreground: 0 29% 18%; /* Darker for readability */
+    --card: 49 80% 97%;
+    /* Banana Cream lighter */
+    --card-foreground: 0 29% 18%;
+    /* Darker for readability */
 
     --popover: 49 80% 97%;
     --popover-foreground: 0 29% 18%;
 
-    --primary: 16 100% 58%; /* Papaya - slightly darker for better contrast */
+    --primary: 16 100% 58%;
+    /* Papaya - slightly darker for better contrast */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 45% 88%; /* Sky - lighter for background */
-    --secondary-foreground: 0 29% 20%; /* Dark text on light bg */
+    --secondary: 222 45% 88%;
+    /* Sky - lighter for background */
+    --secondary-foreground: 0 29% 20%;
+    /* Dark text on light bg */
 
     --muted: 53 30% 90%;
-    --muted-foreground: 0 20% 35%; /* Darker for readability */
+    --muted-foreground: 0 20% 35%;
+    /* Darker for readability */
 
-    --accent: 60 45% 50%; /* Saguaro - slightly darker */
-    --accent-foreground: 0 0% 100%; /* White text on accent */
+    --accent: 60 45% 50%;
+    /* Saguaro - slightly darker */
+    --accent-foreground: 0 0% 100%;
+    /* White text on accent */
 
     --destructive: 0 84% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -38,13 +48,16 @@
     --radius: 1rem;
 
     /* Baby Tracker Feature Colors - darker for better contrast */
-    --feeding: 222 50% 65%; /* Sky - darker for icons */
+    --feeding: 222 50% 65%;
+    /* Sky - darker for icons */
     --feeding-glow: 222 55% 80%;
-    --diaper: 60 50% 48%; /* Saguaro - darker for icons */
+    --diaper: 60 50% 48%;
+    /* Saguaro - darker for icons */
     --diaper-glow: 60 45% 70%;
     --sleep: 262 50% 55%;
     --sleep-glow: 262 50% 70%;
-    --pump: 16 100% 58%; /* Papaya */
+    --pump: 16 100% 58%;
+    /* Papaya */
     --pump-glow: 16 100% 75%;
 
     /* Theme Accent Colors */
@@ -72,7 +85,7 @@
     --gradient-sleep: linear-gradient(135deg, hsl(262 50% 55%), hsl(280 50% 48%));
     --gradient-hero: linear-gradient(180deg, hsl(49 100% 92%) 0%, hsl(53 40% 95%) 100%);
     --gradient-bottle: linear-gradient(180deg, hsl(222 55% 82%) 0%, hsl(222 50% 65%) 100%);
-    
+
     /* Shadows */
     --shadow-soft: 0 4px 24px -6px hsl(0 29% 17% / 0.12);
     --shadow-glow-feeding: 0 0 24px hsl(222 50% 65% / 0.35);
@@ -90,8 +103,10 @@
   }
 
   .dark {
-    --background: 0 25% 8%; /* Deep Oxblood */
-    --foreground: 53 35% 92%; /* Light Linen */
+    --background: 0 25% 8%;
+    /* Deep Oxblood */
+    --foreground: 53 35% 92%;
+    /* Light Linen */
 
     --card: 0 22% 12%;
     --card-foreground: 53 35% 90%;
@@ -99,7 +114,8 @@
     --popover: 0 22% 12%;
     --popover-foreground: 53 35% 90%;
 
-    --primary: 16 100% 65%; /* Papaya - brighter for dark mode */
+    --primary: 16 100% 65%;
+    /* Papaya - brighter for dark mode */
     --primary-foreground: 0 29% 10%;
 
     --secondary: 0 18% 18%;
@@ -108,7 +124,8 @@
     --muted: 0 18% 16%;
     --muted-foreground: 53 20% 65%;
 
-    --accent: 60 45% 55%; /* Saguaro brighter */
+    --accent: 60 45% 55%;
+    /* Saguaro brighter */
     --accent-foreground: 0 29% 10%;
 
     --destructive: 0 70% 45%;
@@ -125,7 +142,7 @@
     --diaper-glow: 60 45% 50%;
     --sleep: 262 55% 65%;
     --pump: 16 100% 68%;
-    
+
     --papaya: 16 100% 65%;
     --sky: 222 55% 72%;
     --saguaro: 60 50% 58%;
@@ -164,6 +181,7 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -224,6 +242,7 @@
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -239,10 +258,13 @@
 
 /* Pulse Animation */
 @keyframes soft-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.8;
     transform: scale(1.02);
@@ -255,9 +277,12 @@
 
 /* Float Animation */
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }

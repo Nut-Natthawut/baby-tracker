@@ -9,6 +9,10 @@ interface BabySwitcherProps {
   currentBaby: Baby | null;
   onSelectBaby: (baby: Baby) => void;
   onAddBaby: () => void;
+  containerClassName?: string;
+  buttonClassName?: string;
+  nameClassName?: string;
+  chevronClassName?: string;
 }
 
 const BabySwitcher: React.FC<BabySwitcherProps> = ({
@@ -16,24 +20,28 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
   currentBaby,
   onSelectBaby,
   onAddBaby,
+  containerClassName,
+  buttonClassName,
+  nameClassName,
+  chevronClassName,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!currentBaby) return null;
 
   return (
-    <div className="relative">
+    <div className={`relative ${containerClassName ?? ''}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card/50 border border-border/50 hover:bg-card transition-colors"
+        className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-card/50 border border-border/50 hover:bg-card transition-colors ${buttonClassName ?? ''}`}
       >
         <BabyAvatar baby={currentBaby} size="sm" />
-        <span className="font-semibold text-foreground text-base max-w-[140px] truncate">
+        <span className={`font-semibold text-foreground text-base max-w-[140px] truncate ${nameClassName ?? ''}`}>
           {currentBaby.name}
         </span>
         <ChevronDown 
           size={18} 
-          className={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''} ${chevronClassName ?? ''}`}
         />
       </button>
 

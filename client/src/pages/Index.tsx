@@ -168,6 +168,16 @@ const Index = () => {
     };
   }, [activeModal]);
 
+  useEffect(() => {
+    document.body.classList.add("no-scrollbar");
+    document.documentElement.classList.add("no-scrollbar");
+
+    return () => {
+      document.body.classList.remove("no-scrollbar");
+      document.documentElement.classList.remove("no-scrollbar");
+    };
+  }, []);
+
   // Show onboarding if no baby profile
   const showOnboarding = !loading && !baby;
 
@@ -573,35 +583,22 @@ const Index = () => {
 
       <div className="flex h-full grow flex-col max-w-[1440px] mx-auto">
         {/* Header / Nav */}
-        <header className="relative z-10 flex items-center justify-between px-4 md:px-8 py-5 md:py-7">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="relative flex items-center justify-center size-11 rounded-2xl bg-gradient-to-br from-primary to-papaya/70 shadow-glow-primary text-white">
-                <Baby className="w-5 h-5" />
-                <span className="absolute -bottom-1 -right-1 size-4 rounded-full bg-white shadow flex items-center justify-center">
-                  <span className="size-2 rounded-full bg-primary" />
-                </span>
-              </div>
-              <div className="leading-tight">
-                <p className="text-sm md:text-base uppercase tracking-[0.28em] text-muted-foreground">แดชบอร์ด</p>
-                <h2 className="text-lg md:text-xl font-black tracking-[-0.02em]">Baby Tracker</h2>
-              </div>
-            </div>
-            <BabySwitcher
-              babies={babies}
-              currentBaby={baby}
-              onSelectBaby={(selectedBaby) => switchBaby(selectedBaby.id)}
-              onAddBaby={() => setActiveModal("add-baby")}
-            />
-          </div>
-
-          {/* pill nav (desktop) */}
-
+        <header className="relative z-10 flex items-center justify-between px-4 md:px-8 py-5 md:py-7 gap-3">
+          <BabySwitcher
+            babies={babies}
+            currentBaby={baby}
+            onSelectBaby={(selectedBaby) => switchBaby(selectedBaby.id)}
+            onAddBaby={() => setActiveModal("add-baby")}
+            containerClassName="min-w-0"
+            buttonClassName="w-auto max-w-[70vw] sm:max-w-none justify-start gap-3 px-4 py-3 rounded-[26px] bg-white/90 dark:bg-white/5 border border-white/70 dark:border-white/10 shadow-[0_20px_45px_-30px_rgba(15,23,42,0.4)] backdrop-blur-xl transition-all hover:shadow-[0_24px_55px_-32px_rgba(15,23,42,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            nameClassName="text-[15px] md:text-base font-semibold tracking-tight text-[#3a2c2c] dark:text-white"
+            chevronClassName="text-slate-400"
+          />
 
           <div className="flex gap-3 items-center">
             <button
               onClick={() => setActiveModal("dashboard")}
-              className="flex items-center justify-center size-10 rounded-full bg-white/80 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 border border-white/70 dark:border-white/10 text-gray-600 dark:text-gray-200 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all"
+              className="flex items-center justify-center size-9 sm:size-10 rounded-full bg-white/90 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 border border-white/70 dark:border-white/10 text-gray-600 dark:text-gray-200 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all backdrop-blur-xl"
             >
               <Bell className="w-5 h-5" />
             </button>
@@ -609,7 +606,7 @@ const Index = () => {
             {/* profile bubble */}
             <button
               onClick={() => setActiveModal("settings")}
-              className="relative size-10 rounded-full bg-gradient-to-br from-papaya/30 via-white/70 to-sky/20 border-2 border-white/80 dark:border-white/10 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)]"
+              className="relative size-9 sm:size-10 rounded-full bg-gradient-to-br from-papaya/30 via-white/80 to-sky/20 border-2 border-white/80 dark:border-white/10 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)]"
               aria-label="Open settings"
             >
               <span className="absolute inset-0 rounded-full ring-1 ring-white/60 dark:ring-white/10" />
