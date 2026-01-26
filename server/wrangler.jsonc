@@ -11,7 +11,10 @@
 			"database_id": "5d1716c0-c82b-4813-b3a2-37ec5f6d10be",
 			"migrations_dir": "drizzle"
 		}
-	]
+	],
+	"vars": {
+		"APP_URL": "http://localhost:8080\n"
+	}
 	// "compatibility_flags": [
 	//   "nodejs_compat"
 	// ],

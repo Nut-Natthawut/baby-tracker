@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Baby, LogEntry, LogType } from '@/types/baby';
-import { generateId } from '@/lib/babyUtils';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://server.chonlakon.workers.dev/api';
+import { API_BASE_URL } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 const STORAGE_KEYS = {
   BABIES: 'baby-tracker-babies',
@@ -11,6 +10,7 @@ const STORAGE_KEYS = {
 };
 
 export const useBabyData = () => {
+  const { token, logout } = useAuth();
   const [babies, setBabies] = useState<Baby[]>([]);
   const [currentBabyId, setCurrentBabyId] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -21,10 +21,25 @@ export const useBabyData = () => {
 
   // Load data
   useEffect(() => {
+    if (!token) {
+      setBabies([]);
+      setLogs([]);
+      setCurrentBabyId(null);
+      setLoading(false);
+      return;
+    }
+
     const loadData = async () => {
       try {
-        // 1. Load babies from API
-        const response = await fetch(`${API_BASE_URL}/babies`);
+        const response = await fetch(`${API_BASE_URL}/babies`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.status === 401) {
+          await logout();
+          return;
+        }
+
         const result = await response.json();
 
         if (result.success) {
@@ -35,27 +50,13 @@ export const useBabyData = () => {
           setBabies(mappedBabies);
 
           const savedCurrentId = localStorage.getItem(STORAGE_KEYS.CURRENT_BABY_ID);
-          let activeId = null;
 
           if (savedCurrentId && result.data.some((b: Baby) => b.id === savedCurrentId)) {
-            activeId = savedCurrentId;
             setCurrentBabyId(savedCurrentId);
           } else if (result.data.length > 0) {
-            activeId = result.data[0].id;
-            setCurrentBabyId(activeId);
-          }
-
-          // 2. Load logs for the current baby from API
-          if (activeId) {
-            const logsResponse = await fetch(`${API_BASE_URL}/logs/${activeId}/details`);
-            const logsResult = await logsResponse.json();
-            if (logsResult.success) {
-              const parsedLogs = logsResult.data.map((log: any) => ({
-                ...log,
-                timestamp: new Date(log.timestamp * 1000), // Convert Unix timestamp to Date
-              }));
-              setLogs(parsedLogs);
-            }
+            setCurrentBabyId(result.data[0].id);
+          } else {
+            setCurrentBabyId(null);
           }
         }
       } catch (error) {
@@ -66,18 +67,24 @@ export const useBabyData = () => {
     };
 
     loadData();
-  }, [currentBabyId]); // Reload when currentBabyId changes (or we might need a separate effect)
+  }, [token, logout]);
 
   // NOTE: In a real app, we might want to separate log fetching into a separate useEffect dependent on currentBabyId
   // But for now, we'll keep it simple or refactor slightly.
 
   // Refactored Effect to handle baby switching
   useEffect(() => {
-    if (!currentBabyId) return;
+    if (!currentBabyId || !token) return;
 
     const fetchLogs = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/logs/${currentBabyId}/details`);
+        const response = await fetch(`${API_BASE_URL}/logs/${currentBabyId}/details`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.status === 401) {
+          await logout();
+          return;
+        }
         const result = await response.json();
         if (result.success) {
           const parsedLogs = result.data.map((log: any) => ({
@@ -92,11 +99,12 @@ export const useBabyData = () => {
     };
 
     fetchLogs();
-  }, [currentBabyId]);
+  }, [currentBabyId, token, logout]);
 
 
   // Save baby profile
   const saveBabyProfile = async (babyData: Partial<Baby>) => {
+    if (!token) return false;
     try {
       const isEdit = !!babyData.id;
       const url = isEdit
@@ -107,10 +115,15 @@ export const useBabyData = () => {
         method: isEdit ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(babyData),
       });
 
+      if (response.status === 401) {
+        await logout();
+        return false;
+      }
       const result = await response.json();
 
       if (result.success) {
@@ -146,11 +159,17 @@ export const useBabyData = () => {
 
   // Delete a baby via API
   const deleteBaby = async (babyId: string) => {
+    if (!token) return false;
     try {
       const response = await fetch(`${API_BASE_URL}/babies/${babyId}`, {
         method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
       });
 
+      if (response.status === 401) {
+        await logout();
+        return false;
+      }
       const result = await response.json();
 
       if (result.success) {
@@ -174,12 +193,12 @@ export const useBabyData = () => {
 
   // Add a new log entry via API
   const addLog = async (type: LogType, data: { timestamp: Date; details: any }) => {
-    if (!currentBabyId) return;
+    if (!currentBabyId || !token) return;
 
     try {
       const response = await fetch(`${API_BASE_URL}/logs`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           babyId: currentBabyId,
           type,
@@ -188,6 +207,10 @@ export const useBabyData = () => {
         }),
       });
 
+      if (response.status === 401) {
+        await logout();
+        return;
+      }
       const result = await response.json();
 
       if (result.success) {
@@ -206,11 +229,17 @@ export const useBabyData = () => {
 
   // Delete a log entry via API
   const deleteLog = async (logId: string) => {
+    if (!token) return;
     try {
       const response = await fetch(`${API_BASE_URL}/logs/${logId}`, {
         method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
       });
 
+      if (response.status === 401) {
+        await logout();
+        return;
+      }
       const result = await response.json();
 
       if (result.success) {

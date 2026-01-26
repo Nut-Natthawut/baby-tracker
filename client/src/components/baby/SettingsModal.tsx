@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, LogOut, Trash2, Users } from 'lucide-react';
 import { Baby } from '@/types/baby';
 import { calculateAge } from '@/lib/babyUtils';
 import BabyAvatar from './BabyAvatar';
 import ThemeToggle from './ThemeToggle';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SettingsModalProps {
   baby: Baby | null;
@@ -23,6 +24,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenCaregivers,
   onDeleteBaby,
 }) => {
+  const { logout } = useAuth();
+
   return (
     <motion.div
       initial={{ opacity: 0, x: '100%' }}
@@ -125,6 +128,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div>
                         <p className="text-base font-semibold text-foreground">ผู้ดูแลร่วม</p>
                         <p className="text-sm text-muted-foreground">จัดการสมาชิกครอบครัว</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await logout();
+                        onClose();
+                      }}
+                      className="w-full flex items-center gap-4 px-4 py-5 rounded-2xl hover:bg-white/70 dark:hover:bg-white/10 transition-colors text-left"
+                    >
+                      <div className="p-2 rounded-2xl bg-amber-100/80 dark:bg-amber-900/30">
+                        <LogOut size={20} className="text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-base font-semibold text-foreground">ออกจากระบบ</p>
+                        <p className="text-sm text-muted-foreground">สลับบัญชีหรือเข้าสู่ระบบใหม่</p>
                       </div>
                     </button>
                   </div>

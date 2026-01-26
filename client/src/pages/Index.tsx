@@ -133,6 +133,103 @@ function formatFeedingMethod(input: any) {
   return map[key] ?? raw;
 }
 
+type RecentItem = {
+  type: string;
+  label: string;
+  sub: string;
+  icon: React.ComponentType<{ className?: string }>;
+  tone: "blue" | "purple" | "orange" | "pink" | "green";
+  key: string;
+};
+
+function buildSleepLabel(details: any) {
+  const duration = typeof details?.durationMinutes === "number" ? details.durationMinutes : 0;
+  if (duration <= 0) {
+    return details?.action === "end" ? "เธ•เธทเนเธเธเธญเธ" : "เน€เธฃเธดเนเธกเธซเธฅเธฑเธ";
+  }
+  const h = Math.floor(duration / 60);
+  const m = duration % 60;
+  return `เธเธญเธเธซเธฅเธฑเธ (${h > 0 ? h + "เธเธก. " : ""}${m}เธ.)`;
+}
+
+function buildFeedingLabel(details: any) {
+  const amountMl = getAmountMl(details);
+  if (amountMl) return `เธเธงเธ”เธเธก (${amountMl} เธกเธฅ.)`;
+
+  const leftSec = details?.leftDurationSeconds || 0;
+  const rightSec = details?.rightDurationSeconds || 0;
+  const totalMin = Math.round((leftSec + rightSec) / 60);
+
+  if (totalMin > 0) return `เน€เธเนเธฒเน€เธ•เนเธฒ (${totalMin} เธเธฒเธ—เธต)`;
+  if (details?.method === "breast" || details?.method === "nursing" || details?.source === "breast") {
+    return "เน€เธเนเธฒเน€เธ•เนเธฒ";
+  }
+  return "เธเธฒเธฃเธเธดเธเธเธก";
+}
+
+function buildRecentItem(log: any): RecentItem {
+  const type = (log?.type ?? log?.logType ?? log?.category ?? "unknown") as string;
+  const at = safeDate(log?.timestamp ?? log?.createdAt ?? log?.time ?? log?.date) ?? new Date();
+  const details = log?.details ?? log ?? {};
+  const key = String(log?.id ?? log?._id ?? log?.logId ?? `${type}-${at.getTime()}`);
+
+  if (type.includes("diaper")) {
+    const diaperType = formatDiaperType(details?.status ?? details?.diaperType ?? details?.kind ?? details?.type);
+    const label = diaperType ? `เธเนเธฒเธญเนเธญเธก (${diaperType})` : "เธเนเธฒเธญเนเธญเธก";
+    return {
+      type: "diaper",
+      label,
+      sub: `${fmtTime(at)} โ€ข ${timeAgo(at)}`,
+      icon: Droplets,
+      tone: "blue",
+      key,
+    };
+  }
+
+  if (type.includes("sleep")) {
+    return {
+      type: "sleep",
+      label: buildSleepLabel(details),
+      sub: `${fmtTime(at)} โ€ข ${timeAgo(at)}`,
+      icon: Moon,
+      tone: "purple",
+      key,
+    };
+  }
+
+  if (type.includes("feeding")) {
+    const method = formatFeedingMethod(details?.method ?? details?.feedingType ?? details?.source);
+    return {
+      type: "feeding",
+      label: buildFeedingLabel(details),
+      sub: `${fmtTime(at)} โ€ข ${method}`,
+      icon: Coffee,
+      tone: "orange",
+      key,
+    };
+  }
+
+  if (type.includes("pump")) {
+    return {
+      type: "pump",
+      label: "เธเธฑเนเธกเธเธก",
+      sub: `${fmtTime(at)} โ€ข ${timeAgo(at)}`,
+      icon: Milk,
+      tone: "pink",
+      key,
+    };
+  }
+
+  return {
+    type: "unknown",
+    label: "เธเธดเธเธเธฃเธฃเธก",
+    sub: `${fmtTime(at)} โ€ข ${timeAgo(at)}`,
+    icon: Ruler,
+    tone: "green",
+    key,
+  };
+}
+
 // --------------------------------------------
 
 const Index = () => {
@@ -290,93 +387,7 @@ const Index = () => {
       return db.getTime() - da.getTime();
     });
 
-    return arr.slice(0, 4).map((l: any) => {
-      const type = (l?.type ?? l?.logType ?? l?.category ?? "unknown") as string;
-      const at = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date) ?? new Date();
-      const details = l?.details ?? l ?? {};
-      const key = String(l?.id ?? l?._id ?? l?.logId ?? `${type}-${at.getTime()}`);
-
-      // label + icon
-      if (type.includes("diaper")) {
-        const diaperType = formatDiaperType(details?.status ?? details?.diaperType ?? details?.kind ?? details?.type);
-        const label = diaperType ? `ผ้าอ้อม (${diaperType})` : "ผ้าอ้อม";
-        return {
-          type: "diaper",
-          label,
-          sub: `${fmtTime(at)} • ${timeAgo(at)}`,
-          icon: Droplets,
-          tone: "blue" as const,
-          key,
-        };
-      }
-      if (type.includes("sleep")) {
-        const duration = typeof details?.durationMinutes === "number" ? details.durationMinutes : 0;
-        let label = details?.action === "end" ? "ตื่นนอน" : "เริ่มหลับ";
-
-        if (duration > 0) {
-          const h = Math.floor(duration / 60);
-          const m = duration % 60;
-          label = `นอนหลับ (${h > 0 ? h + "ชม. " : ""}${m}น.)`;
-        }
-
-        return {
-          type: "sleep",
-          label,
-          sub: `${fmtTime(at)} • ${timeAgo(at)}`,
-          icon: Moon,
-          tone: "purple" as const,
-          key,
-        };
-      }
-      if (type.includes("feeding")) {
-        const amountMl = getAmountMl(details);
-        let label = "การกินนม";
-
-        if (amountMl) {
-          label = `ขวดนม (${amountMl} มล.)`;
-        } else {
-          // Breastfeeding logic
-          const leftSec = details?.leftDurationSeconds || 0;
-          const rightSec = details?.rightDurationSeconds || 0;
-          const totalMin = Math.round((leftSec + rightSec) / 60);
-
-          if (totalMin > 0) {
-            label = `เข้าเต้า (${totalMin} นาที)`;
-          } else if (details?.method === 'breast' || details?.method === 'nursing' || details?.source === 'breast') {
-            label = "เข้าเต้า";
-          }
-        }
-        const method = formatFeedingMethod(details?.method ?? details?.feedingType ?? details?.source);
-        return {
-          type: "feeding",
-          label,
-          sub: `${fmtTime(at)} • ${method}`,
-          icon: Coffee,
-          tone: "orange" as const,
-          key,
-        };
-      }
-      if (type.includes("pump")) {
-        const label = "ปั๊มนม";
-        return {
-          type: "pump",
-          label,
-          sub: `${fmtTime(at)} • ${timeAgo(at)}`,
-          icon: Milk,
-          tone: "pink" as const,
-          key,
-        };
-      }
-
-      return {
-        type: "unknown",
-        label: "กิจกรรม",
-        sub: `${fmtTime(at)} • ${timeAgo(at)}`,
-        icon: Ruler,
-        tone: "green" as const,
-        key,
-      };
-    });
+    return arr.slice(0, 4).map(buildRecentItem);
   }, [logs]);
 
   const dailySummary = useMemo(() => {
@@ -966,7 +977,9 @@ const Index = () => {
               onDeleteBaby={handleDeleteBaby}
             />
           )}
-          {activeModal === "caregivers" && <CaregiversModal onClose={() => setActiveModal(null)} />}
+          {activeModal === "caregivers" && (
+            <CaregiversModal babyId={baby?.id || null} onClose={() => setActiveModal(null)} />
+          )}
           {activeModal === "dashboard" && <DashboardModal logs={logs} onClose={() => setActiveModal(null)} />}
         </AnimatePresence>
 

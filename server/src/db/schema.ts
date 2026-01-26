@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 //  ตารางเด็ก
 export const babies = sqliteTable("babies", {
@@ -10,6 +10,22 @@ export const babies = sqliteTable("babies", {
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
+//  Users (auth)
+export const users = sqliteTable(
+  "users",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    name: text("name"),
+    createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    lastLoginAt: integer("last_login_at", { mode: "timestamp" }),
+  },
+  (table) => ({
+    emailUnique: uniqueIndex("users_email_unique").on(table.email),
+  })
+);
+
 //  ตาราง Log (รวมทุกประเภท)
 export const logs = sqliteTable("logs", {
   id: text("id").primaryKey(),
@@ -18,6 +34,45 @@ export const logs = sqliteTable("logs", {
   timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
+
+//  สมาชิกของเด็ก
+export const babyMembers = sqliteTable(
+  "baby_members",
+  {
+    id: text("id").primaryKey(),
+    babyId: text("baby_id").notNull().references(() => babies.id),
+    userId: text("user_id").notNull().references(() => users.id),
+    role: text("role").notNull(), // 'owner' | 'caregiver'
+    createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  },
+  (table) => ({
+    babyUserUnique: uniqueIndex("baby_members_baby_user_unique").on(table.babyId, table.userId),
+    babyIdx: index("baby_members_baby_id_idx").on(table.babyId),
+    userIdx: index("baby_members_user_id_idx").on(table.userId),
+  })
+);
+
+//  คำเชิญผู้ดูแล
+export const invitations = sqliteTable(
+  "invitations",
+  {
+    id: text("id").primaryKey(),
+    babyId: text("baby_id").notNull().references(() => babies.id),
+    email: text("email").notNull(),
+    role: text("role").notNull(), // 'caregiver'
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+    status: text("status").notNull(), // 'pending' | 'accepted' | 'revoked' | 'expired'
+    invitedBy: text("invited_by").notNull().references(() => users.id),
+    createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    acceptedAt: integer("accepted_at", { mode: "timestamp" }),
+  },
+  (table) => ({
+    tokenHashUnique: uniqueIndex("invitations_token_hash_unique").on(table.tokenHash),
+    babyIdx: index("invitations_baby_id_idx").on(table.babyId),
+    emailIdx: index("invitations_email_idx").on(table.email),
+  })
+);
 
 //  รายละเอียดการให้นม
 export const feedingDetails = sqliteTable("feeding_details", {
