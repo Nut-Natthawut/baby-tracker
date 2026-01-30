@@ -1,141 +1,422 @@
-// เริ่มจาก import และ setup พื้นฐาน
 import { Hono } from "hono";
+import type { Bindings } from "../types";
+import { requireAuth, type AuthVariables } from "../middleware/auth";
+import { hashToken } from "../lib/auth";
+import { sendInviteEmail } from "../services/email";
 
-type Bindings = {
-    baby_tracker_db: D1Database;
-};
+const babies = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
 
-const babies = new Hono<{ Bindings: Bindings }>();
+babies.use("*", requireAuth);
+
+function nowSeconds() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function toBase64Url(bytes: Uint8Array) {
+  let binary = "";
+  for (const b of bytes) binary += String.fromCodePoint(b);
+  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+}
+
+function generateToken() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return toBase64Url(bytes);
+}
+
+async function getMembership(
+  db: D1Database,
+  babyId: string,
+  userId: string
+): Promise<{ role: string } | null> {
+  const membership: any = await db
+    .prepare("SELECT role FROM baby_members WHERE baby_id = ? AND user_id = ?")
+    .bind(babyId, userId)
+    .first();
+
+  return membership ? { role: membership.role } : null;
+}
 
 babies.get("/", async (c) => {
-    const result = await c.env.baby_tracker_db
-        .prepare("SELECT * FROM babies ORDER BY created_at DESC")
-        .all();
+  const user = c.get("user");
+  const result = await c.env.baby_tracker_db
+    .prepare(
+      "SELECT b.* FROM babies b INNER JOIN baby_members bm ON bm.baby_id = b.id WHERE bm.user_id = ? ORDER BY b.created_at DESC"
+    )
+    .bind(user.sub)
+    .all();
 
-    const mappedBabies = result.results.map((b: any) => ({
-        ...b,
-        birthDate: b.birth_date,
-        createdAt: b.created_at,
-        birth_date: undefined,
-        created_at: undefined
-    }));
+  const mappedBabies = (result.results ?? []).map((b: any) => ({
+    ...b,
+    birthDate: b.birth_date,
+    createdAt: b.created_at,
+    birth_date: undefined,
+    created_at: undefined,
+  }));
 
-    return c.json({
-        success: true,
-        message: "ดึงข้อมูลสำเร็จ",
-        data: mappedBabies
-    });
-})
+  return c.json({
+    success: true,
+    message: "Loaded babies",
+    data: mappedBabies,
+  });
+});
 
 babies.get("/:id", async (c) => {
-    const id = c.req.param("id");
+  const id = c.req.param("id");
+  const user = c.get("user");
 
-    const baby: any = await c.env.baby_tracker_db
-        .prepare("SELECT * FROM babies WHERE id = ?")
-        .bind(id)
-        .first();
+  const baby: any = await c.env.baby_tracker_db
+    .prepare(
+      "SELECT b.* FROM babies b INNER JOIN baby_members bm ON bm.baby_id = b.id WHERE b.id = ? AND bm.user_id = ?"
+    )
+    .bind(id, user.sub)
+    .first();
 
-    if (!baby) {
-        return c.json({ success: false, message: "ไม่พบข้อมูลเด็ก", error: "NOT_FOUND" }, 404);
-    }
+  if (!baby) {
+    return c.json({ success: false, message: "Baby not found" }, 404);
+  }
 
-    const mappedBaby = {
-        ...baby,
-        birthDate: baby.birth_date,
-        createdAt: baby.created_at,
-        birth_date: undefined,
-        created_at: undefined
-    };
+  const mappedBaby = {
+    ...baby,
+    birthDate: baby.birth_date,
+    createdAt: baby.created_at,
+    birth_date: undefined,
+    created_at: undefined,
+  };
 
-    return c.json({
-        success: true,
-        message: "ดึงข้อมูลสำเร็จ",
-        data: mappedBaby
-    });
-})
+  return c.json({
+    success: true,
+    message: "Loaded baby",
+    data: mappedBaby,
+  });
+});
 
 babies.post("/", async (c) => {
-    const body = await c.req.json();
-    const id = crypto.randomUUID();
-    const now = Math.floor(Date.now() / 1000);
+  const body = await c.req.json();
+  const user = c.get("user");
+  const id = crypto.randomUUID();
+  const now = nowSeconds();
 
-    await c.env.baby_tracker_db
-        .prepare("INSERT INTO babies (id, name, birth_date, gender, weight, created_at) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind(id, body.name, body.birthDate, body.gender, body.weight || null, now)
-        .run();
+  await c.env.baby_tracker_db
+    .prepare("INSERT INTO babies (id, name, birth_date, gender, weight, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+    .bind(id, body.name, body.birthDate, body.gender, body.weight || null, now)
+    .run();
 
-    return c.json({
-        success: true,
-        message: "เพิ่มข้อมูลสำเร็จ",
-        data: { id, ...body, created_at: now }
-    }, 201);
-})
+  await c.env.baby_tracker_db
+    .prepare("INSERT INTO baby_members (id, baby_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)")
+    .bind(crypto.randomUUID(), id, user.sub, "owner", now)
+    .run();
+
+  return c.json(
+    {
+      success: true,
+      message: "Created baby",
+      data: { id, ...body, created_at: now },
+    },
+    201
+  );
+});
 
 babies.put("/:id", async (c) => {
-    const id = c.req.param("id");
-    const body = await c.req.json();
+  const id = c.req.param("id");
+  const user = c.get("user");
+  const body = await c.req.json();
 
-    await c.env.baby_tracker_db
-        .prepare("UPDATE babies SET name = ?, birth_date = ?, gender = ?, weight = ? WHERE id = ?")
-        .bind(body.name, body.birthDate, body.gender, body.weight || null, id)
-        .run();
+  const membership = await getMembership(c.env.baby_tracker_db, id, user.sub);
+  if (!membership) {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
 
-    return c.json({
-        success: true,
-        message: "อัปเดตข้อมูลสำเร็จ",
-        data: { id, ...body }
-    }, 200);
-})
+  await c.env.baby_tracker_db
+    .prepare("UPDATE babies SET name = ?, birth_date = ?, gender = ?, weight = ? WHERE id = ?")
+    .bind(body.name, body.birthDate, body.gender, body.weight || null, id)
+    .run();
+
+  return c.json(
+    {
+      success: true,
+      message: "Updated baby",
+      data: { id, ...body },
+    },
+    200
+  );
+});
 
 babies.delete("/:id", async (c) => {
-    const id = c.req.param("id");
+  const id = c.req.param("id");
+  const user = c.get("user");
 
-    try {
-        // 1. Get all logs for this baby to clean up details first
-        const logsResult = await c.env.baby_tracker_db
-            .prepare("SELECT id FROM logs WHERE baby_id = ?")
-            .bind(id)
-            .all();
+  const membership = await getMembership(c.env.baby_tracker_db, id, user.sub);
+  if (membership?.role !== "owner") {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
 
-        const logIds = (logsResult.results || []).map((l: any) => l.id);
+  try {
+    // 1. Get all logs for this baby to clean up details first
+    const logsResult = await c.env.baby_tracker_db
+      .prepare("SELECT id FROM logs WHERE baby_id = ?")
+      .bind(id)
+      .all();
 
-        if (logIds.length > 0) {
-            // Delete from all detail tables using IN clause
-            const placeholders = logIds.map(() => "?").join(",");
+    const logIds = (logsResult.results ?? []).map((l: any) => l.id);
 
-            // Execute deletes for details
-            await Promise.all([
-                c.env.baby_tracker_db.prepare(`DELETE FROM feeding_details WHERE log_id IN (${placeholders})`).bind(...logIds).run(),
-                c.env.baby_tracker_db.prepare(`DELETE FROM diaper_details WHERE log_id IN (${placeholders})`).bind(...logIds).run(),
-                c.env.baby_tracker_db.prepare(`DELETE FROM sleep_details WHERE log_id IN (${placeholders})`).bind(...logIds).run(),
-                c.env.baby_tracker_db.prepare(`DELETE FROM pumping_details WHERE log_id IN (${placeholders})`).bind(...logIds).run()
-            ]);
+    if (logIds.length > 0) {
+      const placeholders = logIds.map(() => "?").join(",");
 
-            // 2. Delete logs
-            await c.env.baby_tracker_db
-                .prepare("DELETE FROM logs WHERE baby_id = ?")
-                .bind(id)
-                .run();
-        }
+      await Promise.all([
+        c.env.baby_tracker_db
+          .prepare(`DELETE FROM feeding_details WHERE log_id IN (${placeholders})`)
+          .bind(...logIds)
+          .run(),
+        c.env.baby_tracker_db
+          .prepare(`DELETE FROM diaper_details WHERE log_id IN (${placeholders})`)
+          .bind(...logIds)
+          .run(),
+        c.env.baby_tracker_db
+          .prepare(`DELETE FROM sleep_details WHERE log_id IN (${placeholders})`)
+          .bind(...logIds)
+          .run(),
+        c.env.baby_tracker_db
+          .prepare(`DELETE FROM pumping_details WHERE log_id IN (${placeholders})`)
+          .bind(...logIds)
+          .run(),
+      ]);
 
-        // 3. Delete baby
-        await c.env.baby_tracker_db
-            .prepare("DELETE FROM babies WHERE id = ?")
-            .bind(id)
-            .run();
-
-        return c.json({
-            success: true,
-            message: "ลบข้อมูลสำเร็จ",
-        }, 200);
-    } catch (error: any) {
-        console.error("Error deleting baby:", error);
-        return c.json({
-            success: false,
-            message: "เกิดข้อผิดพลาดในการลบข้อมูล",
-            error: error.message
-        }, 500);
+      await c.env.baby_tracker_db
+        .prepare("DELETE FROM logs WHERE baby_id = ?")
+        .bind(id)
+        .run();
     }
-})
+
+    await c.env.baby_tracker_db.prepare("DELETE FROM invitations WHERE baby_id = ?").bind(id).run();
+    await c.env.baby_tracker_db.prepare("DELETE FROM baby_members WHERE baby_id = ?").bind(id).run();
+
+    await c.env.baby_tracker_db.prepare("DELETE FROM babies WHERE id = ?").bind(id).run();
+
+    return c.json(
+      {
+        success: true,
+        message: "Deleted baby",
+      },
+      200
+    );
+  } catch (error: any) {
+    console.error("Error deleting baby:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Failed to delete baby",
+        error: error.message,
+      },
+      500
+    );
+  }
+});
+
+// Caregivers list + pending invites
+babies.get("/:id/caregivers", async (c) => {
+  const babyId = c.req.param("id");
+  const user = c.get("user");
+
+  const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
+  if (!membership) {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
+
+  const now = nowSeconds();
+  await c.env.baby_tracker_db
+    .prepare("UPDATE invitations SET status = 'expired' WHERE status = 'pending' AND expires_at <= ? AND baby_id = ?")
+    .bind(now, babyId)
+    .run();
+
+  const membersResult = await c.env.baby_tracker_db
+    .prepare(
+      "SELECT u.id, u.name, u.email, bm.role, bm.created_at FROM baby_members bm INNER JOIN users u ON u.id = bm.user_id WHERE bm.baby_id = ? ORDER BY bm.created_at ASC"
+    )
+    .bind(babyId)
+    .all();
+
+  const invitesResult = await c.env.baby_tracker_db
+    .prepare(
+      "SELECT id, email, role, status, expires_at, created_at FROM invitations WHERE baby_id = ? AND status = 'pending' ORDER BY created_at DESC"
+    )
+    .bind(babyId)
+    .all();
+
+  const members = (membersResult.results ?? []).map((row: any) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    role: row.role,
+    createdAt: row.created_at,
+  }));
+
+  const invites = (invitesResult.results ?? []).map((row: any) => ({
+    id: row.id,
+    email: row.email,
+    role: row.role,
+    status: row.status,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
+  }));
+
+  return c.json({
+    success: true,
+    data: { members, invites },
+  });
+});
+
+// Create invite (owner only)
+babies.post("/:id/invitations", async (c) => {
+  const babyId = c.req.param("id");
+  const user = c.get("user");
+  const body = await c.req.json();
+  const email = normalizeEmail(String(body?.email ?? ""));
+  const role = "caregiver";
+
+  if (!email) {
+    return c.json({ success: false, message: "Email is required" }, 400);
+  }
+
+  const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
+  if (membership?.role !== "owner") {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
+
+  const appUrl = c.env.APP_URL || c.req.header("Origin") || "";
+  if (!appUrl) {
+    return c.json({ success: false, message: "Server misconfigured" }, 500);
+  }
+
+  const existingMember = await c.env.baby_tracker_db
+    .prepare(
+      "SELECT u.id FROM users u INNER JOIN baby_members bm ON bm.user_id = u.id WHERE bm.baby_id = ? AND u.email = ?"
+    )
+    .bind(babyId, email)
+    .first();
+
+  if (existingMember) {
+    return c.json({ success: false, message: "User already a member" }, 409);
+  }
+
+  const now = nowSeconds();
+  const pendingInvite = await c.env.baby_tracker_db
+    .prepare(
+      "SELECT id FROM invitations WHERE baby_id = ? AND email = ? AND status = 'pending' AND expires_at > ?"
+    )
+    .bind(babyId, email, now)
+    .first();
+
+  if (pendingInvite) {
+    return c.json({ success: false, message: "Invite already sent" }, 409);
+  }
+
+  const token = generateToken();
+  const tokenHash = await hashToken(token);
+  const inviteId = crypto.randomUUID();
+  const expiresAt = now + 24 * 60 * 60;
+
+  await c.env.baby_tracker_db
+    .prepare(
+      "INSERT INTO invitations (id, baby_id, email, role, token_hash, expires_at, status, invited_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    )
+    .bind(inviteId, babyId, email, role, tokenHash, expiresAt, "pending", user.sub, now)
+    .run();
+
+  const baby: any = await c.env.baby_tracker_db
+    .prepare("SELECT name FROM babies WHERE id = ?")
+    .bind(babyId)
+    .first();
+
+  const inviteLink = `${appUrl.replace(/\/$/, "")}/invite/${token}`;
+  const inviterName = user.name || "Someone";
+  const babyName = baby?.name || "your baby";
+
+  try {
+    if (c.env.RESEND_API_KEY) {
+      await sendInviteEmail(c.env.RESEND_API_KEY, {
+        to: email,
+        inviteLink,
+        inviterName,
+        babyName,
+      });
+    } else {
+      console.warn("RESEND_API_KEY not set. Skipping invite email.");
+    }
+  } catch (error: any) {
+    console.error("Invite email failed:", error);
+    return c.json({ success: false, message: "Failed to send invite email" }, 500);
+  }
+
+  return c.json(
+    {
+      success: true,
+      data: {
+        id: inviteId,
+        email,
+        role,
+        status: "pending",
+        expiresAt,
+        inviteLink: c.env.RESEND_API_KEY ? null : inviteLink,
+      },
+    },
+    201
+  );
+});
+
+// Revoke invite (owner only)
+babies.post("/:id/invitations/:inviteId/revoke", async (c) => {
+  const babyId = c.req.param("id");
+  const inviteId = c.req.param("inviteId");
+  const user = c.get("user");
+
+  const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
+  if (membership?.role !== "owner") {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
+
+  await c.env.baby_tracker_db
+    .prepare("UPDATE invitations SET status = 'revoked' WHERE id = ? AND baby_id = ?")
+    .bind(inviteId, babyId)
+    .run();
+
+  return c.json({ success: true });
+});
+
+// Remove caregiver (owner only)
+babies.delete("/:id/caregivers/:userId", async (c) => {
+  const babyId = c.req.param("id");
+  const targetUserId = c.req.param("userId");
+  const user = c.get("user");
+
+  const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
+  if (membership?.role !== "owner") {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
+
+  const target: any = await c.env.baby_tracker_db
+    .prepare("SELECT role FROM baby_members WHERE baby_id = ? AND user_id = ?")
+    .bind(babyId, targetUserId)
+    .first();
+
+  if (!target) {
+    return c.json({ success: false, message: "Member not found" }, 404);
+  }
+
+  if (target.role === "owner") {
+    return c.json({ success: false, message: "Cannot remove owner" }, 400);
+  }
+
+  await c.env.baby_tracker_db
+    .prepare("DELETE FROM baby_members WHERE baby_id = ? AND user_id = ?")
+    .bind(babyId, targetUserId)
+    .run();
+
+  return c.json({ success: true });
+});
 
 export default babies;

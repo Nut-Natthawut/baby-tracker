@@ -15,7 +15,21 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
   const isPump = entry.type === 'pump';
   const isSleep = entry.type === 'sleep';
 
-  const details = entry.details as any;
+  const details = entry.details;
+  const feedingDetails = isFeeding ? (details as FeedingDetails) : null;
+  const diaperDetails = isDiaper ? (details as DiaperDetails) : null;
+  const pumpDetails = isPump ? (details as PumpingDetails) : null;
+  const sleepDetails = isSleep ? (details as SleepDetails) : null;
+  const notes = details.notes;
+  const hasNotes = Boolean(notes);
+  const hasFeedingAmount = Boolean(
+    feedingDetails
+      && feedingDetails.method === 'bottle'
+      && typeof feedingDetails.amountMl === 'number'
+      && feedingDetails.amountMl > 0,
+  );
+  const hasPooColor = Boolean(diaperDetails?.pooColor);
+  const hasSleepEndTime = Boolean(sleepDetails?.endTime);
 
   let bgClass = 'bg-secondary/20';
   let iconBgClass = 'bg-secondary/30';
@@ -65,17 +79,17 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`px-6 py-5 ${bgClass}`}>
+        <div className={`px-6 py-6 ${bgClass}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`p-3 rounded-2xl ${iconBgClass}`}>
                 <Icon size={24} className={iconColor} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-foreground">
+                <h3 className="text-xl font-bold text-foreground">
                   {title}
                 </h3>
-                <p className="text-sm text-muted-foreground">รายละเอียดบันทึก</p>
+                <p className="text-base text-muted-foreground">รายละเอียดบันทึก</p>
               </div>
             </div>
             <button
@@ -94,86 +108,86 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
             <div className="flex-1 bg-secondary/50 rounded-2xl p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Clock size={16} />
-                <span className="text-xs font-medium">เวลา</span>
+                <span className="text-sm font-medium">เวลา</span>
               </div>
-              <p className="text-xl font-bold text-foreground">{formatTime(entry.timestamp)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatTime(entry.timestamp)}</p>
             </div>
             <div className="flex-1 bg-secondary/50 rounded-2xl p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <Calendar size={16} />
-                <span className="text-xs font-medium">วันที่</span>
+                <span className="text-sm font-medium">วันที่</span>
               </div>
-              <p className="text-xl font-bold text-foreground">{formatDate(entry.timestamp)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatDate(entry.timestamp)}</p>
             </div>
           </div>
 
           {/* Feeding Details */}
-          {isFeeding && (
+          {isFeeding && feedingDetails && (
             <div className="space-y-4">
               <div className="bg-feeding/10 rounded-2xl p-4 border border-feeding/20">
-                <p className="text-sm text-muted-foreground mb-2">วิธีการให้นม</p>
+                <p className="text-base text-muted-foreground mb-2">วิธีการให้นม</p>
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">
-                    {(details as FeedingDetails).method === 'bottle' ? '🍼' : '🤱'}
+                    {feedingDetails.method === 'bottle' ? '🍼' : '🤱'}
                   </span>
                   <div>
-                    <p className="font-bold text-foreground">
-                      {(details as FeedingDetails).method === 'bottle' ? 'ขวดนม' : 'เข้าเต้า'}
+                    <p className="text-base font-bold text-foreground">
+                      {feedingDetails.method === 'bottle' ? 'ขวดนม' : 'เข้าเต้า'}
                     </p>
-                    {(details as FeedingDetails).bottleContent && (
-                      <p className="text-sm text-muted-foreground">
-                        {(details as FeedingDetails).bottleContent === 'breastmilk' ? 'นมแม่' : 'นมผง'}
+                    {feedingDetails.bottleContent && (
+                      <p className="text-base text-muted-foreground">
+                        {feedingDetails.bottleContent === 'breastmilk' ? 'นมแม่' : 'นมผง'}
                       </p>
                     )}
                   </div>
                 </div>
               </div>
 
-              {(details as FeedingDetails).method === 'bottle' && (details as FeedingDetails).amountMl && (
+              {hasFeedingAmount && (
                 <div className="bg-secondary/50 rounded-2xl p-4">
-                  <p className="text-sm text-muted-foreground mb-2">ปริมาณนม</p>
-                  <p className="text-4xl font-bold text-feeding">
-                    {(details as FeedingDetails).amountMl} <span className="text-xl">ml</span>
+                  <p className="text-base text-muted-foreground mb-2">ปริมาณนม</p>
+                  <p className="text-5xl font-bold text-feeding">
+                    {feedingDetails.amountMl} <span className="text-2xl">ml</span>
                   </p>
                 </div>
               )}
 
-              {(details as FeedingDetails).method === 'breast' && (
+              {feedingDetails.method === 'breast' && (
                 <div className="space-y-3">
                   <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                    <p className="text-sm text-muted-foreground mb-1">เวลารวม</p>
+                    <p className="text-base text-muted-foreground mb-1">เวลารวม</p>
                     <p className="text-3xl font-bold text-foreground">
                       {(() => {
-                        const totalSeconds = ((details as FeedingDetails).leftDurationSeconds || 0) + ((details as FeedingDetails).rightDurationSeconds || 0);
+                        const totalSeconds = (feedingDetails.leftDurationSeconds || 0) + (feedingDetails.rightDurationSeconds || 0);
                         const m = Math.floor(totalSeconds / 60);
                         const s = totalSeconds % 60;
-                        if (m === 0) return <>{s} <span className="text-sm">วินาที</span></>;
-                        return <>{m} <span className="text-sm">นาที</span> {s > 0 && <>{s} <span className="text-sm">วิ</span></>}</>;
+                        if (m === 0) return <>{s} <span className="text-base">วินาที</span></>;
+                        return <>{m} <span className="text-base">นาที</span> {s > 0 && <>{s} <span className="text-base">วิ</span></>}</>;
                       })()}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                      <p className="text-sm text-muted-foreground mb-1">เต้าซ้าย</p>
+                      <p className="text-base text-muted-foreground mb-1">เต้าซ้าย</p>
                       <p className="text-2xl font-bold text-foreground">
                         {(() => {
-                          const seconds = (details as FeedingDetails).leftDurationSeconds || 0;
+                          const seconds = feedingDetails.leftDurationSeconds || 0;
                           const m = Math.floor(seconds / 60);
                           const s = seconds % 60;
-                          if (m === 0) return <>{s} <span className="text-sm">วินาที</span></>;
-                          return <>{m} <span className="text-sm">นาที</span> {s > 0 && <>{s} <span className="text-sm">วิ</span></>}</>;
+                          if (m === 0) return <>{s} <span className="text-base">วินาที</span></>;
+                          return <>{m} <span className="text-base">นาที</span> {s > 0 && <>{s} <span className="text-base">วิ</span></>}</>;
                         })()}
                       </p>
                     </div>
                     <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                      <p className="text-sm text-muted-foreground mb-1">เต้าขวา</p>
+                      <p className="text-base text-muted-foreground mb-1">เต้าขวา</p>
                       <p className="text-2xl font-bold text-foreground">
                         {(() => {
-                          const seconds = (details as FeedingDetails).rightDurationSeconds || 0;
+                          const seconds = feedingDetails.rightDurationSeconds || 0;
                           const m = Math.floor(seconds / 60);
                           const s = seconds % 60;
-                          if (m === 0) return <>{s} <span className="text-sm">วินาที</span></>;
-                          return <>{m} <span className="text-sm">นาที</span> {s > 0 && <>{s} <span className="text-sm">วิ</span></>}</>;
+                          if (m === 0) return <>{s} <span className="text-base">วินาที</span></>;
+                          return <>{m} <span className="text-base">นาที</span> {s > 0 && <>{s} <span className="text-base">วิ</span></>}</>;
                         })()}
                       </p>
                     </div>
@@ -181,7 +195,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
                 </div>
               )}
 
-              {(details as FeedingDetails).hasSpitUp && (
+              {feedingDetails.hasSpitUp && (
                 <div className="flex items-center gap-3 bg-orange-500/10 rounded-2xl p-4 border border-orange-500/20">
                   <AlertTriangle size={20} className="text-orange-500" />
                   <p className="font-medium text-orange-500">แหวะนม</p>
@@ -191,24 +205,24 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
           )}
 
           {/* Diaper Details */}
-          {isDiaper && (
+          {isDiaper && diaperDetails && (
             <div className="space-y-4">
               <div className="bg-diaper/10 rounded-2xl p-4 border border-diaper/20">
-                <p className="text-sm text-muted-foreground mb-3">สถานะผ้าอ้อม</p>
+                <p className="text-base text-muted-foreground mb-3">สถานะผ้าอ้อม</p>
                 <div className="flex items-center gap-4">
-                  {((details as DiaperDetails).status === 'pee' || (details as DiaperDetails).status === 'mixed') && (
+                  {(diaperDetails.status === 'pee' || diaperDetails.status === 'mixed') && (
                     <div className="flex items-center gap-2">
                       <span className="text-3xl">💧</span>
                       <span className="font-bold text-diaper">ฉี่</span>
                     </div>
                   )}
-                  {((details as DiaperDetails).status === 'poo' || (details as DiaperDetails).status === 'mixed') && (
+                  {(diaperDetails.status === 'poo' || diaperDetails.status === 'mixed') && (
                     <div className="flex items-center gap-2">
                       <span className="text-3xl">💩</span>
                       <span className="font-bold text-diaper">อึ</span>
                     </div>
                   )}
-                  {(details as DiaperDetails).status === 'clean' && (
+                  {diaperDetails.status === 'clean' && (
                     <div className="flex items-center gap-2">
                       <span className="text-3xl">✨</span>
                       <span className="font-bold text-diaper">สะอาด</span>
@@ -217,12 +231,12 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
                 </div>
               </div>
 
-              {(details as DiaperDetails).pooColor && (
+              {hasPooColor && (
                 <div className="bg-secondary/50 rounded-2xl p-4">
-                  <p className="text-sm text-muted-foreground mb-3">สีอึ</p>
+                  <p className="text-base text-muted-foreground mb-3">สีอึ</p>
                   <div className="flex items-center gap-3">
                     {(() => {
-                      const colorInfo = POO_COLORS.find(c => c.id === (details as DiaperDetails).pooColor);
+                      const colorInfo = POO_COLORS.find(c => c.id === diaperDetails.pooColor);
                       return colorInfo ? (
                         <>
                           <div
@@ -240,30 +254,30 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
           )}
 
           {/* Pump Details */}
-          {isPump && (
+          {isPump && pumpDetails && (
             <div className="space-y-4">
               <div className="bg-pump/10 rounded-2xl p-4 border border-pump/20">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">ปริมาณรวม</span>
-                  <span className="text-sm text-muted-foreground">{details.durationMinutes} นาที</span>
+                  <span className="text-base text-muted-foreground">ปริมาณรวม</span>
+                  <span className="text-base text-muted-foreground">{pumpDetails.durationMinutes} นาที</span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-pump">{details.amountTotalMl}</span>
-                  <span className="text-xl text-muted-foreground">ml</span>
+                  <span className="text-5xl font-bold text-pump">{pumpDetails.amountTotalMl}</span>
+                  <span className="text-2xl text-muted-foreground">ml</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                  <p className="text-sm text-muted-foreground mb-1">ซ้าย</p>
+                  <p className="text-base text-muted-foreground mb-1">ซ้าย</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {details.amountLeftMl || 0} <span className="text-sm">ml</span>
+                    {pumpDetails.amountLeftMl || 0} <span className="text-base">ml</span>
                   </p>
                 </div>
                 <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                  <p className="text-sm text-muted-foreground mb-1">ขวา</p>
+                  <p className="text-base text-muted-foreground mb-1">ขวา</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {details.amountRightMl || 0} <span className="text-sm">ml</span>
+                    {pumpDetails.amountRightMl || 0} <span className="text-base">ml</span>
                   </p>
                 </div>
               </div>
@@ -271,24 +285,24 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
           )}
 
           {/* Sleep Details */}
-          {isSleep && (
+          {isSleep && sleepDetails && (
             <div className="space-y-4">
               <div className="bg-sleep/10 rounded-2xl p-4 border border-sleep/20">
-                <p className="text-sm text-muted-foreground mb-2">ระยะเวลาการนอน</p>
+                <p className="text-base text-muted-foreground mb-2">ระยะเวลาการนอน</p>
                 <div className="flex items-baseline gap-2">
-                  {Math.floor(details.durationMinutes / 60) > 0 && (
-                    <span className="text-4xl font-bold text-sleep">{Math.floor(details.durationMinutes / 60)} <span className="text-xl text-muted-foreground">ชม.</span></span>
+                  {Math.floor(sleepDetails.durationMinutes / 60) > 0 && (
+                    <span className="text-4xl font-bold text-sleep">{Math.floor(sleepDetails.durationMinutes / 60)} <span className="text-2xl text-muted-foreground">ชม.</span></span>
                   )}
-                  <span className="text-4xl font-bold text-sleep">{details.durationMinutes % 60}</span>
-                  <span className="text-xl text-muted-foreground">นาที</span>
+                  <span className="text-4xl font-bold text-sleep">{sleepDetails.durationMinutes % 60}</span>
+                  <span className="text-2xl text-muted-foreground">นาที</span>
                 </div>
               </div>
 
-              {details.endTime && (
+              {hasSleepEndTime && (
                 <div className="bg-secondary/50 rounded-2xl p-4">
-                  <p className="text-sm text-muted-foreground mb-2">ตื่นเวลา</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {formatTime(new Date(details.endTime))}
+                  <p className="text-base text-muted-foreground mb-2">ตื่นเวลา</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {formatTime(new Date(sleepDetails.endTime))}
                   </p>
                 </div>
               )}
@@ -296,10 +310,10 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
           )}
 
           {/* Notes */}
-          {(details as any).notes && (
+          {hasNotes && (
             <div className="bg-secondary/50 rounded-2xl p-4">
-              <p className="text-sm text-muted-foreground mb-2">หมายเหตุ</p>
-              <p className="text-foreground">{(details as any).notes}</p>
+              <p className="text-base text-muted-foreground mb-2">หมายเหตุ</p>
+              <p className="text-base text-foreground">{notes}</p>
             </div>
           )}
         </div>
@@ -308,7 +322,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
         <div className="px-6 pb-6">
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-2xl bg-secondary text-foreground font-semibold hover:bg-secondary/80 transition-colors"
+            className="w-full py-4 rounded-2xl bg-secondary text-foreground text-base font-semibold hover:bg-secondary/80 transition-colors"
           >
             ปิด
           </button>

@@ -2,10 +2,9 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import babies from "./routes/babies";
 import logs from "./routes/logs";
-
-type Bindings = {
-  baby_tracker_db: D1Database;
-};
+import auth from "./routes/auth";
+import invitations from "./routes/invitations";
+import type { Bindings } from "./types";
 
 const app = new Hono<{ Bindings: Bindings }>();
 
@@ -15,7 +14,7 @@ app.use(
   cors({
     origin: "*",
     allowMethods: ["GET", "POST", "PUT", "DELETE"],
-    allowHeaders: ["Content-Type"],
+    allowHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -27,5 +26,7 @@ app.get("/", (c) => {
 // Mount routes
 app.route("/api/babies", babies);
 app.route("/api/logs", logs);
+app.route("/api/auth", auth);
+app.route("/api/invitations", invitations);
 
 export default app;
