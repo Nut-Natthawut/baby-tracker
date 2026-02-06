@@ -1,0 +1,17 @@
+stages:
+  - deploy
+
+# ----------- DEPLOY Vercel -----------
+deploy-vercel:
+  stage: deploy
+  image: node:22
+  variables:
+    TOKEN: $VERCEL_TOKEN
+    VERCEL_ORG_ID: $VERCEL_ORG_ID
+    VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID
+  script:
+    - cd client  # Go to client directory because that's where the frontend code is
+    - npm install --global vercel
+    - vercel pull --yes --environment=production --token="$TOKEN"
+    - vercel build --prod --token="$TOKEN"
+    - vercel deploy --prebuilt --prod --token="$TOKEN"
