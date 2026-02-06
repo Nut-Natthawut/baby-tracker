@@ -69,7 +69,7 @@ const InviteAccept = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f7f5] dark:bg-[#0f172a] text-[#111418] dark:text-gray-100">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-xl mx-auto px-6 py-10">
         <button
           onClick={() => navigate("/")}

@@ -48,19 +48,10 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
     return m === 0 ? `${h}ชม.` : `${h}ชม. ${m}น.`;
   };
 
-  const clayCardStyle: React.CSSProperties = {
-    backgroundColor: 'rgba(245, 247, 250, 0.95)',
-    backdropFilter: 'blur(10px)',
-    boxShadow:
-      '8px 8px 16px rgba(0, 0, 0, 0.25), -8px -8px 16px rgba(255, 255, 255, 0.08), inset 2px 2px 4px rgba(255, 255, 255, 0.7), inset -2px -2px 4px rgba(0, 0, 0, 0.05)',
-    borderRadius: '2rem',
-  };
-
-  const clayButtonStyle: React.CSSProperties = {
-    backgroundColor: '#f0f2f4',
-    boxShadow:
-      '12px 12px 24px rgba(0, 0, 0, 0.3), -12px -12px 24px rgba(255, 255, 255, 0.1), inset 4px 4px 8px rgba(255, 255, 255, 1), inset -4px -4px 8px rgba(0, 0, 0, 0.1)',
-  };
+  const cardClass =
+    'rounded-[28px] border border-white/15 bg-white/95 text-slate-900 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.6)] backdrop-blur-xl';
+  const softActionClass =
+    'bg-slate-900/5 border border-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.35)] hover:bg-slate-900/10 active:scale-95 transition-transform';
 
   const handleSave = () => {
     const startTime = new Date(endTime.getTime() - durationMinutes * 60000);
@@ -102,7 +93,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex flex-col overflow-hidden text-white"
     >
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#1e3a8a] to-[#3b82f6]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0b1024] via-[#172554] to-[#1d4ed8]" />
 
       <div className="absolute inset-0 pointer-events-none">
         {stars.map((star, index) => (
@@ -119,12 +110,12 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
       <header className="relative z-10 flex items-center justify-between px-6 py-5">
         <button
           onClick={onClose}
-          className="flex size-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition"
+          className="flex size-11 items-center justify-center rounded-full bg-white/10 text-white border border-white/15 hover:bg-white/20 transition"
         >
           <X size={20} />
         </button>
         <div className="flex items-center gap-3 text-white">
-          <div className="size-11 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg">
+          <div className="size-11 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg border border-white/15">
             <Moon className="w-5 h-5 text-white" />
           </div>
           <h2 className="text-white text-xl font-bold tracking-wide">Sleep & Dream</h2>
@@ -153,8 +144,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              style={clayCardStyle}
-              className="p-6 md:p-8"
+              className={`${cardClass} p-6 md:p-8`}
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
@@ -170,16 +160,14 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleDurationChange(durationMinutes - durationStep)}
-                    style={clayButtonStyle}
-                    className="size-12 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
+                    className={`size-12 rounded-2xl flex items-center justify-center ${softActionClass}`}
                     aria-label={`ลดเวลา ${durationStep} นาที`}
                   >
                     <Minus size={18} />
                   </button>
                   <button
                     onClick={() => handleDurationChange(durationMinutes + durationStep)}
-                    style={clayButtonStyle}
-                    className="size-12 rounded-full flex items-center justify-center text-slate-500 active:scale-95 transition-transform"
+                    className={`size-12 rounded-2xl flex items-center justify-center ${softActionClass}`}
                     aria-label={`เพิ่มเวลา ${durationStep} นาที`}
                   >
                     <Plus size={18} />
@@ -195,7 +183,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                   step={durationStep}
                   value={durationMinutes}
                   onChange={(event) => handleDurationChange(Number(event.target.value))}
-                  className="w-full accent-primary"
+                  className="w-full h-2 rounded-full bg-slate-200/80 accent-primary"
                   aria-label="ปรับระยะเวลาการนอน"
                 />
                 <div className="flex justify-between text-xs text-slate-400 font-semibold mt-2">
@@ -213,7 +201,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                       onClick={() => handleDurationChange(value)}
                       className={`px-3 py-2 rounded-full text-sm font-bold transition ${isActive
                         ? "bg-primary text-white shadow-md"
-                        : "bg-white/80 text-slate-500 hover:bg-white"
+                        : "bg-slate-900/5 text-slate-600 hover:bg-slate-900/10"
                         }`}
                     >
                       {formatDurationLabel(value)}
@@ -240,8 +228,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              style={clayCardStyle}
-              className="p-5 md:p-6 flex flex-col gap-4"
+              className={`${cardClass} p-5 md:p-6 flex flex-col gap-4`}
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
@@ -251,7 +238,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                       type="time"
                       value={endTimeValue}
                       onChange={(event) => handleEndTimeChange(event.target.value)}
-                      className="rounded-2xl border border-white/60 bg-white/80 px-4 py-3 text-2xl font-black text-slate-800 shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      className="rounded-2xl border border-white/70 bg-white/95 px-4 py-3 text-2xl font-black text-slate-800 shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                     <span className="text-sm font-semibold text-slate-500">แตะเพื่อเลือกเวลา</span>
                   </div>
@@ -259,8 +246,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                 </div>
                 <button
                   onClick={() => setEndTime(new Date())}
-                  style={clayButtonStyle}
-                  className="px-5 py-3 rounded-2xl text-slate-600 font-bold shadow-sm active:scale-95 transition-transform"
+                  className={`px-5 py-3 rounded-2xl font-bold ${softActionClass}`}
                 >
                   ตอนนี้
                 </button>
@@ -269,13 +255,13 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => adjustTime(-30)}
-                  className="px-4 py-2 rounded-full bg-white/90 text-slate-500 text-sm font-bold shadow-sm hover:bg-white transition"
+                  className={`px-4 py-2 rounded-full text-sm font-bold ${softActionClass}`}
                 >
                   -30น.
                 </button>
                 <button
                   onClick={() => adjustTime(30)}
-                  className="px-4 py-2 rounded-full bg-white/90 text-slate-500 text-sm font-bold shadow-sm hover:bg-white transition"
+                  className={`px-4 py-2 rounded-full text-sm font-bold ${softActionClass}`}
                 >
                   +30น.
                 </button>
@@ -286,11 +272,10 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              style={clayCardStyle}
-              className="p-5 md:p-6"
+              className={`${cardClass} p-5 md:p-6`}
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="size-12 rounded-full bg-indigo-100 flex items-center justify-center shadow-inner text-indigo-600">
+                <div className="size-12 rounded-2xl bg-slate-900/5 border border-white/70 flex items-center justify-center shadow-inner text-slate-700">
                   <Moon className="w-6 h-6" />
                 </div>
                 <div>
@@ -302,7 +287,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="เช่น หลับปุ๋ย, ตื่นมาร้อง..."
-                className="w-full bg-white/80 border border-white/60 rounded-2xl p-3 text-base text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full bg-white/95 border border-white/70 rounded-2xl p-3 text-base text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
                 rows={4}
               />
             </motion.div>
