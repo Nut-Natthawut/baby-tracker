@@ -9,7 +9,7 @@ deploy-vercel:
     TOKEN: $VERCEL_TOKEN
 
   script:
-    - cd client  # Go to client directory because that's where the frontend code is
+
     - npm install --global vercel
     - vercel pull --yes --environment=production --token="$TOKEN"
     - vercel build --prod --token="$TOKEN"
