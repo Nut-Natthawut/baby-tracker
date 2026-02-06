@@ -83,11 +83,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const saved = localStorage.getItem(TOKEN_KEY);
     if (saved) {
       setToken(saved);
-      refreshMe(saved);
+      // Call refreshMe directly with the saved token to avoid stale closure issues
+      (async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${saved}` },
+          });
+          if (response.status === 401) {
+            setUser(null);
+            setToken(null);
+          } else if (response.ok) {
+            const result = await response.json();
+            setUser(result?.data as AuthUser);
+          } else {
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Auth refresh failed:", error);
+          setUser(null);
+        } finally {
+          setLoading(false);
+        }
+      })();
     } else {
       setLoading(false);
     }
-  }, [refreshMe]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     try {
