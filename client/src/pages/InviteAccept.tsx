@@ -17,7 +17,7 @@ const InviteAccept = () => {
 
   const handleAccept = async () => {
     if (!token) {
-      setError("ลิงก์เชิญไม่ถูกต้อง");
+      setError("ลิงก์เชิญไม่ถูกต้อง !");
       return;
     }
 
