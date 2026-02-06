@@ -7,8 +7,7 @@ deploy-vercel:
   image: node:22
   variables:
     TOKEN: $VERCEL_TOKEN
-    VERCEL_ORG_ID: $VERCEL_ORG_ID
-    VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID
+
   script:
     - cd client  # Go to client directory because that's where the frontend code is
     - npm install --global vercel
