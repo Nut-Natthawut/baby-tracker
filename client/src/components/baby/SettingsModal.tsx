@@ -32,7 +32,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: '100%' }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className="fixed inset-0 z-50 bg-[#f7f7f5] dark:bg-[#0f172a] text-[#111418] dark:text-gray-100 overflow-hidden"
+      className="fixed inset-0 z-50 bg-background text-foreground overflow-hidden"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <motion.div

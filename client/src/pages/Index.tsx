@@ -145,26 +145,26 @@ type RecentItem = {
 function buildSleepLabel(details: any) {
   const duration = typeof details?.durationMinutes === "number" ? details.durationMinutes : 0;
   if (duration <= 0) {
-    return details?.action === "end" ? "เธ•เธทเนเธเธเธญเธ" : "เน€เธฃเธดเนเธกเธซเธฅเธฑเธ";
+    return details?.action === "end" ? "ตื่นนอน" : "เริ่มหลับ";
   }
   const h = Math.floor(duration / 60);
   const m = duration % 60;
-  return `เธเธญเธเธซเธฅเธฑเธ (${h > 0 ? h + "เธเธก. " : ""}${m}เธ.)`;
+  return `นอนหลับ (${h > 0 ? h + "ชม. " : ""}${m}น.)`;
 }
 
 function buildFeedingLabel(details: any) {
   const amountMl = getAmountMl(details);
-  if (amountMl) return `เธเธงเธ”เธเธก (${amountMl} เธกเธฅ.)`;
+  if (amountMl) return `ขวดนม (${amountMl} มล.)`;
 
   const leftSec = details?.leftDurationSeconds || 0;
   const rightSec = details?.rightDurationSeconds || 0;
   const totalMin = Math.round((leftSec + rightSec) / 60);
 
-  if (totalMin > 0) return `เน€เธเนเธฒเน€เธ•เนเธฒ (${totalMin} เธเธฒเธ—เธต)`;
+  if (totalMin > 0) return `เข้าเต้า (${totalMin} นาที)`;
   if (details?.method === "breast" || details?.method === "nursing" || details?.source === "breast") {
-    return "เน€เธเนเธฒเน€เธ•เนเธฒ";
+    return "เข้าเต้า";
   }
-  return "เธเธฒเธฃเธเธดเธเธเธก";
+  return "การกินนม";
 }
 
 function buildRecentItem(log: any): RecentItem {
@@ -175,11 +175,11 @@ function buildRecentItem(log: any): RecentItem {
 
   if (type.includes("diaper")) {
     const diaperType = formatDiaperType(details?.status ?? details?.diaperType ?? details?.kind ?? details?.type);
-    const label = diaperType ? `เธเนเธฒเธญเนเธญเธก (${diaperType})` : "เธเนเธฒเธญเนเธญเธก";
+    const label = diaperType ? `ผ้าอ้อม (${diaperType})` : "ผ้าอ้อม";
     return {
       type: "diaper",
       label,
-      sub: `${fmtTime(at)} โ€ข ${timeAgo(at)}`,
+      sub: `${fmtTime(at)} โดย ${timeAgo(at)}`,
       icon: Droplets,
       tone: "blue",
       key,
@@ -190,7 +190,7 @@ function buildRecentItem(log: any): RecentItem {
     return {
       type: "sleep",
       label: buildSleepLabel(details),
-      sub: `${fmtTime(at)} โ€ข ${timeAgo(at)}`,
+      sub: `${fmtTime(at)} โดย ${timeAgo(at)}`,
       icon: Moon,
       tone: "purple",
       key,
@@ -202,7 +202,7 @@ function buildRecentItem(log: any): RecentItem {
     return {
       type: "feeding",
       label: buildFeedingLabel(details),
-      sub: `${fmtTime(at)} โ€ข ${method}`,
+      sub: `${fmtTime(at)} โดย ${method}`,
       icon: Coffee,
       tone: "orange",
       key,
@@ -212,8 +212,8 @@ function buildRecentItem(log: any): RecentItem {
   if (type.includes("pump")) {
     return {
       type: "pump",
-      label: "เธเธฑเนเธกเธเธก",
-      sub: `${fmtTime(at)} โ€ข ${timeAgo(at)}`,
+      label: "ปั๊มนม",
+      sub: `${fmtTime(at)} โดย ${timeAgo(at)}`,
       icon: Milk,
       tone: "pink",
       key,
@@ -222,8 +222,8 @@ function buildRecentItem(log: any): RecentItem {
 
   return {
     type: "unknown",
-    label: "เธเธดเธเธเธฃเธฃเธก",
-    sub: `${fmtTime(at)} โ€ข ${timeAgo(at)}`,
+    label: "กิจกรรม",
+    sub: `${fmtTime(at)} โดย ${timeAgo(at)}`,
     icon: Ruler,
     tone: "green",
     key,
@@ -251,32 +251,19 @@ const Index = () => {
     const originalBodyOverflow = document.body.style.overflow;
     const originalHtmlOverflow = document.documentElement.style.overflow;
 
-    if (activeModal) {
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = originalBodyOverflow || "";
-      document.documentElement.style.overflow = originalHtmlOverflow || "";
-    }
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
 
     return () => {
       document.body.style.overflow = originalBodyOverflow || "";
       document.documentElement.style.overflow = originalHtmlOverflow || "";
-    };
-  }, [activeModal]);
-
-  useEffect(() => {
-    document.body.classList.add("no-scrollbar");
-    document.documentElement.classList.add("no-scrollbar");
-
-    return () => {
-      document.body.classList.remove("no-scrollbar");
-      document.documentElement.classList.remove("no-scrollbar");
     };
   }, []);
 
   // Show onboarding if no baby profile
   const showOnboarding = !loading && !baby;
+  const isModalOpen = Boolean(activeModal);
+  const contentScrollClass = isModalOpen ? "overflow-hidden" : "overflow-y-auto";
 
   const handleSaveFeeding = (data: any) => {
     addLog("feeding", data);
@@ -473,13 +460,15 @@ const Index = () => {
   // ---------------- loading ----------------
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+      <div className={`h-screen ${contentScrollClass} no-scrollbar bg-background`}>
+        <div className="min-h-full flex items-center justify-center">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
           <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 animate-pulse">
             <span className="text-3xl">👶</span>
           </div>
           <p className="text-muted-foreground font-medium">กำลังโหลด...</p>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     );
   }
@@ -487,8 +476,9 @@ const Index = () => {
   // ---------------- onboarding ----------------
   if (showOnboarding) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+      <div className={`h-screen ${contentScrollClass} no-scrollbar bg-background`}>
+        <div className="min-h-full flex flex-col">
+          <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
             <motion.div
               initial={{ scale: 0.8 }}
@@ -549,11 +539,12 @@ const Index = () => {
           </motion.div>
         </div>
 
-        <AnimatePresence>
-          {activeModal === "add-baby" && (
-            <BabyProfileModal baby={null} onClose={() => setActiveModal(null)} onSave={handleSaveBaby} />
-          )}
-        </AnimatePresence>
+          <AnimatePresence>
+            {activeModal === "add-baby" && (
+              <BabyProfileModal baby={null} onClose={() => setActiveModal(null)} onSave={handleSaveBaby} />
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     );
   }
@@ -566,7 +557,7 @@ const Index = () => {
   const lastActivity = recent[0];
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden bg-[#f7f7f5] dark:bg-[#0f172a] text-[#111418] dark:text-gray-100">
+    <div className="h-screen relative overflow-hidden bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <motion.div
           className="absolute -top-32 -right-24 h-[360px] w-[360px] rounded-full bg-papaya/25 blur-3xl"
@@ -592,7 +583,10 @@ const Index = () => {
         </motion.div>
       </div>
 
-      <div className="flex h-full grow flex-col max-w-[1440px] mx-auto">
+      <div
+        className={`relative h-full overflow-x-hidden ${contentScrollClass} no-scrollbar`}
+      >
+        <div className="flex min-h-full flex-col max-w-[1440px] mx-auto">
         {/* Header / Nav */}
         <header className="relative z-10 flex items-center justify-between px-4 md:px-8 py-5 md:py-7 gap-3">
           <BabySwitcher
@@ -992,6 +986,7 @@ const Index = () => {
           onConfirm={confirmDeleteBaby}
           onCancel={() => setActiveModal("settings")}
         />
+        </div>
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f7f7f5] dark:bg-[#0f172a] flex items-center justify-center text-muted-foreground">
+      <div className="min-h-screen bg-background text-muted-foreground flex items-center justify-center">
         กำลังโหลด...
       </div>
     );

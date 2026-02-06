@@ -40,25 +40,13 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f7f7f5] dark:bg-[#0f172a] text-[#111418] dark:text-gray-100 overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-16 overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10">
-          <motion.div
-            className="absolute -top-32 -right-24 h-[360px] w-[360px] rounded-full bg-papaya/25 blur-3xl"
-            animate={{ y: [0, 18, 0], x: [0, -12, 0] }}
-            transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute top-[20%] -left-32 h-[420px] w-[420px] rounded-full bg-sky/25 blur-3xl"
-            animate={{ y: [0, -14, 0], x: [0, 10, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute bottom-0 right-[8%] h-[280px] w-[280px] rounded-full bg-saguaro/20 blur-3xl"
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-          />
+          <div className="landing-blob-1 absolute -top-32 -right-24 h-[360px] w-[360px] rounded-full bg-papaya/25 blur-3xl" />
+          <div className="landing-blob-2 absolute top-[20%] -left-32 h-[420px] w-[420px] rounded-full bg-sky/25 blur-3xl" />
+          <div className="landing-blob-3 absolute bottom-0 right-[8%] h-[280px] w-[280px] rounded-full bg-saguaro/20 blur-3xl" />
         </div>
 
         <motion.div
@@ -248,7 +236,7 @@ const LandingPage = () => {
               <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
                 แอปที่ออกแบบมาเพื่อคุณพ่อคุณแม่โดยเฉพาะ ใช้งานง่าย บันทึกเร็ว และดูสถิติย้อนหลังได้ทันที
               </p>
-              
+
               <div className="grid gap-4">
                 <div className="flex items-center gap-4 rounded-2xl bg-white/80 dark:bg-white/5 border border-white/70 dark:border-white/10 p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)]">
                   <div className="w-12 h-12 rounded-xl bg-papaya/20 flex items-center justify-center">
@@ -298,7 +286,7 @@ const LandingPage = () => {
                         <p className="font-black text-foreground">น้องมีนา</p>
                         <p className="text-xs text-muted-foreground">อายุ 3 เดือน</p>
                       </div>
-                      
+
                       <div className="space-y-2 flex-1">
                         <div className="bg-white/80 p-3 rounded-xl border border-white/70 flex items-center gap-3">
                           <div className="w-10 h-10 bg-feeding/20 rounded-lg flex items-center justify-center text-xl">🍼</div>

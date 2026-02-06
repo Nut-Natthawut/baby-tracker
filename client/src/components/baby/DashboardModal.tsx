@@ -287,7 +287,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-[#f7f7f5] dark:bg-[#0f172a] text-[#111418] dark:text-gray-100 overflow-hidden"
+      className="fixed inset-0 z-50 bg-background text-foreground overflow-hidden"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <motion.div

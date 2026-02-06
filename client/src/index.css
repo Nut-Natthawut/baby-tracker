@@ -103,60 +103,55 @@
   }
 
   .dark {
-    --background: 0 25% 8%;
-    /* Deep Oxblood */
-    --foreground: 53 35% 92%;
-    /* Light Linen */
+    --background: 222 28% 9%;
+    --foreground: 45 30% 92%;
 
-    --card: 0 22% 12%;
-    --card-foreground: 53 35% 90%;
+    --card: 222 22% 12%;
+    --card-foreground: 45 28% 90%;
 
-    --popover: 0 22% 12%;
-    --popover-foreground: 53 35% 90%;
+    --popover: 222 22% 12%;
+    --popover-foreground: 45 28% 90%;
 
-    --primary: 16 100% 65%;
-    /* Papaya - brighter for dark mode */
+    --primary: 16 100% 62%;
     --primary-foreground: 0 29% 10%;
 
-    --secondary: 0 18% 18%;
-    --secondary-foreground: 53 30% 88%;
+    --secondary: 222 18% 17%;
+    --secondary-foreground: 45 25% 88%;
 
-    --muted: 0 18% 16%;
-    --muted-foreground: 53 20% 65%;
+    --muted: 222 16% 16%;
+    --muted-foreground: 45 18% 70%;
 
-    --accent: 60 45% 55%;
-    /* Saguaro brighter */
-    --accent-foreground: 0 29% 10%;
+    --accent: 60 35% 50%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 70% 45%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 18% 20%;
-    --input: 0 18% 20%;
-    --ring: 16 100% 65%;
+    --border: 222 18% 22%;
+    --input: 222 18% 22%;
+    --ring: 16 100% 62%;
 
-    /* Dark mode feature colors - brighter for visibility */
-    --feeding: 222 55% 72%;
-    --feeding-glow: 222 55% 65%;
-    --diaper: 60 50% 58%;
-    --diaper-glow: 60 45% 50%;
-    --sleep: 262 55% 65%;
-    --pump: 16 100% 68%;
+    --feeding: 214 60% 70%;
+    --feeding-glow: 214 60% 58%;
+    --diaper: 64 45% 55%;
+    --diaper-glow: 64 45% 48%;
+    --sleep: 262 55% 68%;
+    --pump: 16 100% 64%;
 
-    --papaya: 16 100% 65%;
-    --sky: 222 55% 72%;
-    --saguaro: 60 50% 58%;
-    --peach: 16 100% 65%;
-    --mint: 60 50% 58%;
+    --papaya: 16 100% 62%;
+    --sky: 214 60% 70%;
+    --saguaro: 64 45% 55%;
+    --peach: 16 100% 62%;
+    --mint: 64 45% 55%;
 
-    --sidebar-background: 0 22% 10%;
-    --sidebar-foreground: 53 30% 88%;
-    --sidebar-primary: 16 100% 65%;
+    --sidebar-background: 222 22% 11%;
+    --sidebar-foreground: 45 25% 88%;
+    --sidebar-primary: 16 100% 62%;
     --sidebar-primary-foreground: 0 29% 10%;
-    --sidebar-accent: 0 18% 14%;
-    --sidebar-accent-foreground: 53 35% 90%;
-    --sidebar-border: 0 18% 18%;
-    --sidebar-ring: 16 100% 65%;
+    --sidebar-accent: 222 18% 16%;
+    --sidebar-accent-foreground: 45 25% 88%;
+    --sidebar-border: 222 18% 22%;
+    --sidebar-ring: 16 100% 62%;
   }
 }
 
@@ -173,7 +168,6 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none;
   }
 }
 
@@ -234,6 +228,57 @@
 
   .shadow-glow-saguaro {
     box-shadow: 0 0 24px hsl(60 50% 48% / 0.3);
+  }
+}
+
+/* Landing page background animation (CSS, lighter than JS) */
+@keyframes landing-float-1 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-12px, 18px, 0);
+  }
+}
+
+@keyframes landing-float-2 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(10px, -14px, 0);
+  }
+}
+
+@keyframes landing-float-3 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 12px, 0);
+  }
+}
+
+.landing-blob-1 {
+  animation: landing-float-1 16s ease-in-out infinite;
+}
+
+.landing-blob-2 {
+  animation: landing-float-2 20s ease-in-out infinite;
+}
+
+.landing-blob-3 {
+  animation: landing-float-3 22s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-blob-1,
+  .landing-blob-2,
+  .landing-blob-3 {
+    animation: none;
   }
 }
 
