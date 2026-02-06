@@ -25,7 +25,8 @@ const TOKEN_KEY = "baby-tracker-auth-token";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  // Initialize token from localStorage to prevent useEffect from deleting it on mount
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -81,56 +82,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const saved = localStorage.getItem(TOKEN_KEY);
+    console.log("[AuthContext] Initial load, saved token:", saved ? "exists" : "null");
     if (saved) {
       setToken(saved);
       // Call refreshMe directly with the saved token to avoid stale closure issues
       (async () => {
         try {
+          console.log("[AuthContext] Fetching /auth/me with token...");
           const response = await fetch(`${API_BASE_URL}/auth/me`, {
             headers: { Authorization: `Bearer ${saved}` },
           });
+          console.log("[AuthContext] /auth/me response status:", response.status);
           if (response.status === 401) {
+            console.log("[AuthContext] 401 Unauthorized, clearing user");
             setUser(null);
             setToken(null);
           } else if (response.ok) {
             const result = await response.json();
+            console.log("[AuthContext] /auth/me success, user:", result?.data);
             setUser(result?.data as AuthUser);
           } else {
+            console.log("[AuthContext] /auth/me failed with status:", response.status);
             setUser(null);
           }
         } catch (error) {
-          console.error("Auth refresh failed:", error);
+          console.error("[AuthContext] Auth refresh failed:", error);
           setUser(null);
         } finally {
           setLoading(false);
         }
       })();
     } else {
+      console.log("[AuthContext] No saved token, setting loading to false");
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
+    console.log("[AuthContext] login() called with email:", email);
     try {
+      console.log("[AuthContext] Sending login request to:", `${API_BASE_URL}/auth/login`);
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      if (!response.ok) return false;
+      console.log("[AuthContext] Login response status:", response.status);
+      if (!response.ok) {
+        console.log("[AuthContext] Login failed, response not ok");
+        return false;
+      }
       const result = await response.json();
+      console.log("[AuthContext] Login response data:", result);
       const tokenValue = result?.data?.token as string | undefined;
       const userValue = result?.data?.user as AuthUser | undefined;
-      if (!tokenValue || !userValue) return false;
+      console.log("[AuthContext] Extracted token:", tokenValue ? "exists" : "null");
+      console.log("[AuthContext] Extracted user:", userValue);
+      if (!tokenValue || !userValue) {
+        console.log("[AuthContext] Missing token or user, returning false");
+        return false;
+      }
+
+      // Explicitly save to localStorage immediately
+      localStorage.setItem(TOKEN_KEY, tokenValue);
+      console.log("[AuthContext] Token saved to localStorage, verifying...");
+      console.log("[AuthContext] localStorage check:", localStorage.getItem(TOKEN_KEY) ? "saved!" : "FAILED!");
+
       setToken(tokenValue);
       setUser(userValue);
       return true;
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("[AuthContext] Login error:", error);
       return false;
     }
-  }, [setToken]);
+  }, []);
 
   const signup = useCallback(
     async (email: string, password: string, name?: string) => {
