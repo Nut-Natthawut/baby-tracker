@@ -55,7 +55,8 @@ const useBreastTimers = () => {
   const [leftSeconds, setLeftSeconds] = useState(0);
   const [rightSeconds, setRightSeconds] = useState(0);
   const [activeTimer, setActiveTimer] = useState<BreastSide | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   useEffect(() => {
     if (timerRef.current) {

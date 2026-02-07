@@ -13,7 +13,7 @@
 		}
 	],
 	"vars": {
-		"APP_URL": "http://localhost:8080\n"
+		"APP_URL": "baby-tracker-sable.vercel.app\n"
 	}
 	// "compatibility_flags": [
 	//   "nodejs_compat"
