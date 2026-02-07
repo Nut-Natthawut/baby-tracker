@@ -7,6 +7,8 @@ export const babies = sqliteTable("babies", {
   birthDate: text("birth_date").notNull(),
   gender: text("gender").notNull(), // 'boy' | 'girl'
   weight: text("weight"), // kg
+  inviteCode: text("invite_code"), // Room code for joining (6 digits)
+  inviteExpiresAt: integer("invite_expires_at", { mode: "timestamp" }), // Expiry for the code
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 

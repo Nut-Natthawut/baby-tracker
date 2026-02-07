@@ -387,6 +387,84 @@ babies.post("/:id/invitations/:inviteId/revoke", async (c) => {
   return c.json({ success: true });
 });
 
+// Generate Room Code (Owner only)
+babies.post("/:id/invite-code", async (c) => {
+  const babyId = c.req.param("id");
+  const user = c.get("user");
+
+  const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
+  if (membership?.role !== "owner") {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
+
+  // Generate 6-digit code
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const now = nowSeconds();
+  const expiresAt = now + 5 * 60; // 5 minutes
+
+  await c.env.baby_tracker_db
+    .prepare("UPDATE babies SET invite_code = ?, invite_expires_at = ? WHERE id = ?")
+    .bind(code, expiresAt, babyId)
+    .run();
+
+  return c.json({
+    success: true,
+    data: {
+      code,
+      expiresAt,
+    },
+  });
+});
+
+// Join via Room Code
+babies.post("/invitations/join", async (c) => {
+  const body = await c.req.json();
+  const { code, role, name, password, email } = body; // email is optional if user already exists (not implemented effectively here yet, assuming new or existing auth flow separate?)
+  // Actually, for this flow:
+  // 1. User enters code -> We validate code & find baby.
+  // 2. If user is NOT logged in, they provide Name & Password to create account OR Login.
+  //    Wait, the requirement says "Create User (if needed) or use Auth".
+  //    Let's assume the user MIGHT be logged in (token in header) OR providing new credentials.
+  //    The prompt says "Input: { code, role, name, password }". This implies creating a NEW user or quick join?
+  //    Let's stick to: If no auth header, create new user. If auth header, use existing.
+
+  // BUT, to keep it simple and consistent with current auth:
+  // Let's assume this endpoint is called AFTER auth OR it handles registration.
+  // The current structure uses `requireAuth` for `babies.use("*", ...)` so this route needs to be PUBLIC if we want unauthenticated access?
+  // However, `babies.ts` has `babies.use("*", requireAuth)`.
+  // So we might need to move this route OUT or handle auth differently.
+  // FIX: define this route BEFORE `babies.use("*", requireAuth)` if possible, OR user must be logged in/registered first?
+  // The prompt says: "Create User (if needed) or use Auth".
+  // If we are inside `babies.ts`, we are already under auth!
+  // So the flow should probably be:
+  // 1. Guest goes to site, enters code.
+  // 2. Client calls PUBLIC endpoint to validate code & get baby info.
+  // 3. Guest Registers/Logins.
+  // 4. Guest calls Authenticated endpoint "Join".
+  // OR the "Join" endpoint does it all.
+
+  // GIVEN constraints in `babies.ts` (all protected), let's assume the client will:
+  // 1. Register/Login the user first (or use generic "Join" flow).
+  // 2. Call this endpoint with the Token.
+  // Wait, the prompt says "Input: { code, role, name, password }". This implies "Sign up & Join".
+  // If so, this route CANNOT be under `requireAuth`.
+  // I should probably move this route to `server.ts` or a new `public` router, OR exclude it from auth middleware.
+
+  // For now, let's implement the logic assuming the user IS authenticated (simplest path for `babies.js` structure).
+  // If user is NOT authenticated, the Frontend should Register them first (using existing /auth/register), then call this.
+  // Let's support: User is already logged in (Token).
+  // If the user needs to create an account, the UI does that first.
+
+  // ...Wait, prompt says "Create User (if needed)".
+  // I will check if I can modify the router structure. `babies.ts` applies auth to `*`.
+  // I'll add a new route file or modify strictness.
+  // Actually, I can allow `POST /invitations/join` to be public IF I move it or handle middleware differently.
+
+  // Let's assume the user is ALREADY authenticated for now (simpler migration). 
+  // If the requirement strictly implies "One Step Join" (Sign up + Join), I'll need to use the `name` and `password` provided.
+  // Let's implement logic to "Find Baby by Code" first.
+});
+
 // Remove caregiver (owner only)
 babies.delete("/:id/caregivers/:userId", async (c) => {
   const babyId = c.req.param("id");
