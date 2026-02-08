@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import JoinRoom from "./pages/JoinRoom";
 import InviteAccept from "./pages/InviteAccept";
 import { AuthProvider } from "@/context/AuthContext";
 import RequireAuth from "@/components/auth/RequireAuth";
@@ -21,9 +22,18 @@ const router = createBrowserRouter(
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/join" element={<JoinRoom />} />
       <Route path="/invite/:token" element={<InviteAccept />} />
       <Route
         path="/app"
+        element={
+          <RequireAuth>
+            <Index />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/app/baby/:babyId"
         element={
           <RequireAuth>
             <Index />

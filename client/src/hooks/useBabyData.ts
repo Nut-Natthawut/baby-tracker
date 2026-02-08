@@ -72,12 +72,17 @@ export const useBabyData = () => {
   // NOTE: In a real app, we might want to separate log fetching into a separate useEffect dependent on currentBabyId
   // But for now, we'll keep it simple or refactor slightly.
 
+
+  // NOTE: In a real app, we might want to separate log fetching into a separate useEffect dependent on currentBabyId
+  // But for now, we'll keep it simple or refactor slightly.
+
   // Refactored Effect to handle baby switching
   useEffect(() => {
     if (!currentBabyId || !token) return;
 
     const fetchLogs = async () => {
       try {
+        console.log("DEBUG: Fetching logs for babyId:", currentBabyId);
         const response = await fetch(`${API_BASE_URL}/logs/${currentBabyId}/details`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -86,11 +91,13 @@ export const useBabyData = () => {
           return;
         }
         const result = await response.json();
+        console.log("DEBUG: API Response:", result);
         if (result.success) {
           const parsedLogs = result.data.map((log: any) => ({
             ...log,
             timestamp: new Date(log.timestamp * 1000),
           }));
+          console.log("DEBUG: Parsed Logs count:", parsedLogs.length);
           setLogs(parsedLogs);
         }
       } catch (error) {

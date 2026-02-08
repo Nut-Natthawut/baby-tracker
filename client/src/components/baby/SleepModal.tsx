@@ -22,42 +22,44 @@ const stars = [
 ];
 
 const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
-  const [durationMinutes, setDurationMinutes] = useState(60);
+  // Initialize with end time now, start time 1 hour ago
   const [endTime, setEndTime] = useState<Date>(roundToNearest30(new Date()));
+  const [startTime, setStartTime] = useState<Date>(() => {
+    const end = roundToNearest30(new Date());
+    return new Date(end.getTime() - 60 * 60000); // Default 1 hour duration
+  });
   const [notes, setNotes] = useState('');
 
-  const hours = Math.floor(durationMinutes / 60);
-  const minutes = durationMinutes % 60;
+  const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
   const pad2 = (value: number) => value.toString().padStart(2, '0');
-  const sleepTargetMinutes = 12 * 60;
-  const sleepTargetHours = sleepTargetMinutes / 60;
-  const minDuration = 15;
-  const maxDuration = sleepTargetMinutes;
-  const durationStep = 15;
-  const quickDurations = [30, 60, 90, 120, 180, 240];
 
-  const clampDuration = (value: number) => Math.min(maxDuration, Math.max(minDuration, value));
-  const startTime = new Date(endTime.getTime() - durationMinutes * 60000);
-  const sleepPercent = Math.min(100, Math.round((durationMinutes / sleepTargetMinutes) * 100));
-  const endTimeValue = `${pad2(endTime.getHours())}:${pad2(endTime.getMinutes())}`;
-
-  const formatDurationLabel = (totalMinutes: number) => {
-    if (totalMinutes < 60) return `${totalMinutes}น.`;
-    const h = Math.floor(totalMinutes / 60);
-    const m = totalMinutes % 60;
-    return m === 0 ? `${h}ชม.` : `${h}ชม. ${m}น.`;
-  };
-
-  const cardClass =
-    'rounded-[28px] border border-white/15 bg-white/95 text-slate-900 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.6)] backdrop-blur-xl';
-  const softActionClass =
-    'bg-slate-900/5 border border-white/70 text-slate-700 shadow-[0_12px_30px_-18px_rgba(15,23,42,0.35)] hover:bg-slate-900/10 active:scale-95 transition-transform';
+  const cardClass = 'rounded-[28px] border border-white/15 bg-white/95 text-slate-900 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.6)] backdrop-blur-xl';
 
   const handleSave = () => {
-    const startTime = new Date(endTime.getTime() - durationMinutes * 60000);
+    // Ensure duration is positive?
+    const duration = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
+
+    // If negative (end before start), maybe they meant overnight? add 24h?
+    // For simplicity, we just save as is or warn? 
+    // Usually if user sets Start 23:00 End 01:00, the dates should reflect that.
+    // The simple time pickers only change HH:MM on the specific Date object.
+
+    // Auto-fix for overnight:
+    // If endTime < startTime, assume simple overnight case if within reasonable range (e.g. < 24h)
+    // But since we modify the specific Date object in state, if we use setHours below, we are changing the SAME day.
+    // So if Start 10:00 End 09:00 -> duration -1 hour.
+    // We should probably check if duration <= 0, add 1 day to EndTime?
+    let finalEndTime = endTime;
+    if (finalEndTime <= startTime) {
+      finalEndTime = new Date(endTime.getTime() + 24 * 60 * 60000);
+    }
+
+    // Recalc duration with final end time
+    const finalDuration = Math.round((finalEndTime.getTime() - startTime.getTime()) / 60000);
+
     const details: SleepDetails = {
-      durationMinutes,
-      endTime,
+      durationMinutes: Math.max(0, finalDuration),
+      endTime: finalEndTime,
       notes: notes || undefined,
     };
 
@@ -67,24 +69,6 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
     });
   };
 
-  const handleDurationChange = (value: number) => {
-    setDurationMinutes(clampDuration(value));
-  };
-
-  const adjustTime = (minutesOffset: number) => {
-    const newTime = new Date(endTime.getTime() + minutesOffset * 60000);
-    setEndTime(newTime);
-  };
-
-  const handleEndTimeChange = (value: string) => {
-    const [hourStr, minuteStr] = value.split(':');
-    const nextHour = Number(hourStr);
-    const nextMinute = Number(minuteStr);
-    if (Number.isNaN(nextHour) || Number.isNaN(nextMinute)) return;
-    const nextTime = new Date(endTime);
-    nextTime.setHours(nextHour, nextMinute, 0, 0);
-    setEndTime(nextTime);
-  };
 
   return (
     <motion.div
@@ -124,171 +108,137 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
       </header>
 
       <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar">
-        <div className="flex flex-col items-center gap-8 px-6 pb-10 pt-2">
+        <div className="flex flex-col items-center gap-6 px-6 pb-10 pt-2">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center flex flex-col gap-2"
           >
-            <h1 className="text-white text-4xl md:text-5xl font-black leading-tight tracking-tight drop-shadow-lg">
-              ฝันดีนะ
+            <h1 className="text-white text-3xl md:text-4xl font-black leading-tight tracking-tight drop-shadow-lg">
+              บันทึกการนอน
             </h1>
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/10 w-fit mx-auto">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-white text-base font-medium tracking-wide">กำลังบันทึกการนอน</span>
-            </div>
+            <p className="text-slate-300 text-sm">
+              การนอนหลับที่ดีช่วยพัฒนาสมองและการเจริญเติบโต
+            </p>
           </motion.div>
 
-          <div className="w-full max-w-[820px] flex flex-col gap-5">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className={`${cardClass} p-6 md:p-8`}
-            >
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">ระยะเวลาการนอน</span>
-                  <div className="flex items-end gap-2 mt-2">
-                    <span className="text-4xl md:text-5xl font-black text-slate-800">{hours}</span>
-                    <span className="text-base font-bold text-slate-400">ชม.</span>
-                    <span className="text-4xl md:text-5xl font-black text-slate-800">{pad2(minutes)}</span>
-                    <span className="text-base font-bold text-slate-400">น.</span>
-                  </div>
-                  <p className="text-sm text-slate-500 mt-2">เริ่มหลับประมาณ {formatTime(startTime)}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => handleDurationChange(durationMinutes - durationStep)}
-                    className={`size-12 rounded-2xl flex items-center justify-center ${softActionClass}`}
-                    aria-label={`ลดเวลา ${durationStep} นาที`}
-                  >
-                    <Minus size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDurationChange(durationMinutes + durationStep)}
-                    className={`size-12 rounded-2xl flex items-center justify-center ${softActionClass}`}
-                    aria-label={`เพิ่มเวลา ${durationStep} นาที`}
-                  >
-                    <Plus size={18} />
-                  </button>
-                </div>
-              </div>
+          <div className="w-full max-w-md flex flex-col gap-5">
 
-              <div className="mt-5">
+            {/* Time Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Start Time */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className={`${cardClass} p-5 flex flex-col gap-3 items-center text-center relative overflow-hidden group`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider relative z-10">เริ่มหลับ</span>
                 <input
-                  type="range"
-                  min={minDuration}
-                  max={maxDuration}
-                  step={durationStep}
-                  value={durationMinutes}
-                  onChange={(event) => handleDurationChange(Number(event.target.value))}
-                  className="w-full h-2 rounded-full bg-slate-200/80 accent-primary"
-                  aria-label="ปรับระยะเวลาการนอน"
+                  type="time"
+                  value={`${pad2(startTime.getHours())}:${pad2(startTime.getMinutes())}`}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(':').map(Number);
+                    const newStart = new Date(startTime);
+                    newStart.setHours(h, m);
+                    // Adjust end time if start is after end? No, let user handle it or shift end time?
+                    // Better UX: if start > end, assume overnight, allow it.
+                    // But here we rely on duration calculates.
+                    // Let's keep it simple: update start, recalc duration?
+                    // No, prompted design is Start & End.
+                    // So we update state directly.
+                    setStartTime(newStart);
+                  }}
+                  className="bg-transparent text-4xl font-black text-slate-800 text-center w-full focus:outline-none relative z-10"
                 />
-                <div className="flex justify-between text-xs text-slate-400 font-semibold mt-2">
-                  <span>{formatDurationLabel(minDuration)}</span>
-                  <span>{formatDurationLabel(maxDuration)}</span>
+                <div className="flex gap-2 justify-center relative z-10">
+                  <button onClick={() => setStartTime(new Date(startTime.getTime() - 15 * 60000))} className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600">-15</button>
+                  <button onClick={() => setStartTime(new Date())} className="p-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-xs font-bold text-primary">ตอนนี้</button>
+                  <button onClick={() => setStartTime(new Date(startTime.getTime() + 15 * 60000))} className="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600">+15</button>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {quickDurations.map((value) => {
-                  const isActive = durationMinutes === value;
-                  return (
-                    <button
-                      key={value}
-                      onClick={() => handleDurationChange(value)}
-                      className={`px-3 py-2 rounded-full text-sm font-bold transition ${isActive
-                        ? "bg-primary text-white shadow-md"
-                        : "bg-slate-900/5 text-slate-600 hover:bg-slate-900/10"
-                        }`}
-                    >
-                      {formatDurationLabel(value)}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-5">
-                <div className="flex items-center justify-between text-sm font-semibold text-slate-500">
-                  <span>เป้าหมาย {sleepTargetHours} ชม.</span>
-                  <span className="text-primary font-black">{sleepPercent}%</span>
+              {/* End Time */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className={`${cardClass} p-5 flex flex-col gap-3 items-center text-center relative overflow-hidden group`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider relative z-10">ตื่นนอน</span>
+                <input
+                  type="time"
+                  value={`${pad2(endTime.getHours())}:${pad2(endTime.getMinutes())}`}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(':').map(Number);
+                    const newEnd = new Date(endTime);
+                    newEnd.setHours(h, m);
+                    setEndTime(newEnd);
+                  }}
+                  className="bg-transparent text-5xl font-black text-slate-800 text-center w-full focus:outline-none relative z-10"
+                />
+                <div className="flex gap-2 justify-center relative z-10 w-full">
+                  <button onClick={() => setEndTime(new Date(endTime.getTime() - 15 * 60000))} className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition">-15</button>
+                  <button onClick={() => setEndTime(new Date())} className="flex-1 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-xs font-bold text-primary transition">ตอนนี้</button>
+                  <button onClick={() => setEndTime(new Date(endTime.getTime() + 15 * 60000))} className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition">+15</button>
                 </div>
-                <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary"
-                    style={{ width: `${sleepPercent}%` }}
-                  />
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
 
+            {/* Total Duration Info */}
             <motion.div
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className={`${cardClass} p-5 md:p-6 flex flex-col gap-4`}
+              transition={{ delay: 0.2 }}
+              className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 text-center"
             >
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">เวลาตื่น</span>
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <input
-                      type="time"
-                      value={endTimeValue}
-                      onChange={(event) => handleEndTimeChange(event.target.value)}
-                      className="rounded-2xl border border-white/70 bg-white/95 px-4 py-3 text-2xl font-black text-slate-800 shadow-inner focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    />
-                    <span className="text-sm font-semibold text-slate-500">แตะเพื่อเลือกเวลา</span>
-                  </div>
-                  <p className="text-sm text-slate-500 mt-2">หรือปรับทีละ 30 นาทีด้วยปุ่มด้านล่าง</p>
-                </div>
-                <button
-                  onClick={() => setEndTime(new Date())}
-                  className={`px-5 py-3 rounded-2xl font-bold ${softActionClass}`}
-                >
-                  ตอนนี้
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => adjustTime(-30)}
-                  className={`px-4 py-2 rounded-full text-sm font-bold ${softActionClass}`}
-                >
-                  -30น.
-                </button>
-                <button
-                  onClick={() => adjustTime(30)}
-                  className={`px-4 py-2 rounded-full text-sm font-bold ${softActionClass}`}
-                >
-                  +30น.
-                </button>
+              <span className="text-slate-300 text-sm uppercase tracking-wider font-bold">รวมเวลาการนอน</span>
+              <div className="text-3xl font-black text-white mt-1">
+                {Math.floor(durationMinutes / 60) > 0 && <span className="mr-2">{Math.floor(durationMinutes / 60)} ชม.</span>}
+                <span>{durationMinutes % 60} นาที</span>
               </div>
             </motion.div>
 
+            {/* Recommendations */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className={`${cardClass} p-5`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="bg-yellow-100/50 p-2 rounded-xl text-yellow-600">
+                  <Moon size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-800 text-sm mb-1">คำแนะนำการนอน (ตามวัย)</h3>
+                  <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside">
+                    <li><strong>แรกเกิด - 3 เดือน:</strong> 14-17 ชม./วัน</li>
+                    <li><strong>4 - 11 เดือน:</strong> 12-15 ชม./วัน</li>
+                    <li><strong>1 - 2 ปี:</strong> 11-14 ชม./วัน</li>
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Notes */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className={`${cardClass} p-5 md:p-6`}
+              transition={{ delay: 0.4 }}
+              className={`${cardClass} p-5`}
             >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="size-12 rounded-2xl bg-slate-900/5 border border-white/70 flex items-center justify-center shadow-inner text-slate-700">
-                  <Moon className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">หมายเหตุ</span>
-                  <p className="text-base font-medium text-slate-500">เพิ่มรายละเอียดการนอน</p>
-                </div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">บันทึกเพิ่มเติม</span>
               </div>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="เช่น หลับปุ๋ย, ตื่นมาร้อง..."
-                className="w-full bg-white/95 border border-white/70 rounded-2xl p-3 text-base text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
-                rows={4}
+                placeholder="ลูกนอนเป็นอย่างไรบ้าง..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all"
+                rows={3}
               />
             </motion.div>
           </div>
@@ -298,9 +248,10 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
       <div className="relative z-10 px-6 pb-6">
         <button
           onClick={handleSave}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-xl shadow-lg active:scale-[0.98] transition-transform"
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-indigo-600 text-white font-bold text-xl shadow-lg shadow-indigo-500/30 active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
         >
-          บันทึก
+          <Moon size={20} className="fill-white" />
+          บันทึกการนอน
         </button>
       </div>
     </motion.div>

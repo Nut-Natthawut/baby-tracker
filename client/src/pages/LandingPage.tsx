@@ -63,14 +63,24 @@ const LandingPage = () => {
               <span className="font-black text-lg text-foreground">ดูแลลูกน้อย</span>
             </div>
           </div>
-          <Button
-            onClick={() => navigate('/app')}
-            size="sm"
-            variant="ghost"
-            className="rounded-full bg-white/80 dark:bg-white/10 text-foreground border border-white/70 dark:border-white/10 px-5 py-2 font-bold shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)] hover:bg-white hover:text-foreground"
-          >
-            เข้าแอป
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => navigate('/join')}
+              size="sm"
+              variant="ghost"
+              className="rounded-full text-muted-foreground hover:text-foreground font-semibold"
+            >
+              กรอกรหัสเข้าร่วม
+            </Button>
+            <Button
+              onClick={() => navigate('/app')}
+              size="sm"
+              variant="ghost"
+              className="rounded-full bg-white/80 dark:bg-white/10 text-foreground border border-white/70 dark:border-white/10 px-5 py-2 font-bold shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)] hover:bg-white hover:text-foreground"
+            >
+              เข้าแอป
+            </Button>
+          </div>
         </motion.div>
 
         <div className="max-w-5xl mx-auto text-center z-10">

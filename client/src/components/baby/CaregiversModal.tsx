@@ -31,10 +31,7 @@ interface CaregiversModalProps {
 const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) => {
   const { authFetch, user } = useAuth();
   const [members, setMembers] = useState<CaregiverMember[]>([]);
-  const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showInvite, setShowInvite] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
 
   const isOwner = useMemo(() => {
     if (!user) return false;
@@ -50,7 +47,6 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
         const result = await response.json();
         if (result.success) {
           setMembers(result.data.members || []);
-          setInvites(result.data.invites || []);
         } else {
           toast({
             title: "โหลดข้อมูลไม่สำเร็จ",
@@ -73,65 +69,6 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
     fetchCaregivers();
   }, [authFetch, babyId]);
 
-  const handleInvite = async () => {
-    if (!inviteEmail || !babyId) return;
-    if (!isOwner) {
-      toast({
-        title: "เฉพาะเจ้าของเท่านั้น",
-        description: "คุณไม่มีสิทธิ์ส่งคำเชิญ",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const response = await authFetch(`${API_BASE_URL}/babies/${babyId}/invitations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) {
-        toast({
-          title: "ส่งคำเชิญไม่สำเร็จ",
-          description: result.message || "กรุณาลองใหม่",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setInvites((prev) => [result.data, ...prev]);
-      setInviteEmail('');
-      setShowInvite(false);
-      if (result.data?.inviteLink) {
-        try {
-          await navigator.clipboard.writeText(result.data.inviteLink);
-          toast({
-            title: "สร้างลิงก์เชิญแล้ว",
-            description: "คัดลอกลิงก์เชิญไว้ในคลิปบอร์ดแล้ว",
-          });
-        } catch {
-          toast({
-            title: "สร้างลิงก์เชิญแล้ว",
-            description: result.data.inviteLink,
-          });
-        }
-      } else {
-        toast({
-          title: "ส่งคำเชิญสำเร็จ",
-          description: `ส่งคำเชิญไปที่ ${inviteEmail}`,
-        });
-      }
-    } catch (error) {
-      console.error("Invite error:", error);
-      toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถส่งคำเชิญได้",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleRemove = async (id: string) => {
     if (!babyId) return;
     try {
@@ -153,33 +90,6 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
       toast({
         title: "เกิดข้อผิดพลาด",
         description: "ไม่สามารถลบสมาชิกได้",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRevoke = async (inviteId: string) => {
-    if (!babyId) return;
-    try {
-      const response = await authFetch(
-        `${API_BASE_URL}/babies/${babyId}/invitations/${inviteId}/revoke`,
-        { method: "POST" }
-      );
-      if (!response.ok) {
-        const result = await response.json();
-        toast({
-          title: "ยกเลิกไม่สำเร็จ",
-          description: result.message || "กรุณาลองใหม่",
-          variant: "destructive",
-        });
-        return;
-      }
-      setInvites((prev) => prev.filter((invite) => invite.id !== inviteId));
-    } catch (error) {
-      console.error("Revoke invite error:", error);
-      toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถยกเลิกคำเชิญได้",
         variant: "destructive",
       });
     }
@@ -237,9 +147,9 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
                   เชิญคนในครอบครัวมาช่วยบันทึกข้อมูลร่วมกัน ทุกคนจะเห็นข้อมูลเดียวกัน
                 </p>
                 <div className="mt-3 text-sm text-muted-foreground space-y-1">
-                  <p>• ถ้าตั้งค่าอีเมลไว้ ระบบจะส่งลิงก์เชิญให้โดยอัตโนมัติ</p>
-                  <p>• ถ้ายังไม่ตั้งค่าอีเมล ระบบจะให้ลิงก์เชิญสำหรับคัดลอก</p>
-                  <p>• ลิงก์เชิญมีอายุ 24 ชั่วโมง</p>
+                  <p>• ใช้รหัส 6 หลักในการเข้าร่วมห้อง</p>
+                  <p>• รหัสมีอายุการใช้งาน 5 นาที</p>
+                  <p>• สร้างรหัสใหม่ได้ตลอดเวลา</p>
                 </div>
               </div>
             </div>
@@ -266,9 +176,8 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
                 return (
                   <div
                     key={caregiver.id}
-                    className={`flex items-center gap-4 px-4 py-5 ${
-                      isLast ? '' : 'border-b border-border'
-                    }`}
+                    className={`flex items-center gap-4 px-4 py-5 ${isLast ? '' : 'border-b border-border'
+                      }`}
                   >
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-peach to-mint flex items-center justify-center text-lg font-bold text-primary-foreground">
                       {displayName.charAt(0)}
@@ -298,137 +207,106 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
             )}
           </div>
         </div>
-
-        {/* Pending Invites */}
-        <div className="px-6 pb-6">
-          <h3 className="text-base font-semibold text-muted-foreground mb-3">
-            คำเชิญที่ส่งแล้ว ({invites.length})
-          </h3>
-          {!loading && invites.length > 0 && (
-            <p className="text-xs text-muted-foreground mb-3">
-              หากไม่มีอีเมล ระบบจะแสดงลิงก์คัดลอกได้เฉพาะตอนเชิญครั้งล่าสุด
-            </p>
-          )}
-          <div className="bg-card rounded-2xl border border-border overflow-hidden">
-            {invites.length === 0 ? (
-              <div className="px-4 py-6 text-sm text-muted-foreground">ยังไม่มีคำเชิญค้างอยู่</div>
-            ) : (
-              invites.map((invite, index) => {
-                const isLast = index === invites.length - 1;
-                return (
-                  <div
-                    key={invite.id}
-                    className={`flex items-center gap-4 px-4 py-5 ${
-                      isLast ? '' : 'border-b border-border'
-                    }`}
-                  >
-                    <div className="w-12 h-12 rounded-full bg-feeding/10 flex items-center justify-center text-feeding">
-                      <Mail size={18} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-base font-semibold text-foreground truncate">{invite.email}</p>
-                      <p className="text-sm text-muted-foreground">รอการตอบรับ</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {invite.inviteLink && (
-                        <button
-                          onClick={async () => {
-                            try {
-                              await navigator.clipboard.writeText(invite.inviteLink || "");
-                              toast({
-                                title: "คัดลอกลิงก์เชิญแล้ว",
-                                description: "ส่งลิงก์ให้ผู้ดูแลได้เลย",
-                              });
-                            } catch {
-                              toast({
-                                title: "คัดลอกไม่สำเร็จ",
-                                description: invite.inviteLink || "",
-                                variant: "destructive",
-                              });
-                            }
-                          }}
-                          className="px-3 py-2 rounded-lg text-sm font-semibold text-foreground hover:bg-secondary"
-                        >
-                          คัดลอกลิงก์
-                        </button>
-                      )}
-                      {isOwner && (
-                        <button
-                          onClick={() => handleRevoke(invite.id)}
-                          className="px-3 py-2 rounded-lg text-sm font-semibold text-destructive hover:bg-destructive/10"
-                        >
-                          ยกเลิก
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Invite Form */}
-        <AnimatePresence>
-          {showInvite && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="px-6 pb-6"
-            >
-              <div className="bg-card rounded-2xl border border-border p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-foreground">เชิญผู้ดูแล</h3>
-                  <button
-                    onClick={() => setShowInvite(false)}
-                    className="p-1 rounded-lg hover:bg-secondary transition-colors"
-                  >
-                    <X size={18} className="text-muted-foreground" />
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <label htmlFor="caregiver-email" className="text-base text-muted-foreground mb-1 block">
-                      อีเมล
-                    </label>
-                    <input
-                      id="caregiver-email"
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="email@example.com"
-                      className="w-full bg-secondary border border-border rounded-xl px-4 py-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    />
-                  </div>
-                  <button
-                    onClick={handleInvite}
-                    disabled={!inviteEmail || !isOwner}
-                    className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-                  >
-                    ส่งคำเชิญ
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* Add Button */}
-      {!showInvite && isOwner && (
-        <div className="p-6 border-t border-border bg-card">
-          <button
-            onClick={() => setShowInvite(true)}
-            className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-xl shadow-glow-primary active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-          >
-            <UserPlus size={22} />
-            เชิญผู้ดูแลใหม่
-          </button>
+      {isOwner && (
+        <div className="p-6 border-t border-border bg-card space-y-4">
+          <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
+            <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
+              <UserPlus size={18} />
+              วิธีเชิญผู้ดูแล
+            </h4>
+            <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-1 ml-1">
+              <li>กดปุ่ม <b>"สร้างรหัส 6 หลัก"</b> ด้านล่าง</li>
+              <li>ส่งรหัสให้คนในครอบครัว</li>
+              <li>ให้เขาไปที่หน้า <b>"เข้าร่วมห้อง"</b> (หรือกดที่หน้า Login)</li>
+              <li>กรอกรหัสเพื่อเข้าร่วมทันที</li>
+            </ol>
+          </div>
+
+          <GenerateCodeButton babyId={babyId} authFetch={authFetch} />
         </div>
       )}
     </motion.div>
+  );
+};
+
+const GenerateCodeButton = ({ babyId, authFetch }: { babyId: string, authFetch: any }) => {
+  const [code, setCode] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>("");
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    const interval = setInterval(() => {
+      const now = Math.floor(Date.now() / 1000);
+      const diff = expiresAt - now;
+      if (diff <= 0) {
+        setTimeLeft("หมดอายุ");
+        setCode(null);
+        setExpiresAt(null);
+        clearInterval(interval);
+      } else {
+        const m = Math.floor(diff / 60);
+        const s = diff % 60;
+        setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [expiresAt]);
+
+  const handleGenerate = async () => {
+    setLoading(true);
+    try {
+      const res = await authFetch(`${API_BASE_URL}/babies/${babyId}/invite-code`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCode(data.data.code);
+        setExpiresAt(data.data.expiresAt);
+      } else {
+        toast({ title: "ไม่สามารถสร้างรหัสได้", variant: "destructive" });
+      }
+    } catch (e) {
+      console.error(e);
+      toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyCode = () => {
+    if (code) {
+      navigator.clipboard.writeText(code);
+      toast({ title: "คัดลอกรหัสแล้ว" });
+    }
+  };
+
+  if (code) {
+    return (
+      <div className="bg-secondary/50 rounded-2xl p-4 border border-border flex flex-col items-center">
+        <p className="text-sm text-muted-foreground mb-1">รหัสเข้าร่วมห้อง (หมดอายุใน {timeLeft})</p>
+        <div className="flex items-center gap-4 mb-2">
+          <span className="text-4xl font-mono font-bold tracking-widest text-primary">{code}</span>
+        </div>
+        <button onClick={copyCode} className="text-sm font-semibold text-primary hover:underline">
+          คัดลอกรหัส
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleGenerate}
+      disabled={loading}
+      className="w-full py-4 rounded-2xl bg-secondary text-secondary-foreground font-bold text-xl border-2 border-border hover:bg-secondary/80 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+    >
+      {loading ? "กำลังสร้าง..." : "สร้างรหัส 6 หลัก"}
+    </button>
   );
 };
 
