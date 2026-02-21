@@ -43,7 +43,7 @@ export const useBabyData = () => {
         const result = await response.json();
 
         if (result.success) {
-          const mappedBabies = result.data.map((b: any) => ({
+          const mappedBabies = result.data.map((b: Baby & { birth_date?: string | Date }) => ({
             ...b,
             birthDate: b.birth_date || b.birthDate,
           }));
@@ -93,7 +93,7 @@ export const useBabyData = () => {
         const result = await response.json();
         console.log("DEBUG: API Response:", result);
         if (result.success) {
-          const parsedLogs = result.data.map((log: any) => ({
+          const parsedLogs = result.data.map((log: LogEntry & { timestamp: number }) => ({
             ...log,
             timestamp: new Date(log.timestamp * 1000),
           }));
@@ -199,7 +199,7 @@ export const useBabyData = () => {
   };
 
   // Add a new log entry via API
-  const addLog = async (type: LogType, data: { timestamp: Date; details: any }) => {
+  const addLog = async (type: LogType, data: { timestamp: Date; details: Record<string, unknown> }) => {
     if (!currentBabyId || !token) return;
 
     try {
@@ -259,7 +259,7 @@ export const useBabyData = () => {
 
   // Get logs for current baby only
   const currentBabyLogs = logs.filter(log =>
-    (log as any).babyId === currentBabyId || !(log as any).babyId
+    (log as LogEntry & { babyId?: string }).babyId === currentBabyId || !(log as LogEntry & { babyId?: string }).babyId
   );
 
   // Get logs by type

@@ -26,7 +26,7 @@ const InviteAccept = () => {
 
     try {
       const headers: Record<string, string> = {};
-      let body: any = undefined;
+      let body: string | undefined = undefined;
 
       if (authToken) {
         headers.Authorization = `Bearer ${authToken}`;

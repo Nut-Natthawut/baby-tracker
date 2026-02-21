@@ -5,6 +5,9 @@ import { LogEntry, FeedingDetails, DiaperDetails, POO_COLORS } from '@/types/bab
 import { formatTime, formatDate } from '@/lib/babyUtils';
 import LogDetailModal from './LogDetailModal';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyData = any;
+
 interface TimelineItemProps {
   entry: LogEntry;
   onViewDetail: (entry: LogEntry) => void;
@@ -63,14 +66,14 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ entry, onViewDetail }) => {
     color = 'text-pump';
     bgColor = 'bg-pump';
     title = 'ปั๊มนม';
-    const d = entry.details as any;
+    const d = entry.details as AnyData;
     details = `${d.amountTotalMl} ml • ${d.durationMinutes} นาที`;
   } else if (entry.type === 'sleep') {
     icon = <Moon size={16} />;
     color = 'text-sleep';
     bgColor = 'bg-sleep';
     title = 'การนอน';
-    const d = entry.details as any;
+    const d = entry.details as AnyData;
     const hrs = Math.floor(d.durationMinutes / 60);
     const mins = d.durationMinutes % 60;
     details = `${hrs > 0 ? `${hrs}ชม. ` : ''}${mins}นาที`;
