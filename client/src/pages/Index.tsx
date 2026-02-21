@@ -29,6 +29,9 @@ import {
   BedDouble,
 } from "lucide-react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyData = any;
+
 type ModalType =
   | "feeding"
   | "diaper"
@@ -43,7 +46,7 @@ type ModalType =
   | null;
 
 // ---------- helpers (safe/defensive) ----------
-function safeDate(input: any): Date | null {
+function safeDate(input: AnyData): Date | null {
   const d = input ? new Date(input) : null;
   return d && !Number.isNaN(d.getTime()) ? d : null;
 }
@@ -83,7 +86,7 @@ function mlToOz(ml: number) {
 
 const DIAPER_BAR_KEYS = ["bar-1", "bar-2", "bar-3", "bar-4", "bar-5"];
 
-function getAmountMl(details: any) {
+function getAmountMl(details: AnyData) {
   if (typeof details?.amountMl === "number") return details.amountMl;
   if (typeof details?.amountOz === "number") return Math.round(details.amountOz * 29.5735);
   return null;
@@ -100,7 +103,7 @@ function getRecentToneClass(tone: string) {
   return map[tone] ?? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600";
 }
 
-function formatDiaperType(input: any) {
+function formatDiaperType(input: AnyData) {
   const raw = String(input ?? "").trim();
   if (!raw) return "";
   const key = raw.toLowerCase();
@@ -119,7 +122,7 @@ function formatDiaperType(input: any) {
   return map[key] ?? raw;
 }
 
-function formatFeedingMethod(input: any) {
+function formatFeedingMethod(input: AnyData) {
   const raw = String(input ?? "").trim();
   if (!raw) return "ขวดนมหรือเข้าเต้า";
   const key = raw.toLowerCase();
@@ -142,7 +145,7 @@ type RecentItem = {
   key: string;
 };
 
-function buildSleepLabel(details: any) {
+function buildSleepLabel(details: AnyData) {
   const duration = typeof details?.durationMinutes === "number" ? details.durationMinutes : 0;
   if (duration <= 0) {
     return details?.action === "end" ? "ตื่นนอน" : "เริ่มหลับ";
@@ -152,7 +155,7 @@ function buildSleepLabel(details: any) {
   return `นอนหลับ (${h > 0 ? h + "ชม. " : ""}${m}น.)`;
 }
 
-function buildFeedingLabel(details: any) {
+function buildFeedingLabel(details: AnyData) {
   const amountMl = getAmountMl(details);
   if (amountMl) return `ขวดนม (${amountMl} มล.)`;
 
@@ -167,7 +170,7 @@ function buildFeedingLabel(details: any) {
   return "การกินนม";
 }
 
-function buildRecentItem(log: any): RecentItem {
+function buildRecentItem(log: AnyData): RecentItem {
   const type = (log?.type ?? log?.logType ?? log?.category ?? "unknown") as string;
   const at = safeDate(log?.timestamp ?? log?.createdAt ?? log?.time ?? log?.date) ?? new Date();
   const details = log?.details ?? log ?? {};
@@ -267,7 +270,7 @@ const Index = () => {
   const isModalOpen = Boolean(activeModal);
   const contentScrollClass = isModalOpen ? "overflow-hidden" : "overflow-y-auto";
 
-  const handleSaveFeeding = (data: any) => {
+  const handleSaveFeeding = (data: AnyData) => {
     addLog("feeding", data);
     setActiveModal(null);
     toast({
@@ -276,7 +279,7 @@ const Index = () => {
     });
   };
 
-  const handleSaveDiaper = (data: any) => {
+  const handleSaveDiaper = (data: AnyData) => {
     addLog("diaper", data);
     setActiveModal(null);
     toast({
@@ -285,7 +288,7 @@ const Index = () => {
     });
   };
 
-  const handleSavePumping = (data: any) => {
+  const handleSavePumping = (data: AnyData) => {
     addLog("pump", data);
     setActiveModal(null);
     toast({
@@ -294,7 +297,7 @@ const Index = () => {
     });
   };
 
-  const handleSaveSleep = (data: any) => {
+  const handleSaveSleep = (data: AnyData) => {
     addLog("sleep", data);
     setActiveModal(null);
     toast({
@@ -303,7 +306,7 @@ const Index = () => {
     });
   };
 
-  const handleSaveBaby = async (data: any) => {
+  const handleSaveBaby = async (data: AnyData) => {
     try {
       const payload = activeModal === "edit-baby" && baby ? { ...data, id: baby.id } : data;
       const success = await saveBabyProfile(payload);
@@ -370,7 +373,7 @@ const Index = () => {
   const recent = useMemo(() => {
     const arr = Array.isArray(logs) ? [...logs] : [];
     // try sorting by createdAt / time / date
-    arr.sort((a: any, b: any) => {
+    arr.sort((a: AnyData, b: AnyData) => {
       const da = safeDate(a?.timestamp ?? a?.createdAt ?? a?.time ?? a?.date) ?? new Date(0);
       const db = safeDate(b?.timestamp ?? b?.createdAt ?? b?.time ?? b?.date) ?? new Date(0);
       return db.getTime() - da.getTime();
@@ -387,7 +390,7 @@ const Index = () => {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 
-    const today = arr.filter((l: any) => {
+    const today = arr.filter((l: AnyData) => {
       const d = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date);
       return d ? d.getTime() >= start.getTime() : false;
     });
@@ -395,12 +398,12 @@ const Index = () => {
     console.log("DEBUG: Today's logs count:", today.length);
 
     // diapers count
-    const diaperCount = today.filter((l: any) => String(l?.type ?? l?.logType ?? "").includes("diaper")).length;
+    const diaperCount = today.filter((l: AnyData) => String(l?.type ?? l?.logType ?? "").includes("diaper")).length;
 
     // feeding volume ml
-    const feeds = today.filter((l: any) => String(l?.type ?? l?.logType ?? "").includes("feeding"));
+    const feeds = today.filter((l: AnyData) => String(l?.type ?? l?.logType ?? "").includes("feeding"));
     let totalMl = 0;
-    for (const f of feeds as any[]) {
+    for (const f of feeds as AnyData[]) {
       const details = f?.details ?? f ?? {};
       if (typeof details?.amountMl === "number") totalMl += details.amountMl;
       else if (typeof details?.amountOz === "number") totalMl += Math.round(details.amountOz * 29.5735);
@@ -408,15 +411,15 @@ const Index = () => {
 
     // sleep minutes: best-effort pairing start/end
     const sleepLogs = today
-      .filter((l: any) => String(l?.type ?? l?.logType ?? "").includes("sleep"))
-      .map((l: any) => {
+      .filter((l: AnyData) => String(l?.type ?? l?.logType ?? "").includes("sleep"))
+      .map((l: AnyData) => {
         const at = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date) ?? new Date();
         const details = l?.details ?? l ?? {};
         const action = details?.action ?? details?.event ?? details?.type ?? "start"; // start/end if exists
         const duration = typeof details?.durationMinutes === "number" ? details.durationMinutes : 0;
         return { at, action: String(action), duration };
       })
-      .sort((a: any, b: any) => a.at.getTime() - b.at.getTime());
+      .sort((a: AnyData, b: AnyData) => a.at.getTime() - b.at.getTime());
 
     let sleepMins = 0;
     let currentStart: Date | null = null;

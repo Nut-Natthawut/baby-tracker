@@ -18,19 +18,19 @@ type DragDirection = 'up' | 'down';
 const getMilkPalette = (bottleContent: BottleContent) => {
   return bottleContent === 'formula'
     ? {
-        base: '#FFF3BF',
-        mid: '#FDE68A',
-        foam: '#FFF7D6',
-        bubble: '#FFE9A3',
-        highlight: '#FFFDF6',
-      }
+      base: '#FFF3BF',
+      mid: '#FDE68A',
+      foam: '#FFF7D6',
+      bubble: '#FFE9A3',
+      highlight: '#FFFDF6',
+    }
     : {
-        base: '#FFE8D6',
-        mid: '#FAD2B0',
-        foam: '#FFF1E2',
-        bubble: '#FDCBA8',
-        highlight: '#FFF7ED',
-      };
+      base: '#FFE8D6',
+      mid: '#FAD2B0',
+      foam: '#FFF1E2',
+      bubble: '#FDCBA8',
+      highlight: '#FFF7ED',
+    };
 };
 
 const getBottleTilt = (direction: DragDirection | null) => {
@@ -256,9 +256,8 @@ const BottleSection: React.FC<BottleSectionProps> = ({
               <button
                 key={value}
                 onClick={() => onAmountChange(value)}
-                className={`px-4 py-2.5 rounded-full text-base font-semibold ${
-                  safeAmount === value ? 'bg-feeding text-white' : 'bg-card border border-border text-muted-foreground'
-                }`}
+                className={`px-4 py-2.5 rounded-full text-base font-semibold ${safeAmount === value ? 'bg-feeding text-white' : 'bg-card border border-border text-muted-foreground'
+                  }`}
               >
                 {value} ml
               </button>

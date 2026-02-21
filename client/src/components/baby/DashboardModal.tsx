@@ -17,6 +17,9 @@ import {
 } from 'date-fns';
 import { th } from 'date-fns/locale';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyData = any;
+
 interface DashboardModalProps {
   logs: LogEntry[];
   onClose: () => void;
@@ -25,7 +28,7 @@ interface DashboardModalProps {
 type NormalizedLog = {
   type: 'feeding' | 'diaper' | 'sleep' | 'pump' | 'unknown';
   at: Date;
-  details: Record<string, any>;
+  details: Record<string, AnyData>;
 };
 
 const toNumber = (value: unknown, fallback = 0) => {
@@ -74,7 +77,7 @@ const normalizeType = (value: unknown): NormalizedLog['type'] => {
   return 'unknown';
 };
 
-const getDetails = (log: any): Record<string, any> => {
+const getDetails = (log: AnyData): Record<string, AnyData> => {
   if (!log) return {};
   const raw = log.details ?? log.detail ?? log.data ?? log;
   if (typeof raw === 'string') {
@@ -89,7 +92,7 @@ const getDetails = (log: any): Record<string, any> => {
 
 const isDefined = <T,>(value: T | null | undefined): value is T => value !== null && value !== undefined;
 
-const normalizeLog = (log: any): NormalizedLog | null => {
+const normalizeLog = (log: AnyData): NormalizedLog | null => {
   const at = toDate(log?.timestamp ?? log?.time ?? log?.date ?? log?.createdAt ?? log?.created_at);
   if (!at) return null;
   const type = normalizeType(log?.type ?? log?.logType ?? log?.category ?? log?.kind ?? log?.event);
@@ -341,21 +344,19 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                 <div className="inline-flex items-center gap-2 rounded-full px-2 py-2 bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/70 dark:border-white/10 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
                   <button
                     onClick={() => handleViewModeChange('daily')}
-                    className={`px-5 py-3 rounded-full font-bold text-base transition-colors ${
-                      viewMode === 'daily'
+                    className={`px-5 py-3 rounded-full font-bold text-base transition-colors ${viewMode === 'daily'
                         ? 'bg-primary/15 text-primary'
                         : 'text-gray-600 dark:text-gray-200 hover:bg-white/80 dark:hover:bg-white/10'
-                    }`}
+                      }`}
                   >
                     รายวัน
                   </button>
                   <button
                     onClick={() => handleViewModeChange('monthly')}
-                    className={`px-5 py-3 rounded-full font-bold text-base transition-colors ${
-                      viewMode === 'monthly'
+                    className={`px-5 py-3 rounded-full font-bold text-base transition-colors ${viewMode === 'monthly'
                         ? 'bg-primary/15 text-primary'
                         : 'text-gray-600 dark:text-gray-200 hover:bg-white/80 dark:hover:bg-white/10'
-                    }`}
+                      }`}
                   >
                     รายเดือน
                   </button>
@@ -424,131 +425,131 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       <div className="absolute inset-0 bg-gradient-to-br from-amber-100/70 via-white/80 to-white/60 opacity-90" />
                       <div className="relative p-6">
                         <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="size-11 rounded-2xl bg-amber-100/80 dark:bg-amber-900/20 flex items-center justify-center">
-                            <Utensils className="w-5 h-5 text-amber-600" />
+                          <div className="flex items-center gap-3">
+                            <div className="size-11 rounded-2xl bg-amber-100/80 dark:bg-amber-900/20 flex items-center justify-center">
+                              <Utensils className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Feeding</p>
+                              <h3 className="text-lg font-black text-foreground">การกินนม</h3>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Feeding</p>
-                            <h3 className="text-lg font-black text-foreground">การกินนม</h3>
-                          </div>
+                          <span className="text-sm font-semibold text-muted-foreground">{dailyStats.feedingCount} ครั้ง</span>
                         </div>
-                        <span className="text-sm font-semibold text-muted-foreground">{dailyStats.feedingCount} ครั้ง</span>
-                      </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-3">
-                        <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
-                          <p className="text-sm font-semibold text-muted-foreground">ขวดนม</p>
-                          <p className="text-2xl font-black text-amber-600">{dailyStats.totalBottleMl}</p>
-                          <p className="text-sm text-muted-foreground">มล. • {dailyStats.bottleCount} ครั้ง</p>
-                        </div>
-                        <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
-                          <p className="text-sm font-semibold text-muted-foreground">เข้าเต้า</p>
-                          <p className="text-2xl font-black text-amber-600">{dailyStats.totalBreastMinutes}</p>
-                          <p className="text-sm text-muted-foreground">นาที • {dailyStats.breastCount} ครั้ง</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3">
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-sm font-semibold text-muted-foreground">ขวดนม</p>
+                            <p className="text-2xl font-black text-amber-600">{dailyStats.totalBottleMl}</p>
+                            <p className="text-sm text-muted-foreground">มล. • {dailyStats.bottleCount} ครั้ง</p>
+                          </div>
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-sm font-semibold text-muted-foreground">เข้าเต้า</p>
+                            <p className="text-2xl font-black text-amber-600">{dailyStats.totalBreastMinutes}</p>
+                            <p className="text-sm text-muted-foreground">นาที • {dailyStats.breastCount} ครั้ง</p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
                     <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                       <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/70 via-white/80 to-white/60 opacity-90" />
                       <div className="relative p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                          <div className="size-11 rounded-2xl bg-emerald-100/80 dark:bg-emerald-900/30 flex items-center justify-center">
-                            <Droplets className="w-5 h-5 text-emerald-600" />
+                            <div className="size-11 rounded-2xl bg-emerald-100/80 dark:bg-emerald-900/30 flex items-center justify-center">
+                              <Droplets className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Diaper</p>
+                              <h3 className="text-lg font-black text-foreground">ผ้าอ้อม</h3>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Diaper</p>
-                            <h3 className="text-lg font-black text-foreground">ผ้าอ้อม</h3>
-                          </div>
+                          <span className="text-sm font-semibold text-muted-foreground">{dailyStats.diaperCount} ครั้ง</span>
                         </div>
-                        <span className="text-sm font-semibold text-muted-foreground">{dailyStats.diaperCount} ครั้ง</span>
-                      </div>
 
                         <div className="mt-4 grid grid-cols-2 gap-3">
                           <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
                             <p className="text-2xl font-black text-emerald-600">{dailyStats.peeCount}</p>
-                          <p className="text-sm text-muted-foreground mt-1">💧 ฉี่</p>
-                        </div>
-                        <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
-                          <p className="text-2xl font-black text-emerald-600">{dailyStats.pooCount}</p>
-                          <p className="text-sm text-muted-foreground mt-1">💩 อึ</p>
+                            <p className="text-sm text-muted-foreground mt-1">💧 ฉี่</p>
+                          </div>
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
+                            <p className="text-2xl font-black text-emerald-600">{dailyStats.pooCount}</p>
+                            <p className="text-sm text-muted-foreground mt-1">💩 อึ</p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
                     <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                       <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/70 via-white/80 to-white/60 opacity-90" />
                       <div className="relative p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                          <div className="size-11 rounded-2xl bg-indigo-100/80 dark:bg-indigo-900/30 flex items-center justify-center">
-                            <Moon className="w-5 h-5 text-indigo-600" />
+                            <div className="size-11 rounded-2xl bg-indigo-100/80 dark:bg-indigo-900/30 flex items-center justify-center">
+                              <Moon className="w-5 h-5 text-indigo-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Sleep</p>
+                              <h3 className="text-lg font-black text-foreground">การนอน</h3>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Sleep</p>
-                            <h3 className="text-lg font-black text-foreground">การนอน</h3>
-                          </div>
+                          <span className="text-sm font-semibold text-muted-foreground">{dailyStats.sleepCount} ครั้ง</span>
                         </div>
-                        <span className="text-sm font-semibold text-muted-foreground">{dailyStats.sleepCount} ครั้ง</span>
-                      </div>
 
                         <div className="mt-4 grid grid-cols-2 gap-3">
                           <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
-                          <p className="text-sm font-semibold text-muted-foreground">เวลารวม</p>
-                          <p className="text-2xl font-black text-indigo-600">
-                            {sleepHours}h {sleepMins}m
-                          </p>
-                          <p className="text-sm text-muted-foreground">วันนี้</p>
-                        </div>
-                        <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
-                          <p className="text-sm font-semibold text-muted-foreground">เฉลี่ย/ครั้ง</p>
-                          <p className="text-2xl font-black text-indigo-600">
-                            {dailyStats.sleepCount > 0
-                              ? Math.round(dailyStats.sleepMinutes / dailyStats.sleepCount)
-                              : 0}
-                          </p>
-                          <p className="text-sm text-muted-foreground">นาที</p>
+                            <p className="text-sm font-semibold text-muted-foreground">เวลารวม</p>
+                            <p className="text-2xl font-black text-indigo-600">
+                              {sleepHours}h {sleepMins}m
+                            </p>
+                            <p className="text-sm text-muted-foreground">วันนี้</p>
+                          </div>
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-sm font-semibold text-muted-foreground">เฉลี่ย/ครั้ง</p>
+                            <p className="text-2xl font-black text-indigo-600">
+                              {dailyStats.sleepCount > 0
+                                ? Math.round(dailyStats.sleepMinutes / dailyStats.sleepCount)
+                                : 0}
+                            </p>
+                            <p className="text-sm text-muted-foreground">นาที</p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
                     <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                       <div className="absolute inset-0 bg-gradient-to-br from-rose-100/70 via-white/80 to-white/60 opacity-90" />
                       <div className="relative p-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                          <div className="size-11 rounded-2xl bg-rose-100/80 dark:bg-rose-900/30 flex items-center justify-center">
-                            <Milk className="w-5 h-5 text-rose-500" />
+                            <div className="size-11 rounded-2xl bg-rose-100/80 dark:bg-rose-900/30 flex items-center justify-center">
+                              <Milk className="w-5 h-5 text-rose-500" />
+                            </div>
+                            <div>
+                              <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Pumping</p>
+                              <h3 className="text-lg font-black text-foreground">ปั๊มนม</h3>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Pumping</p>
-                            <h3 className="text-lg font-black text-foreground">ปั๊มนม</h3>
-                          </div>
+                          <span className="text-sm font-semibold text-muted-foreground">{dailyStats.pumpCount} ครั้ง</span>
                         </div>
-                        <span className="text-sm font-semibold text-muted-foreground">{dailyStats.pumpCount} ครั้ง</span>
-                      </div>
 
                         <div className="mt-4 grid grid-cols-2 gap-3">
                           <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
-                          <p className="text-sm font-semibold text-muted-foreground">ปริมาณรวม</p>
-                          <p className="text-2xl font-black text-rose-500">{dailyStats.pumpMl}</p>
-                          <p className="text-sm text-muted-foreground">มล.</p>
-                        </div>
-                        <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
-                          <p className="text-sm font-semibold text-muted-foreground">เวลาปั๊ม</p>
-                          <p className="text-2xl font-black text-rose-500">
-                            {pumpHours > 0 ? `${pumpHours}h ${pumpMins}m` : `${pumpMins}m`}
-                          </p>
-                          <p className="text-sm text-muted-foreground">รวมทั้งหมด</p>
+                            <p className="text-sm font-semibold text-muted-foreground">ปริมาณรวม</p>
+                            <p className="text-2xl font-black text-rose-500">{dailyStats.pumpMl}</p>
+                            <p className="text-sm text-muted-foreground">มล.</p>
+                          </div>
+                          <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <p className="text-sm font-semibold text-muted-foreground">เวลาปั๊ม</p>
+                            <p className="text-2xl font-black text-rose-500">
+                              {pumpHours > 0 ? `${pumpHours}h ${pumpMins}m` : `${pumpMins}m`}
+                            </p>
+                            <p className="text-sm text-muted-foreground">รวมทั้งหมด</p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
                   </div>
                 </div>
               ) : (

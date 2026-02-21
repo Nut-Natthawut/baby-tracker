@@ -232,7 +232,7 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
   );
 };
 
-const GenerateCodeButton = ({ babyId, authFetch }: { babyId: string, authFetch: any }) => {
+const GenerateCodeButton = ({ babyId, authFetch }: { babyId: string, authFetch: typeof fetch }) => {
   const [code, setCode] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
