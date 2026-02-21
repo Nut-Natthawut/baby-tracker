@@ -4,7 +4,7 @@ on:
   push:
     branches: ['**']
   pull_request:
-    types: [opened]
+    types: [opened, closed]
 
 jobs:
   sync:
@@ -22,7 +22,7 @@ jobs:
             --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
             --data "allow_force_push=true" \
             "https://gitlab.com/api/v4/projects/78190812/protected_branches/main"
-      
+
       - name: Push branches and tags to GitLab
         run: |
           git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/baby_tracker/baby_tracker.git
@@ -30,8 +30,7 @@ jobs:
           git push gitlab --tags --force
 
   create-mr:
-    if: github.event_name == 'pull_request'
-    needs: sync
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
       - name: Create Merge Request on GitLab
@@ -65,4 +64,46 @@ jobs:
             echo "❌ Failed to create Merge Request (HTTP $http_code)"
             echo "$body"
             exit 1
+          fi
+
+  merge-mr:
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge corresponding MR on GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          SOURCE_BRANCH: ${{ github.head_ref }}
+        run: |
+          echo "Finding MR for branch: $SOURCE_BRANCH"
+          
+          # Find open MR by source branch
+          mr_iid=$(curl -s --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+            "https://gitlab.com/api/v4/projects/78190812/merge_requests?source_branch=${SOURCE_BRANCH}&state=opened" \
+            | jq '.[0].iid')
+          
+          if [ "$mr_iid" != "null" ] && [ -n "$mr_iid" ]; then
+            echo "Found MR !${mr_iid}, merging..."
+            
+            # Accept/merge the MR
+            result=$(curl -s -w "\n%{http_code}" --request PUT \
+              --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+              "https://gitlab.com/api/v4/projects/78190812/merge_requests/${mr_iid}/merge?should_remove_source_branch=true")
+            
+            http_code=$(echo "$result" | tail -1)
+            
+            if [ "$http_code" = "200" ]; then
+              echo "✅ MR !${mr_iid} merged successfully on GitLab"
+            else
+              echo "⚠️ Could not auto-merge MR !${mr_iid} (HTTP $http_code)"
+              echo "Closing MR instead..."
+              curl -s --request PUT \
+                --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+                --header "Content-Type: application/json" \
+                --data '{"state_event": "close"}' \
+                "https://gitlab.com/api/v4/projects/78190812/merge_requests/${mr_iid}"
+              echo "✅ MR !${mr_iid} closed"
+            fi
+          else
+            echo "⚠️ No open MR found for branch $SOURCE_BRANCH"
           fi
