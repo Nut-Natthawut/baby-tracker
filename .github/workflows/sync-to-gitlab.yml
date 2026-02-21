@@ -14,5 +14,5 @@ jobs:
       
       - run: |
           git remote add gitlab ${{ secrets.GITLAB_REPO_URL }}
-          git push gitlab --all --force
-          git push gitlab --tags --force
+          git push gitlab --all
+          git push gitlab --tags
