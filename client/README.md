@@ -14,8 +14,10 @@
 
 - **Frontend**: React + TypeScript + Vite
 - **Styling**: Tailwind CSS + shadcn/ui
-- **Backend**: Node.js / Express
-- **Deployment**: Vercel
+- **Backend**: Hono + Cloudflare Workers + Drizzle ORM
+- **Database**: Cloudflare D1 (SQLite)
+- **Deployment**: Vercel (Frontend) + Cloudflare Workers (Backend)
+- **CI/CD**: GitHub Actions + GitLab CI/CD
 
 ## Getting Started
 
@@ -25,6 +27,14 @@ npm install
 
 # Run development server
 npm run dev
+```
+
+## Environment Variables
+
+สร้างไฟล์ `.env` โดยกำหนดค่าต่อไปนี้:
+
+```env
+VITE_API_URL=<backend_api_url>
 ```
 
 ## Build
