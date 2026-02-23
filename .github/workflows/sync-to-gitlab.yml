@@ -14,20 +14,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Allow force push on protected branch
+      - name: Unprotect main branch on GitLab
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
         run: |
-          curl -s --request PATCH \
+          curl -s --request DELETE \
             --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
-            --data "allow_force_push=true" \
-            "https://gitlab.com/api/v4/projects/78190812/protected_branches/main"
+            "https://gitlab.com/api/v4/projects/78190812/protected_branches/main" || true
 
       - name: Push branches and tags to GitLab
         run: |
           git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/baby_tracker/baby_tracker.git
           git push gitlab --all --force
           git push gitlab --tags --force
+
+      - name: Re-protect main branch on GitLab
+        if: always()
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          curl -s --request POST \
+            --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data '{"name": "main", "push_access_level": 40, "merge_access_level": 40, "allow_force_push": true}' \
+            "https://gitlab.com/api/v4/projects/78190812/protected_branches"
 
   create-mr:
     if: github.event_name == 'pull_request' && github.event.action == 'opened'
