@@ -205,6 +205,111 @@ logs.post("/", async (c) => {
   }
 });
 
+// PUT /:id - Update a log
+logs.put("/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json();
+  const user = c.get("user");
+
+  const { timestamp, details } = body;
+
+  const log: any = await c.env.baby_tracker_db
+    .prepare("SELECT id, type, baby_id FROM logs WHERE id = ?")
+    .bind(id)
+    .first();
+
+  if (!log) {
+    return c.json({ success: false, message: "Log not found" }, 404);
+  }
+
+  const membership = await getMembership(c.env.baby_tracker_db, log.baby_id, user.sub);
+  if (!membership) {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
+
+  const type = log.type;
+
+  try {
+    // Update timestamp if provided
+    if (timestamp) {
+      await c.env.baby_tracker_db
+        .prepare("UPDATE logs SET timestamp = ? WHERE id = ?")
+        .bind(timestamp, id)
+        .run();
+    }
+
+    // Update details based on type
+    if (details) {
+      if (type === "feeding") {
+        await c.env.baby_tracker_db
+          .prepare(
+            "UPDATE feeding_details SET method = ?, bottle_content = ?, amount_ml = ?, left_duration_seconds = ?, right_duration_seconds = ?, has_spit_up = ?, notes = ? WHERE log_id = ?"
+          )
+          .bind(
+            details.method,
+            details.bottleContent ?? null,
+            details.amountMl ?? null,
+            details.leftDurationSeconds ?? null,
+            details.rightDurationSeconds ?? null,
+            details.hasSpitUp ? 1 : 0,
+            details.notes ?? null,
+            id
+          )
+          .run();
+      } else if (type === "diaper") {
+        await c.env.baby_tracker_db
+          .prepare(
+            "UPDATE diaper_details SET status = ?, poo_color = ?, poo_texture = ?, notes = ? WHERE log_id = ?"
+          )
+          .bind(
+            details.status,
+            details.pooColor ?? null,
+            details.pooTexture ?? null,
+            details.notes ?? null,
+            id
+          )
+          .run();
+      } else if (type === "sleep") {
+        await c.env.baby_tracker_db
+          .prepare(
+            "UPDATE sleep_details SET duration_minutes = ?, end_time = ?, notes = ? WHERE log_id = ?"
+          )
+          .bind(details.durationMinutes, details.endTime ?? null, details.notes ?? null, id)
+          .run();
+      } else if (type === "pump") {
+        await c.env.baby_tracker_db
+          .prepare(
+            "UPDATE pumping_details SET duration_minutes = ?, amount_left_ml = ?, amount_right_ml = ?, amount_total_ml = ?, notes = ? WHERE log_id = ?"
+          )
+          .bind(
+            details.durationMinutes,
+            details.amountLeftMl ?? null,
+            details.amountRightMl ?? null,
+            details.amountTotalMl,
+            details.notes ?? null,
+            id
+          )
+          .run();
+      }
+    }
+
+    return c.json({
+      success: true,
+      message: "Updated log",
+      data: {
+        id,
+        babyId: log.baby_id,
+        type,
+        timestamp: timestamp ?? log.timestamp,
+        details,
+      },
+    });
+  } catch (err: any) {
+    console.error("Error updating log:", err);
+    return c.json({ success: false, message: "Failed to update log", error: err.message }, 500);
+  }
+});
+
 // DELETE /:id - Delete a log
 logs.delete("/:id", async (c) => {
   const id = c.req.param("id");

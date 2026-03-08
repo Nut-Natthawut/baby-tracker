@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, Minus, Plus, Moon } from 'lucide-react';
+import { X, Minus, Plus, Moon, CalendarDays , ChevronLeft, ChevronRight} from 'lucide-react';
 import { SleepDetails } from '@/types/baby';
 import { roundToNearest30, formatTime } from '@/lib/babyUtils';
 
 interface SleepModalProps {
   onClose: () => void;
   onSave: (data: { timestamp: Date; details: SleepDetails }) => void;
+  initialData?: { timestamp: Date; details: SleepDetails };
 }
 
 const stars = [
@@ -21,13 +22,14 @@ const stars = [
   { className: 'top-[50%] right-[50%] w-0.5 h-0.5', opacity: 0.5, glow: '0 0 6px rgba(255,255,255,0.55)', duration: 3.5, delay: 0.5 },
 ];
 
-const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
+const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave, initialData }) => {
   // Initialize with end time now, start time 1 hour ago
   const [endTime, setEndTime] = useState<Date>(roundToNearest30(new Date()));
   const [startTime, setStartTime] = useState<Date>(() => {
     const end = roundToNearest30(new Date());
     return new Date(end.getTime() - 60 * 60000); // Default 1 hour duration
   });
+  const datePickerRef = useRef<HTMLInputElement>(null);
   const [notes, setNotes] = useState('');
 
   const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
@@ -69,6 +71,37 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
     });
   };
 
+
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value) {
+      const [y, m, d] = e.target.value.split('-').map(Number);
+      setStartTime(prev => {
+        const newDate = new Date(prev);
+        newDate.setFullYear(y, m - 1, d);
+        return newDate;
+      });
+      setEndTime(prev => {
+        const newDate = new Date(prev);
+        newDate.setFullYear(y, m - 1, d);
+        return newDate;
+      });
+    }
+  };
+
+  
+  const handlePrevDay = () => {
+    setStartTime(prev => new Date(prev.getTime() - 86400000));
+    setEndTime(prev => new Date(prev.getTime() - 86400000));
+  };
+  const handleNextDay = () => {
+    setStartTime(prev => new Date(prev.getTime() + 86400000));
+    setEndTime(prev => new Date(prev.getTime() + 86400000));
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
 
   return (
     <motion.div
@@ -124,6 +157,40 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
 
           <div className="w-full max-w-md flex flex-col gap-5">
 
+                    {/* Date Selector */}
+        <div className="mb-4 text-center w-full">
+          <div className="flex items-center justify-between gap-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 p-3">
+            <button
+              onClick={handlePrevDay}
+              className="size-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:opacity-80 transition"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <div className="flex-1 flex flex-col items-center justify-center relative">
+              <input
+                ref={datePickerRef}
+                type="date"
+                value={startTime.toISOString().split('T')[0]}
+                onChange={handleDateChange}
+                className="absolute opacity-0 w-full h-full cursor-pointer z-10 top-0 left-0"
+              />
+              <div className="flex items-center justify-center gap-2 py-1 cursor-pointer pointer-events-none">
+                <span className="text-lg font-bold truncate">
+                  {startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear() ? 
+                    'วันนี้' : formatDate(startTime)}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={handleNextDay}
+              disabled={startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear()}
+              className="size-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:opacity-80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+
             {/* Time Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Start Time */}
@@ -177,7 +244,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave }) => {
                     newEnd.setHours(h, m);
                     setEndTime(newEnd);
                   }}
-                  className="bg-transparent text-5xl font-black text-slate-800 text-center w-full focus:outline-none relative z-10"
+                  className="bg-transparent text-4xl font-black text-slate-800 text-center w-full focus:outline-none relative z-10"
                 />
                 <div className="flex gap-2 justify-center relative z-10 w-full">
                   <button onClick={() => setEndTime(new Date(endTime.getTime() - 15 * 60000))} className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition">-15</button>
