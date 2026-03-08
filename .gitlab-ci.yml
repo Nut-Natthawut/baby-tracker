@@ -9,8 +9,8 @@ deploy-vercel:
     - main
   variables:
     TOKEN: $VERCEL_TOKEN
-    VERCEL_ORG_ID: $VERCEL_ORG_ID
-    VERCEL_PROJECT_ID: $VERCEL_PROJECT_ID
+    VERCEL_ORG_ID: "team_A4LbHXKVgWj1E42KGGy1BNrA"
+    VERCEL_PROJECT_ID: "prj_Q88DmULObqytANTuCTsXaWHjhLrr"
 
   script:
     - npm install --global vercel
