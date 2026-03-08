@@ -33,14 +33,14 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
     <div className={`relative ${containerClassName ?? ''}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-card/50 border border-border/50 hover:bg-card transition-colors ${buttonClassName ?? ''}`}
+        className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-card/50 backdrop-blur-sm border border-white/10 hover:bg-card/80 transition-colors shadow-sm ${buttonClassName ?? ''}`}
       >
         <BabyAvatar baby={currentBaby} size="sm" />
         <span className={`font-semibold text-foreground text-base max-w-[140px] truncate ${nameClassName ?? ''}`}>
           {currentBaby.name}
         </span>
-        <ChevronDown 
-          size={18} 
+        <ChevronDown
+          size={18}
           className={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''} ${chevronClassName ?? ''}`}
         />
       </button>
@@ -63,13 +63,13 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden"
+              className="absolute top-full left-0 mt-2 w-64 bg-background/80 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl z-50 overflow-hidden"
             >
               <div className="p-2">
                 <p className="text-sm text-muted-foreground px-3 py-2 font-medium">
                   เลือกลูกน้อย
                 </p>
-                
+
                 {babies.map((baby) => (
                   <button
                     key={baby.id}
@@ -77,11 +77,10 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
                       onSelectBaby(baby);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${
-                      currentBaby.id === baby.id
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${currentBaby.id === baby.id
                         ? 'bg-primary/10'
                         : 'hover:bg-secondary'
-                    }`}
+                      }`}
                   >
                     <BabyAvatar baby={baby} size="sm" />
                     <div className="flex-1 text-left">
