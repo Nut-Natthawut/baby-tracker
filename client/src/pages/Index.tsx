@@ -281,6 +281,16 @@ const Index = () => {
   // Editing log state  
   const [editingLog, setEditingLog] = useState<{ id: string; type: string; raw: any } | null>(null);
 
+  // Generic Confirm Modal State
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmLabel: string;
+    onCancelRedirect?: "settings" | null;
+    action: () => void;
+  } | null>(null);
+
   // Date picker ref
   const dateInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -380,38 +390,38 @@ const Index = () => {
     }
   };
 
-  const handleDeleteBaby = async () => setActiveModal("delete-confirm");
-
-  const confirmDeleteBaby = async () => {
-    if (!baby) return;
-    setActiveModal(null);
-
-    const success = await deleteBaby(baby.id);
-    if (success) {
-      toast({
-        title: "ลบข้อมูลสำเร็จ",
-        description: "ลบข้อมูลเรียบร้อยแล้ว",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถลบข้อมูลได้",
-        variant: "destructive",
-      });
-    }
+  const handleDeleteBaby = async () => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "ยืนยันการลบข้อมูล",
+      description: `คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลของ ${baby?.name || "เด็กคนนี้"}? การกระทำนี้ไม่สามารถย้อนกลับได้ ข้อมูลบันทึกและประวัติทั้งหมดจะถูกลบถาวร`,
+      confirmLabel: "ลบข้อมูล",
+      onCancelRedirect: "settings",
+      action: async () => {
+        if (!baby) return;
+        setActiveModal(null);
+        const success = await deleteBaby(baby.id);
+        if (success) {
+          toast({ title: "ลบข้อมูลสำเร็จ", description: "ลบข้อมูลเรียบร้อยแล้ว", variant: "destructive" });
+        } else {
+          toast({ title: "เกิดข้อผิดพลาด", description: "ไม่สามารถลบข้อมูลได้", variant: "destructive" });
+        }
+      }
+    });
   };
 
   const handleClearData = () => {
-    if (globalThis.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลทั้งหมด?")) {
-      clearData();
-      setActiveModal(null);
-      toast({
-        title: "ลบข้อมูลสำเร็จ",
-        description: "ข้อมูลทั้งหมดถูกลบเรียบร้อยแล้ว",
-        variant: "destructive",
-      });
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: "ยืนยันการลบข้อมูลทั้งหมด",
+      description: "คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลทั้งหมด? ข้อมูลทุกอย่างจะถูกลบถาวรและไม่สามารถกู้คืนได้",
+      confirmLabel: "ลบข้อมูลทั้งหมด",
+      action: () => {
+        clearData();
+        setActiveModal(null);
+        toast({ title: "ลบข้อมูลสำเร็จ", description: "ข้อมูลทั้งหมดถูกลบเรียบร้อยแล้ว", variant: "destructive" });
+      }
+    });
   };
 
   // ---------- derive dashboard data from logs ----------
@@ -781,30 +791,30 @@ const Index = () => {
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full lg:w-auto">
-                    <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 shadow-[0_12px_25px_-20px_rgba(15,23,42,0.35)]">
+                    <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 shadow-soft">
                       <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                        <span className="size-2 rounded-full bg-indigo-400" />
+                        <span className="size-2 rounded-full bg-sleep" />
                         <span>นอน</span>
                       </div>
-                      <p className="text-lg font-black text-foreground mt-1">
+                      <p className="text-lg font-bold tracking-tight tabular-nums text-foreground mt-1">
                         {dailySummary.sleepH}ชม. {dailySummary.sleepR}น.
                       </p>
                     </div>
-                    <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 shadow-[0_12px_25px_-20px_rgba(15,23,42,0.35)]">
+                    <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 shadow-soft">
                       <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                        <span className="size-2 rounded-full bg-emerald-400" />
+                        <span className="size-2 rounded-full bg-diaper" />
                         <span>ผ้าอ้อม</span>
                       </div>
-                      <p className="text-lg font-black text-foreground mt-1">
+                      <p className="text-lg font-bold tracking-tight tabular-nums text-foreground mt-1">
                         {dailySummary.diaperCount} ครั้ง
                       </p>
                     </div>
-                    <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 shadow-[0_12px_25px_-20px_rgba(15,23,42,0.35)]">
+                    <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 shadow-soft col-span-2 sm:col-span-1">
                       <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                        <span className="size-2 rounded-full bg-rose-400" />
+                        <span className="size-2 rounded-full bg-feeding" />
                         <span>นม</span>
                       </div>
-                      <p className="text-lg font-black text-foreground mt-1">
+                      <p className="text-lg font-bold tracking-tight tabular-nums text-foreground mt-1">
                         {dailySummary.totalMl} มล.
                       </p>
                     </div>
@@ -817,7 +827,7 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 max-w-[1240px] mx-auto items-start">
               {/* Left Column: Timeline */}
               <div className="lg:col-span-3 order-2 lg:order-1">
-                <div className="bg-white/75 dark:bg-white/5 backdrop-blur-xl rounded-3xl p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)] border border-white/70 dark:border-white/10 h-full">
+                <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-soft border border-white/20 h-full">
                   <div className="flex items-start justify-between mb-6">
                     <div>
                       <h3 className="text-lg font-extrabold">กิจกรรมล่าสุด</h3>
@@ -860,8 +870,8 @@ const Index = () => {
                             </div>
 
                             <div className="pt-1 flex-1 min-w-0">
-                              <p className="font-extrabold text-sm text-gray-900 dark:text-white">{item.label}</p>
-                              <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{item.sub}</p>
+                              <p className="font-semibold tracking-tight text-sm text-foreground">{item.label}</p>
+                              <p className="text-muted-foreground text-sm mt-0.5">{item.sub}</p>
                             </div>
 
                             <div className="flex gap-1 pt-1 flex-none">
@@ -872,25 +882,27 @@ const Index = () => {
                                   if (logType.includes('feeding')) setActiveModal('feeding');
                                   else if (logType.includes('diaper')) setActiveModal('diaper');
                                   else if (logType.includes('sleep')) setActiveModal('sleep');
-                                  else if (logType.includes('pump')) setActiveModal('pump');
+                                  else if (logType.includes('pump')) setActiveModal('pumping');
                                 }}
-                                className="size-7 rounded-full bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 flex items-center justify-center text-blue-400 hover:text-blue-500 transition"
+                                className="size-7 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center text-muted-foreground transition"
                                 title="แก้ไข"
                               >
                                 <Pencil size={13} />
                               </button>
                               <button
                                 onClick={() => {
-                                  if (globalThis.confirm('ต้องการลบรายการนี้?')) {
-                                    deleteLog(item.id);
-                                    toast({
-                                      title: "ลบสำเร็จ",
-                                      description: "ลบรายการเรียบร้อยแล้ว",
-                                      variant: "destructive",
-                                    });
-                                  }
+                                  setConfirmConfig({
+                                    isOpen: true,
+                                    title: "ยืนยันการลบ",
+                                    description: "ต้องการลบรายการนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้",
+                                    confirmLabel: "ลบ",
+                                    action: () => {
+                                      deleteLog(item.id);
+                                      toast({ title: "ลบสำเร็จ", description: "ลบรายการเรียบร้อยแล้ว", variant: "destructive" });
+                                    }
+                                  });
                                 }}
-                                className="size-7 rounded-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 flex items-center justify-center text-red-400 hover:text-red-500 transition"
+                                className="size-7 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center text-destructive transition"
                                 title="ลบ"
                               >
                                 <Trash2 size={13} />
@@ -910,19 +922,22 @@ const Index = () => {
                   {/* Feeding */}
                   <motion.button
                     onClick={() => setActiveModal("feeding")}
-                    whileHover={{ y: -6 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="group relative overflow-hidden rounded-[28px] p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/80 dark:bg-white/5 border border-white/70 dark:border-white/10 shadow-[0_20px_45px_-32px_rgba(15,23,42,0.35)]"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-sky/35 via-white/80 to-white/60 opacity-90" />
-                    <div className="absolute -top-10 -right-10 size-24 rounded-full bg-sky/30 blur-2xl" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-feeding/30 via-white/5 to-transparent opacity-80" />
+                    <div className="absolute -top-10 -right-10 size-24 rounded-full bg-feeding/20 blur-2xl" />
                     <div className="relative flex flex-col items-center gap-4 text-center">
-                      <div className="size-16 md:size-20 rounded-2xl bg-white/90 dark:bg-white/10 shadow-sm flex items-center justify-center text-sky-600 group-hover:scale-110 transition-transform duration-300">
+                      <div className="size-16 md:size-20 rounded-2xl bg-white/40 dark:bg-white/10 shadow-sm flex items-center justify-center text-feeding group-hover:scale-110 transition-transform duration-300">
                         <Utensils className="w-9 h-9" />
                       </div>
                       <div>
-                        <span className="block text-xl font-black text-gray-900 dark:text-white mb-1">บันทึกการกินนม</span>
-                        <span className="text-sm font-semibold text-sky-600/80 dark:text-sky-200">
+                        <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">บันทึกการกินนม</span>
+                        <span className="text-sm font-semibold text-feeding/80">
                           ขวดนมหรือเข้าเต้า
                         </span>
                       </div>
@@ -932,19 +947,22 @@ const Index = () => {
                   {/* Diaper */}
                   <motion.button
                     onClick={() => setActiveModal("diaper")}
-                    whileHover={{ y: -6 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="group relative overflow-hidden rounded-[28px] p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/80 dark:bg-white/5 border border-white/70 dark:border-white/10 shadow-[0_20px_45px_-32px_rgba(15,23,42,0.35)]"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.15 }}
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-100/70 via-white/80 to-white/60 opacity-90" />
-                    <div className="absolute -bottom-10 -left-10 size-24 rounded-full bg-amber-200/40 blur-2xl" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-diaper/30 via-white/5 to-transparent opacity-80" />
+                    <div className="absolute -bottom-10 -left-10 size-24 rounded-full bg-diaper/20 blur-2xl" />
                     <div className="relative flex flex-col items-center gap-4 text-center">
-                      <div className="size-16 md:size-20 rounded-2xl bg-white/90 dark:bg-white/10 shadow-sm flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform duration-300">
+                      <div className="size-16 md:size-20 rounded-2xl bg-white/40 dark:bg-white/10 shadow-sm flex items-center justify-center text-diaper group-hover:scale-110 transition-transform duration-300">
                         <Droplet className="w-9 h-9" />
                       </div>
                       <div>
-                        <span className="block text-xl font-black text-gray-900 dark:text-white mb-1">บันทึกผ้าอ้อม</span>
-                        <span className="text-sm font-semibold text-amber-600/80">ฉี่/อึ/ผสม</span>
+                        <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">บันทึกผ้าอ้อม</span>
+                        <span className="text-sm font-semibold text-diaper/80">ฉี่/อึ/ผสม</span>
                       </div>
                     </div>
                   </motion.button>
@@ -952,19 +970,22 @@ const Index = () => {
                   {/* Sleep */}
                   <motion.button
                     onClick={() => setActiveModal("sleep")}
-                    whileHover={{ y: -6 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="group relative overflow-hidden rounded-[28px] p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/80 dark:bg-white/5 border border-white/70 dark:border-white/10 shadow-[0_20px_45px_-32px_rgba(15,23,42,0.35)]"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-white/80 to-white/60 opacity-90" />
-                    <div className="absolute -top-10 -left-10 size-24 rounded-full bg-emerald-200/40 blur-2xl" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-sleep/30 via-white/5 to-transparent opacity-80" />
+                    <div className="absolute -top-10 -left-10 size-24 rounded-full bg-sleep/20 blur-2xl" />
                     <div className="relative flex flex-col items-center gap-4 text-center">
-                      <div className="size-16 md:size-20 rounded-2xl bg-white/90 dark:bg-white/10 shadow-sm flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform duration-300">
+                      <div className="size-16 md:size-20 rounded-2xl bg-white/40 dark:bg-white/10 shadow-sm flex items-center justify-center text-sleep group-hover:scale-110 transition-transform duration-300">
                         <BedDouble className="w-9 h-9" />
                       </div>
                       <div>
-                        <span className="block text-xl font-black text-gray-900 dark:text-white mb-1">บันทึกการนอน</span>
-                        <span className="text-sm font-semibold text-emerald-600/80 dark:text-emerald-300">
+                        <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">บันทึกการนอน</span>
+                        <span className="text-sm font-semibold text-sleep/80">
                           เริ่มหรือตื่นนอน
                         </span>
                       </div>
@@ -974,19 +995,22 @@ const Index = () => {
                   {/* Pumping */}
                   <motion.button
                     onClick={() => setActiveModal("pumping")}
-                    whileHover={{ y: -6 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="group relative overflow-hidden rounded-[28px] p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/80 dark:bg-white/5 border border-white/70 dark:border-white/10 shadow-[0_20px_45px_-32px_rgba(15,23,42,0.35)]"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.25 }}
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-rose-100/70 via-white/80 to-white/60 opacity-90" />
-                    <div className="absolute -bottom-10 -right-10 size-24 rounded-full bg-rose-200/40 blur-2xl" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-pump/30 via-white/5 to-transparent opacity-80" />
+                    <div className="absolute -bottom-10 -right-10 size-24 rounded-full bg-pump/20 blur-2xl" />
                     <div className="relative flex flex-col items-center gap-4 text-center">
-                      <div className="size-16 md:size-20 rounded-2xl bg-white/90 dark:bg-white/10 shadow-sm flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform duration-300">
+                      <div className="size-16 md:size-20 rounded-2xl bg-white/40 dark:bg-white/10 shadow-sm flex items-center justify-center text-pump group-hover:scale-110 transition-transform duration-300">
                         <Milk className="w-9 h-9" />
                       </div>
                       <div>
-                        <span className="block text-xl font-black text-gray-900 dark:text-white mb-1">ปั๊มนม</span>
-                        <span className="text-sm font-semibold text-rose-500/80 dark:text-rose-200">รายละเอียดการปั๊ม</span>
+                        <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">ปั๊มนม</span>
+                        <span className="text-sm font-semibold text-pump/80">รายละเอียดการปั๊ม</span>
                       </div>
                     </div>
                   </motion.button>
@@ -995,7 +1019,7 @@ const Index = () => {
 
               {/* Right Column: Daily Summary */}
               <div className="lg:col-span-3 order-3">
-                <div className="bg-white/75 dark:bg-white/5 backdrop-blur-xl rounded-3xl p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)] border border-white/70 dark:border-white/10 h-full flex flex-col gap-6">
+                <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-soft border border-white/20 h-full flex flex-col gap-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-extrabold">สรุปประจำวัน</h3>
@@ -1107,37 +1131,37 @@ const Index = () => {
           {/* Modals */}
           <AnimatePresence>
             {activeModal === "feeding" && <FeedingModal
-                onClose={() => { setActiveModal(null); setEditingLog(null); }}
-                onSave={handleSaveFeeding}
-                initialData={editingLog?.type?.includes('feeding') ? {
-                  timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
-                  details: editingLog.raw?.details ?? editingLog.raw ?? {},
-                } : undefined}
-              />}
+              onClose={() => { setActiveModal(null); setEditingLog(null); }}
+              onSave={handleSaveFeeding}
+              initialData={editingLog?.type?.includes('feeding') ? {
+                timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
+                details: editingLog.raw?.details ?? editingLog.raw ?? {},
+              } : undefined}
+            />}
             {activeModal === "diaper" && <DiaperModal
-                onClose={() => { setActiveModal(null); setEditingLog(null); }}
-                onSave={handleSaveDiaper}
-                initialData={editingLog?.type?.includes('diaper') ? {
-                  timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
-                  details: editingLog.raw?.details ?? editingLog.raw ?? {},
-                } : undefined}
-              />}
+              onClose={() => { setActiveModal(null); setEditingLog(null); }}
+              onSave={handleSaveDiaper}
+              initialData={editingLog?.type?.includes('diaper') ? {
+                timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
+                details: editingLog.raw?.details ?? editingLog.raw ?? {},
+              } : undefined}
+            />}
             {activeModal === "sleep" && <SleepModal
-                onClose={() => { setActiveModal(null); setEditingLog(null); }}
-                onSave={handleSaveSleep}
-                initialData={editingLog?.type?.includes('sleep') ? {
-                  timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
-                  details: editingLog.raw?.details ?? editingLog.raw ?? {},
-                } : undefined}
-              />}
+              onClose={() => { setActiveModal(null); setEditingLog(null); }}
+              onSave={handleSaveSleep}
+              initialData={editingLog?.type?.includes('sleep') ? {
+                timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
+                details: editingLog.raw?.details ?? editingLog.raw ?? {},
+              } : undefined}
+            />}
             {activeModal === "pumping" && <PumpingModal
-                onClose={() => { setActiveModal(null); setEditingLog(null); }}
-                onSave={handleSavePumping}
-                initialData={editingLog?.type?.includes('pump') ? {
-                  timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
-                  details: editingLog.raw?.details ?? editingLog.raw ?? {},
-                } : undefined}
-              />}
+              onClose={() => { setActiveModal(null); setEditingLog(null); }}
+              onSave={handleSavePumping}
+              initialData={editingLog?.type?.includes('pump') ? {
+                timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
+                details: editingLog.raw?.details ?? editingLog.raw ?? {},
+              } : undefined}
+            />}
 
             {activeModal === "add-baby" && (
               <BabyProfileModal baby={null} onClose={() => setActiveModal(null)} onSave={handleSaveBaby} />
@@ -1162,13 +1186,19 @@ const Index = () => {
           </AnimatePresence>
 
           <ConfirmModal
-            isOpen={activeModal === "delete-confirm"}
-            title="ยืนยันการลบข้อมูล"
-            description={`คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลของ ${baby?.name || "เด็กคนนี้"}? การกระทำนี้ไม่สามารถย้อนกลับได้ ข้อมูลบันทึกและประวัติทั้งหมดจะถูกลบถาวร`}
-            confirmLabel="ลบข้อมูล"
+            isOpen={!!confirmConfig?.isOpen}
+            title={confirmConfig?.title || ""}
+            description={confirmConfig?.description || ""}
+            confirmLabel={confirmConfig?.confirmLabel || "ยืนยัน"}
             variant="destructive"
-            onConfirm={confirmDeleteBaby}
-            onCancel={() => setActiveModal("settings")}
+            onConfirm={() => {
+              if (confirmConfig?.action) confirmConfig.action();
+              setConfirmConfig(null);
+            }}
+            onCancel={() => {
+              if (confirmConfig?.onCancelRedirect) setActiveModal(confirmConfig.onCancelRedirect);
+              setConfirmConfig(null);
+            }}
           />
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, Check, CalendarDays , ChevronLeft, ChevronRight} from 'lucide-react';
+import { X, Check, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DiaperDetails, POO_COLORS, POO_TEXTURES } from '@/types/baby';
 import { roundToNearest30, formatTime } from '@/lib/babyUtils';
 
@@ -120,236 +120,240 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
   const pooFillColor = getPooFillColor(pooColor);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-background flex flex-col"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-        <button onClick={onClose} className="p-2 -ml-2">
-          <X size={24} className="text-foreground" />
-        </button>
-        <h2 className="text-xl font-bold text-foreground">เปลี่ยนผ้าอ้อม</h2>
-        <div className="w-10" />
-      </div>
-
-      <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6">
-        {/* Status Selection */}
-        <div className="mb-6">
-          <p className="text-base font-semibold text-muted-foreground mb-3 block">
-            สถานะ
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <button
-              onClick={() => setStatus('clean')}
-              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'clean'
-                  ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
-                  : 'bg-card border border-border text-muted-foreground'
-                }`}
-            >
-              <span className="text-2xl">✨</span>
-              <span className="text-sm">สะอาด</span>
-            </button>
-            <button
-              onClick={() => setStatus('pee')}
-              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'pee'
-                  ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
-                  : 'bg-card border border-border text-muted-foreground'
-                }`}
-            >
-              <span className="text-2xl">💧</span>
-              <span className="text-sm">ฉี่</span>
-            </button>
-            <button
-              onClick={() => setStatus('poo')}
-              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'poo'
-                  ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
-                  : 'bg-card border border-border text-muted-foreground'
-                }`}
-            >
-              <span className="text-2xl">💩</span>
-              <span className="text-sm">อึ</span>
-            </button>
-            <button
-              onClick={() => setStatus('mixed')}
-              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'mixed'
-                  ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
-                  : 'bg-card border border-border text-muted-foreground'
-                }`}
-            >
-              <span className="text-2xl">💧💩</span>
-              <span className="text-sm">ฉี่+อึ</span>
-            </button>
-          </div>
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-end sm:justify-center bg-black/40 backdrop-blur-sm px-0 sm:px-4 pb-0 sm:pb-8">
+      <motion.div
+        initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: "100%", opacity: 0, scale: 0.95 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="relative w-full max-w-lg bg-background/95 backdrop-blur-2xl sm:rounded-[36px] rounded-t-[36px] shadow-2xl border border-white/20 flex flex-col max-h-[90vh] overflow-hidden"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border/50 sticky top-0 bg-background/50 backdrop-blur-md z-10">
+          <button onClick={onClose} className="p-2 -ml-2 rounded-full bg-secondary/50 hover:bg-secondary transition-colors">
+            <X size={20} className="text-muted-foreground" />
+          </button>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">เปลี่ยนผ้าอ้อม</h2>
+          <div className="w-10" />
         </div>
 
-        {/* Poo Color (only show if poo or mixed) */}
-        {showPooOptions && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="mb-6"
-          >
+        <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6">
+          {/* Status Selection */}
+          <div className="mb-6">
             <p className="text-base font-semibold text-muted-foreground mb-3 block">
-              สีอุจจาระ
+              สถานะ
             </p>
-            <div className="flex gap-3 flex-wrap">
-              {POO_COLORS.map((color) => (
-                <button
-                  key={color.id}
-                  onClick={() => setPooColor(color.id)}
-                  className={`relative p-1 rounded-full transition-all ${pooColor === color.id
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <button
+                onClick={() => setStatus('clean')}
+                className={`py-5 rounded-3xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'clean'
+                  ? 'bg-diaper text-accent-foreground shadow-glow-diaper border border-white/20'
+                  : 'bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
+                  }`}
+              >
+                <span className="text-2xl">✨</span>
+                <span className="text-sm">สะอาด</span>
+              </button>
+              <button
+                onClick={() => setStatus('pee')}
+                className={`py-5 rounded-3xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'pee'
+                  ? 'bg-diaper text-accent-foreground shadow-glow-diaper border border-white/20'
+                  : 'bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
+                  }`}
+              >
+                <span className="text-2xl">💧</span>
+                <span className="text-sm">ฉี่</span>
+              </button>
+              <button
+                onClick={() => setStatus('poo')}
+                className={`py-5 rounded-3xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'poo'
+                  ? 'bg-diaper text-accent-foreground shadow-glow-diaper border border-white/20'
+                  : 'bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
+                  }`}
+              >
+                <span className="text-2xl">💩</span>
+                <span className="text-sm">อึ</span>
+              </button>
+              <button
+                onClick={() => setStatus('mixed')}
+                className={`py-5 rounded-3xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'mixed'
+                  ? 'bg-diaper text-accent-foreground shadow-glow-diaper border border-white/20'
+                  : 'bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
+                  }`}
+              >
+                <span className="text-2xl">💧💩</span>
+                <span className="text-sm">ฉี่+อึ</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Poo Color (only show if poo or mixed) */}
+          {showPooOptions && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-6"
+            >
+              <p className="text-base font-semibold text-muted-foreground mb-3 block">
+                สีอุจจาระ
+              </p>
+              <div className="flex gap-3 flex-wrap">
+                {POO_COLORS.map((color) => (
+                  <button
+                    key={color.id}
+                    onClick={() => setPooColor(color.id)}
+                    className={`relative p-1 rounded-full transition-all ${pooColor === color.id
                       ? 'ring-2 ring-diaper ring-offset-2 ring-offset-background'
                       : ''
-                    }`}
-                >
-                  <div
-                    className="w-12 h-12 rounded-full border-2 border-border"
-                    style={{ backgroundColor: color.color }}
-                  />
-                  {pooColor === color.id && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Check size={16} className="text-primary-foreground drop-shadow-lg" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              {pooColor && POO_COLORS.find(c => c.id === pooColor)?.label}
-            </p>
-          </motion.div>
-        )}
-
-        {/* Poo Texture (only show if poo or mixed) */}
-        {showPooOptions && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="mb-6"
-          >
-            <p className="text-base font-semibold text-muted-foreground mb-3 block">
-              ลักษณะ
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {POO_TEXTURES.map((texture) => {
-                return (
-                  <button
-                    key={texture.id}
-                    onClick={() => setPooTexture(texture.id)}
-                    className={`flex flex-col items-center py-4 px-3 rounded-xl transition-all ${pooTexture === texture.id
-                        ? 'bg-diaper/20 border-2 border-diaper'
-                        : 'bg-card border border-border'
                       }`}
                   >
-                    <div className="mb-2">
-                      {getTextureVisual(texture.id, pooFillColor)}
-                    </div>
-                    <span className={`text-sm font-medium text-center ${pooTexture === texture.id ? 'text-foreground' : 'text-muted-foreground'
-                      }`}>
-                      {texture.label}
-                    </span>
+                    <div
+                      className="w-12 h-12 rounded-full border-2 border-white/20 shadow-sm"
+                      style={{ backgroundColor: color.color }}
+                    />
+                    {pooColor === color.id && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Check size={16} className="text-primary-foreground drop-shadow-lg" />
+                      </div>
+                    )}
                   </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground mt-2 font-medium">
+                {pooColor && POO_COLORS.find(c => c.id === pooColor)?.label}
+              </p>
+            </motion.div>
+          )}
 
-        {/* Time Adjuster */}
-                {/* Date Selector */}
-        <div className="mb-4 text-center w-full">
-          <div className="flex items-center justify-between gap-3 bg-card rounded-2xl border border-border p-3">
-            <button
-              onClick={handlePrevDay}
-              className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition"
+          {/* Poo Texture (only show if poo or mixed) */}
+          {showPooOptions && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-6"
             >
-              <ChevronLeft size={16} />
-            </button>
-            <div className="flex-1 flex flex-col items-center justify-center relative">
-              <input
-                ref={datePickerRef}
-                type="date"
-                value={startTime.toISOString().split('T')[0]}
-                onChange={handleDateChange}
-                className="absolute opacity-0 w-full h-full cursor-pointer z-10 top-0 left-0"
-              />
-              <div className="flex items-center justify-center gap-2 py-1 cursor-pointer pointer-events-none">
-                <span className="text-lg font-bold truncate">
-                  {startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear() ? 
-                    'วันนี้' : formatDate(startTime)}
+              <p className="text-base font-semibold text-muted-foreground mb-3 block">
+                ลักษณะ
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {POO_TEXTURES.map((texture) => {
+                  return (
+                    <button
+                      key={texture.id}
+                      onClick={() => setPooTexture(texture.id)}
+                      className={`flex flex-col items-center py-4 px-3 rounded-2xl transition-all ${pooTexture === texture.id
+                        ? 'bg-diaper/20 border-2 border-diaper shadow-sm'
+                        : 'bg-card/50 border border-white/5 backdrop-blur-sm hover:bg-card/80'
+                        }`}
+                    >
+                      <div className="mb-2">
+                        {getTextureVisual(texture.id, pooFillColor)}
+                      </div>
+                      <span className={`text-sm font-semibold text-center ${pooTexture === texture.id ? 'text-foreground' : 'text-muted-foreground'
+                        }`}>
+                        {texture.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Date Selector */}
+          <div className="mb-4 text-center w-full">
+            <div className="flex items-center justify-between gap-3 bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
+              <button
+                onClick={handlePrevDay}
+                className="size-8 rounded-full bg-secondary/50 flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="flex-1 flex flex-col items-center justify-center relative">
+                <input
+                  ref={datePickerRef}
+                  type="date"
+                  value={startTime.toISOString().split('T')[0]}
+                  onChange={handleDateChange}
+                  className="absolute opacity-0 w-full h-full cursor-pointer z-10 top-0 left-0"
+                />
+                <div className="flex items-center justify-center gap-2 py-1 cursor-pointer pointer-events-none">
+                  <span className="text-lg font-bold tracking-tight truncate">
+                    {startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear() ?
+                      'วันนี้' : formatDate(startTime)}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleNextDay}
+                disabled={startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear()}
+                className="size-8 rounded-full bg-secondary/50 flex items-center justify-center text-foreground hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Time Adjuster */}
+          <div className="mb-6">
+            <p className="text-base font-semibold text-muted-foreground mb-2 block">
+              เวลา
+            </p>
+            <div className="flex items-center justify-center gap-3 bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
+              <button
+                onClick={() => adjustTime(-30)}
+                className="px-4 py-2.5 rounded-2xl bg-secondary/50 hover:bg-secondary text-base font-semibold text-foreground transition-colors"
+              >
+                -30น.
+              </button>
+              <div className="flex-1 text-center">
+                <span className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+                  {formatTime(startTime)}
                 </span>
               </div>
+              <button
+                onClick={() => adjustTime(30)}
+                className="px-4 py-2.5 rounded-2xl bg-secondary/50 hover:bg-secondary text-base font-semibold text-foreground transition-colors"
+              >
+                +30น.
+              </button>
             </div>
+            {/* Start Now Button */}
             <button
-              onClick={handleNextDay}
-              disabled={startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear()}
-              className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={() => setStartTime(new Date())}
+              className="w-full mt-3 py-3 rounded-2xl bg-diaper/10 text-diaper font-bold text-base hover:bg-diaper/20 transition-all border border-diaper/20"
             >
-              <ChevronRight size={16} />
+              ⏱️ เริ่มตอนนี้
             </button>
+          </div>
+
+          {/* Notes */}
+          <div className="mb-6">
+            <label htmlFor="diaper-notes" className="text-base font-semibold text-muted-foreground mb-2 block">
+              หมายเหตุ (ไม่บังคับ)
+            </label>
+            <textarea
+              id="diaper-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="เพิ่มบันทึกเพิ่มเติม..."
+              className="w-full bg-card/50 backdrop-blur-sm border border-white/5 rounded-3xl p-5 text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-diaper/50 transition-all"
+              rows={4}
+            />
           </div>
         </div>
-        <div className="mb-6">
-          <p className="text-base font-semibold text-muted-foreground mb-2 block">
-            เวลา
-          </p>
-          <div className="flex items-center justify-center gap-3 bg-card rounded-2xl border border-border p-3">
-            <button
-              onClick={() => adjustTime(-30)}
-              className="px-4 py-2.5 rounded-xl bg-secondary text-base font-semibold text-muted-foreground"
-            >
-              -30น.
-            </button>
-            <div className="flex-1 text-center">
-              <span className="text-2xl font-bold text-foreground">
-                {formatTime(startTime)}
-              </span>
-            </div>
-            <button
-              onClick={() => adjustTime(30)}
-              className="px-4 py-2.5 rounded-xl bg-secondary text-base font-semibold text-muted-foreground"
-            >
-              +30น.
-            </button>
-          </div>
-          {/* Start Now Button */}
+
+        {/* Save Button */}
+        <div className="p-6 border-t border-border/50 bg-background/50 backdrop-blur-md sticky bottom-0 z-10">
           <button
-            onClick={() => setStartTime(new Date())}
-            className="w-full mt-3 py-3 rounded-xl bg-diaper/20 text-diaper font-semibold text-base hover:bg-diaper/30 transition-all"
+            onClick={handleSave}
+            className="w-full py-4 rounded-3xl bg-primary text-primary-foreground font-bold tracking-tight text-xl shadow-glow-primary hover:opacity-90 active:scale-[0.98] transition-all"
           >
-            ⏱️ เริ่มตอนนี้
+            บันทึก
           </button>
         </div>
-
-        {/* Notes */}
-        <div className="mb-6">
-          <label htmlFor="diaper-notes" className="text-base font-semibold text-muted-foreground mb-2 block">
-            หมายเหตุ (ไม่บังคับ)
-          </label>
-          <textarea
-            id="diaper-notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="เพิ่มบันทึกเพิ่มเติม..."
-            className="w-full bg-card border border-border rounded-2xl p-4 text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-diaper/50"
-            rows={4}
-          />
-        </div>
-      </div>
-
-      {/* Save Button */}
-      <div className="p-6 border-t border-border bg-card">
-        <button
-          onClick={handleSave}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-xl shadow-glow-primary active:scale-[0.98] transition-transform"
-        >
-          บันทึก
-        </button>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

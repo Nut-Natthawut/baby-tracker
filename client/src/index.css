@@ -6,152 +6,124 @@
 
 @layer base {
   :root {
-    /* New Color Palette - ATNN Design */
-    --background: 53 40% 95%;
-    /* Linen */
-    --foreground: 0 29% 20%;
-    /* Oxblood - darker for better contrast */
+    /* Soft Baby-Themed Palette - Light Mode */
+    --background: 0 0% 98%; /* Soft off-white */
+    --foreground: 222 47% 11%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --card: 49 80% 97%;
-    /* Banana Cream lighter */
-    --card-foreground: 0 29% 18%;
-    /* Darker for readability */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --popover: 49 80% 97%;
-    --popover-foreground: 0 29% 18%;
+    --primary: 260 93% 85%; /* Lavender */
+    --primary-foreground: 260 90% 25%;
 
-    --primary: 16 100% 58%;
-    /* Papaya - slightly darker for better contrast */
-    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --secondary: 222 45% 88%;
-    /* Sky - lighter for background */
-    --secondary-foreground: 0 29% 20%;
-    /* Dark text on light bg */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --muted: 53 30% 90%;
-    --muted-foreground: 0 20% 35%;
-    /* Darker for readability */
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
 
-    --accent: 60 45% 50%;
-    /* Saguaro - slightly darker */
-    --accent-foreground: 0 0% 100%;
-    /* White text on accent */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --destructive: 0 84% 55%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 40 30% 82%;
-    --input: 40 30% 82%;
-    --ring: 16 100% 58%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 260 93% 85%;
 
     --radius: 1rem;
 
-    /* Baby Tracker Feature Colors - darker for better contrast */
-    --feeding: 222 50% 65%;
-    /* Sky - darker for icons */
-    --feeding-glow: 222 55% 80%;
-    --diaper: 60 50% 48%;
-    /* Saguaro - darker for icons */
-    --diaper-glow: 60 45% 70%;
-    --sleep: 262 50% 55%;
-    --sleep-glow: 262 50% 70%;
-    --pump: 16 100% 58%;
-    /* Papaya */
-    --pump-glow: 16 100% 75%;
+    /* Baby Tracker Feature Colors - Pastel */
+    --feeding: 351 92% 82%; /* Blush Pink #fda4af */
+    --feeding-glow: 351 92% 90%;
+    
+    --diaper: 45 93% 67%; /* Soft Yellow */
+    --diaper-glow: 45 93% 80%;
+    
+    --sleep: 200 96% 74%; /* Sky Blue #7dd3fc */
+    --sleep-glow: 200 96% 85%;
+    
+    --pump: 260 93% 85%; /* Lavender #c4b5fd */
+    --pump-glow: 260 93% 92%;
 
-    /* Theme Accent Colors */
-    --papaya: 16 100% 58%;
-    --papaya-light: 16 100% 90%;
-    --sky: 222 50% 65%;
-    --sky-light: 222 55% 92%;
-    --saguaro: 60 50% 48%;
-    --saguaro-light: 60 45% 85%;
-    --banana-cream: 49 100% 89%;
-    --linen: 53 40% 95%;
-    --oxblood: 0 29% 17%;
-
-    /* Legacy compatibility */
-    --peach: 16 100% 58%;
-    --peach-light: 16 100% 92%;
-    --mint: 60 50% 48%;
-    --mint-light: 60 45% 90%;
-    --cream: 49 100% 89%;
-    --warm-brown: 0 29% 25%;
+    /* Legacy compatibility for gradients / icons where needed */
+    --peach: 351 92% 82%;
+    --peach-light: 351 92% 92%;
+    --mint: 156 72% 67%; /* Mint #6ee7b7 */
+    --mint-light: 156 72% 85%;
 
     /* Gradients */
-    --gradient-feeding: linear-gradient(135deg, hsl(222 50% 65%), hsl(222 55% 55%));
-    --gradient-diaper: linear-gradient(135deg, hsl(60 50% 48%), hsl(60 55% 40%));
-    --gradient-sleep: linear-gradient(135deg, hsl(262 50% 55%), hsl(280 50% 48%));
-    --gradient-hero: linear-gradient(180deg, hsl(49 100% 92%) 0%, hsl(53 40% 95%) 100%);
-    --gradient-bottle: linear-gradient(180deg, hsl(222 55% 82%) 0%, hsl(222 50% 65%) 100%);
-
-    /* Shadows */
-    --shadow-soft: 0 4px 24px -6px hsl(0 29% 17% / 0.12);
-    --shadow-glow-feeding: 0 0 24px hsl(222 50% 65% / 0.35);
-    --shadow-glow-diaper: 0 0 24px hsl(60 50% 48% / 0.3);
-    --shadow-glow-primary: 0 0 24px hsl(16 100% 58% / 0.4);
-
-    --sidebar-background: 49 80% 97%;
-    --sidebar-foreground: 0 29% 22%;
-    --sidebar-primary: 0 29% 17%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 53 30% 92%;
-    --sidebar-accent-foreground: 0 29% 17%;
-    --sidebar-border: 40 30% 85%;
-    --sidebar-ring: 16 100% 58%;
+    --gradient-feeding: linear-gradient(135deg, hsl(351 92% 82%), hsl(351 92% 75%));
+    --gradient-diaper: linear-gradient(135deg, hsl(45 93% 67%), hsl(45 93% 55%));
+    --gradient-sleep: linear-gradient(135deg, hsl(200 96% 74%), hsl(200 96% 65%));
+    
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 260 93% 85%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 260 93% 85%;
   }
 
   .dark {
-    --background: 222 28% 9%;
-    --foreground: 45 30% 92%;
+    /* Soft Baby-Themed Palette - Dark Mode */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
 
-    --card: 222 22% 12%;
-    --card-foreground: 45 28% 90%;
+    --popover: 222 47% 15%;
+    --popover-foreground: 210 40% 98%;
 
-    --popover: 222 22% 12%;
-    --popover-foreground: 45 28% 90%;
+    --primary: 260 93% 85%; /* Lavender */
+    --primary-foreground: 260 90% 25%;
 
-    --primary: 16 100% 62%;
-    --primary-foreground: 0 29% 10%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-    --secondary: 222 18% 17%;
-    --secondary-foreground: 45 25% 88%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --muted: 222 16% 16%;
-    --muted-foreground: 45 18% 70%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
-    --accent: 60 35% 50%;
-    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 0% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 260 93% 85%;
 
-    --border: 222 18% 22%;
-    --input: 222 18% 22%;
-    --ring: 16 100% 62%;
+    /* Baby Tracker Feature Colors - Pastel Dark Mode Adjusted */
+    --feeding: 351 92% 75%; /* Darker Blush Pink */
+    --feeding-glow: 351 92% 65%;
+    
+    --diaper: 45 93% 60%; /* Darker Yellow */
+    --diaper-glow: 45 93% 50%;
+    
+    --sleep: 200 96% 65%; /* Darker Sky Blue */
+    --sleep-glow: 200 96% 55%;
+    
+    --pump: 260 93% 75%; /* Darker Lavender */
 
-    --feeding: 214 60% 70%;
-    --feeding-glow: 214 60% 58%;
-    --diaper: 64 45% 55%;
-    --diaper-glow: 64 45% 48%;
-    --sleep: 262 55% 68%;
-    --pump: 16 100% 64%;
+    --peach: 351 92% 75%;
+    --mint: 156 72% 60%; 
 
-    --papaya: 16 100% 62%;
-    --sky: 214 60% 70%;
-    --saguaro: 64 45% 55%;
-    --peach: 16 100% 62%;
-    --mint: 64 45% 55%;
-
-    --sidebar-background: 222 22% 11%;
-    --sidebar-foreground: 45 25% 88%;
-    --sidebar-primary: 16 100% 62%;
-    --sidebar-primary-foreground: 0 29% 10%;
-    --sidebar-accent: 222 18% 16%;
-    --sidebar-accent-foreground: 45 25% 88%;
-    --sidebar-border: 222 18% 22%;
-    --sidebar-ring: 16 100% 62%;
+    --sidebar-background: 222 47% 15%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 260 93% 85%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 260 93% 85%;
   }
 }
 

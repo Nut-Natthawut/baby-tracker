@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { Transition } from 'framer-motion';
-import { X, AlertTriangle, Play, Pause, RotateCcw, CalendarDays , ChevronLeft, ChevronRight} from 'lucide-react';
+import { X, AlertTriangle, Play, Pause, RotateCcw, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FeedingDetails } from '@/types/baby';
 import { roundToNearest30, formatTime } from '@/lib/babyUtils';
 
@@ -52,9 +52,9 @@ const formatTimerDisplay = (totalSeconds: number) => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
-const useBreastTimers = () => {
-  const [leftSeconds, setLeftSeconds] = useState(0);
-  const [rightSeconds, setRightSeconds] = useState(0);
+const useBreastTimers = (initialLeft: number = 0, initialRight: number = 0) => {
+  const [leftSeconds, setLeftSeconds] = useState(initialLeft);
+  const [rightSeconds, setRightSeconds] = useState(initialRight);
   const [activeTimer, setActiveTimer] = useState<BreastSide | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -763,7 +763,10 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave, initialDat
   const datePickerRef = useRef<HTMLInputElement>(null);
   const [hasSpitUp, setHasSpitUp] = useState(initialData?.details?.hasSpitUp || false);
   const [notes, setNotes] = useState(initialData?.details?.notes || '');
-  const { leftSeconds, rightSeconds, activeTimer, toggleTimer, resetTimer } = useBreastTimers();
+  const { leftSeconds, rightSeconds, activeTimer, toggleTimer, resetTimer } = useBreastTimers(
+    initialData?.details?.leftDurationSeconds || 0,
+    initialData?.details?.rightDurationSeconds || 0
+  );
 
   const handleSave = () => {
     const details: FeedingDetails = {
@@ -817,122 +820,127 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave, initialDat
   const breastMethodClass = method === 'breast' ? methodActiveClass : methodInactiveClass;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-background flex flex-col"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-border">
-        <button onClick={onClose} className="p-2 -ml-2">
-          <X size={24} className="text-foreground" />
-        </button>
-        <h2 className="text-xl font-bold text-foreground">บันทึกการกินนม</h2>
-        <div className="w-10" />
-      </div>
-
-      <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-6">
-        {/* Method Toggle */}
-        <div className="flex gap-3 mb-6">
-          <button
-            onClick={() => setMethod('bottle')}
-            className={`flex-1 py-4 rounded-2xl text-lg font-semibold transition-all ${bottleMethodClass}`}
-          >
-            🍼 ขวดนม
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-end sm:justify-center bg-black/40 backdrop-blur-sm px-0 sm:px-4 pb-0 sm:pb-8">
+      <motion.div
+        initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: "100%", opacity: 0, scale: 0.95 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="relative w-full max-w-lg bg-gradient-to-b from-pink-50 via-white to-pink-50/50 dark:from-[#2e1522] dark:via-background dark:to-[#361323] sm:rounded-[36px] rounded-t-[36px] shadow-2xl border border-white/20 flex flex-col max-h-[90vh] overflow-hidden"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 sticky top-0 bg-white/40 dark:bg-black/20 backdrop-blur-md z-10 transition-colors">
+          <button onClick={onClose} className="p-2 -ml-2 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition-colors">
+            <X size={20} className="text-foreground" />
           </button>
-          <button
-            onClick={() => setMethod('breast')}
-            className={`flex-1 py-4 rounded-2xl text-lg font-semibold transition-all ${breastMethodClass}`}
-          >
-            🤱 เข้าเต้า
-          </button>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">บันทึกการกินนม</h2>
+          </div>
+          <div className="w-10" />
         </div>
 
-        {method === 'bottle' ? (
-          <BottleSection
-            bottleContent={bottleContent}
-            amount={amount}
-            onBottleContentChange={setBottleContent}
-            onAmountChange={setAmount}
-          />
-        ) : (
-          <BreastSection
-            leftSeconds={leftSeconds}
-            rightSeconds={rightSeconds}
-            activeTimer={activeTimer}
-            onToggle={toggleTimer}
-            onReset={resetTimer}
-          />
-        )}
-
-                {/* Date Selector */}
-        <div className="mb-4 text-center w-full">
-          <div className="flex items-center justify-between gap-3 bg-card rounded-2xl border border-border p-3">
+        <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar px-6 py-6">
+          {/* Method Toggle */}
+          <div className="flex gap-3 mb-6 p-1 bg-black/5 dark:bg-white/5 rounded-3xl backdrop-blur-sm">
             <button
-              onClick={handlePrevDay}
-              className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition"
+              onClick={() => setMethod('bottle')}
+              className={`flex-1 py-3 px-2 rounded-[22px] text-lg font-bold transition-all ${bottleMethodClass}`}
             >
-              <ChevronLeft size={16} />
+              🍼 ขวดนม
             </button>
-            <div className="flex-1 flex flex-col items-center justify-center relative">
-              <input
-                ref={datePickerRef}
-                type="date"
-                value={startTime.toISOString().split('T')[0]}
-                onChange={handleDateChange}
-                className="absolute opacity-0 w-full h-full cursor-pointer z-10 top-0 left-0"
-              />
-              <div className="flex items-center justify-center gap-2 py-1 cursor-pointer pointer-events-none">
-                <span className="text-lg font-bold truncate">
-                  {startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear() ? 
-                    'วันนี้' : formatDate(startTime)}
-                </span>
-              </div>
-            </div>
             <button
-              onClick={handleNextDay}
-              disabled={startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear()}
-              className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={() => setMethod('breast')}
+              className={`flex-1 py-3 px-2 rounded-[22px] text-lg font-bold transition-all ${breastMethodClass}`}
             >
-              <ChevronRight size={16} />
+              🤱 เข้าเต้า
             </button>
           </div>
+
+          {method === 'bottle' ? (
+            <BottleSection
+              bottleContent={bottleContent}
+              amount={amount}
+              onBottleContentChange={setBottleContent}
+              onAmountChange={setAmount}
+            />
+          ) : (
+            <BreastSection
+              leftSeconds={leftSeconds}
+              rightSeconds={rightSeconds}
+              activeTimer={activeTimer}
+              onToggle={toggleTimer}
+              onReset={resetTimer}
+            />
+          )}
+
+          {/* Date Selector */}
+          <div className="mb-4 text-center w-full">
+            <div className="flex items-center justify-between gap-3 bg-card rounded-2xl border border-border p-3">
+              <button
+                onClick={handlePrevDay}
+                className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="flex-1 flex flex-col items-center justify-center relative">
+                <input
+                  ref={datePickerRef}
+                  type="date"
+                  value={startTime.toISOString().split('T')[0]}
+                  onChange={handleDateChange}
+                  className="absolute opacity-0 w-full h-full cursor-pointer z-10 top-0 left-0"
+                />
+                <div className="flex items-center justify-center gap-2 py-1 cursor-pointer pointer-events-none">
+                  <span className="text-lg font-bold truncate">
+                    {startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear() ?
+                      'วันนี้' : formatDate(startTime)}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleNextDay}
+                disabled={startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear()}
+                className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+
+          <TimeAdjuster
+            label="เวลาเริ่มต้น"
+            time={startTime}
+            onAdjust={adjustTime}
+            onNow={() => setStartTime(new Date())}
+            nowClassName="bg-feeding/20 text-feeding hover:bg-feeding/30"
+            nowLabel="⏱️ เริ่มตอนนี้"
+          />
+
+          <SpitUpToggle
+            value={hasSpitUp}
+            onToggle={() => setHasSpitUp(prev => !prev)}
+          />
+
+          <NotesSection
+            id="feeding-notes"
+            label="หมายเหตุ (ไม่บังคับ)"
+            placeholder="เพิ่มบันทึกเพิ่มเติม..."
+            value={notes}
+            onChange={setNotes}
+          />
         </div>
 
-        <TimeAdjuster
-          label="เวลาเริ่มต้น"
-          time={startTime}
-          onAdjust={adjustTime}
-          onNow={() => setStartTime(new Date())}
-          nowClassName="bg-feeding/20 text-feeding hover:bg-feeding/30"
-          nowLabel="⏱️ เริ่มตอนนี้"
-        />
-
-        <SpitUpToggle
-          value={hasSpitUp}
-          onToggle={() => setHasSpitUp(prev => !prev)}
-        />
-
-        <NotesSection
-          id="feeding-notes"
-          label="หมายเหตุ (ไม่บังคับ)"
-          placeholder="เพิ่มบันทึกเพิ่มเติม..."
-          value={notes}
-          onChange={setNotes}
-        />
-      </div>
-
-      {/* Save Button */}
-      <div className="p-6 border-t border-border bg-card">
-        <button
-          onClick={handleSave}
-          className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-xl shadow-glow-primary active:scale-[0.98] transition-transform"
-        >
-          บันทึก
-        </button>
-      </div>
-    </motion.div>
+        {/* Save Button */}
+        <div className="p-6 border-t border-white/10 bg-white/40 dark:bg-black/20 backdrop-blur-md relative z-10">
+          <button
+            onClick={handleSave}
+            className="w-full py-4 rounded-3xl bg-feeding text-white font-bold text-xl shadow-glow-feeding active:scale-[0.98] transition-transform"
+          >
+            บันทึก
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 

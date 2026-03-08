@@ -58,7 +58,7 @@ const FabMenu: React.FC<FabMenuProps> = ({ onOpenFeeding, onOpenDiaper, onOpenPu
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-background/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm"
             />
 
             {/* Menu Items */}
@@ -82,7 +82,7 @@ const FabMenu: React.FC<FabMenuProps> = ({ onOpenFeeding, onOpenDiaper, onOpenPu
                   onClick={item.onClick}
                   className="flex items-center gap-3"
                 >
-                  <span className="bg-card px-4 py-2 rounded-full text-sm font-semibold text-foreground border border-border shadow-lg min-w-28 text-center">
+                  <span className="bg-card/80 backdrop-blur-md px-4 py-2 rounded-full text-sm font-semibold text-foreground border border-white/10 shadow-lg min-w-28 text-center">
                     {item.label}
                   </span>
                   <div className={`w-12 h-12 min-w-12 min-h-12 aspect-square rounded-full ${item.color} flex items-center justify-center shrink-0 ${item.glow}`}>
