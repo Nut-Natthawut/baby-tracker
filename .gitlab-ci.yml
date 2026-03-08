@@ -16,4 +16,5 @@ deploy-vercel:
     - npm install --global vercel
     - vercel pull --yes --environment=production --token="$TOKEN"
     - vercel build --prod --token="$TOKEN"
+    - rm -rf .git
     - vercel deploy --prebuilt --prod --token="$TOKEN"
