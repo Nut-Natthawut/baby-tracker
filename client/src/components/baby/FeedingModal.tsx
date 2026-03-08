@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { Transition } from 'framer-motion';
-import { X, AlertTriangle, Play, Pause, RotateCcw } from 'lucide-react';
+import { X, AlertTriangle, Play, Pause, RotateCcw, CalendarDays , ChevronLeft, ChevronRight} from 'lucide-react';
 import { FeedingDetails } from '@/types/baby';
 import { roundToNearest30, formatTime } from '@/lib/babyUtils';
 
 interface FeedingModalProps {
   onClose: () => void;
   onSave: (data: { timestamp: Date; details: FeedingDetails }) => void;
+  initialData?: { timestamp: Date; details: FeedingDetails };
 }
 
 type FeedingMethod = 'bottle' | 'breast';
@@ -754,13 +755,14 @@ const NotesSection: React.FC<NotesSectionProps> = ({
   );
 };
 
-const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
-  const [method, setMethod] = useState<FeedingMethod>('bottle');
-  const [bottleContent, setBottleContent] = useState<BottleContent>('formula');
-  const [amount, setAmount] = useState(120);
-  const [startTime, setStartTime] = useState<Date>(roundToNearest30(new Date()));
-  const [hasSpitUp, setHasSpitUp] = useState(false);
-  const [notes, setNotes] = useState('');
+const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave, initialData }) => {
+  const [method, setMethod] = useState<FeedingMethod>(initialData?.details?.method as FeedingMethod || 'bottle');
+  const [bottleContent, setBottleContent] = useState<BottleContent>(initialData?.details?.bottleContent as BottleContent || 'formula');
+  const [amount, setAmount] = useState(initialData?.details?.amountMl || 120);
+  const [startTime, setStartTime] = useState<Date>(initialData?.timestamp || roundToNearest30(new Date()));
+  const datePickerRef = useRef<HTMLInputElement>(null);
+  const [hasSpitUp, setHasSpitUp] = useState(initialData?.details?.hasSpitUp || false);
+  const [notes, setNotes] = useState(initialData?.details?.notes || '');
   const { leftSeconds, rightSeconds, activeTimer, toggleTimer, resetTimer } = useBreastTimers();
 
   const handleSave = () => {
@@ -788,6 +790,26 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
     const newTime = new Date(startTime.getTime() + minutes * 60000);
     setStartTime(newTime);
   };
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value) {
+      const [y, m, d] = e.target.value.split('-').map(Number);
+      setStartTime(prev => {
+        const newDate = new Date(prev);
+        newDate.setFullYear(y, m - 1, d);
+        return newDate;
+      });
+    }
+  };
+
+
+  const handlePrevDay = () => setStartTime(prev => new Date(prev.getTime() - 86400000));
+  const handleNextDay = () => setStartTime(prev => new Date(prev.getTime() + 86400000));
+  const handleToday = () => setStartTime(new Date());
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
 
   const methodActiveClass = 'bg-feeding text-white shadow-glow-feeding';
   const methodInactiveClass = 'bg-secondary text-secondary-foreground';
@@ -843,6 +865,40 @@ const FeedingModal: React.FC<FeedingModalProps> = ({ onClose, onSave }) => {
             onReset={resetTimer}
           />
         )}
+
+                {/* Date Selector */}
+        <div className="mb-4 text-center w-full">
+          <div className="flex items-center justify-between gap-3 bg-card rounded-2xl border border-border p-3">
+            <button
+              onClick={handlePrevDay}
+              className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <div className="flex-1 flex flex-col items-center justify-center relative">
+              <input
+                ref={datePickerRef}
+                type="date"
+                value={startTime.toISOString().split('T')[0]}
+                onChange={handleDateChange}
+                className="absolute opacity-0 w-full h-full cursor-pointer z-10 top-0 left-0"
+              />
+              <div className="flex items-center justify-center gap-2 py-1 cursor-pointer pointer-events-none">
+                <span className="text-lg font-bold truncate">
+                  {startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear() ? 
+                    'วันนี้' : formatDate(startTime)}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={handleNextDay}
+              disabled={startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear()}
+              className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
 
         <TimeAdjuster
           label="เวลาเริ่มต้น"

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useBabyData } from "@/hooks/useBabyData";
 import FeedingModal from "@/components/baby/FeedingModal";
@@ -19,6 +19,8 @@ import {
   Baby,
   Bell,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
   Moon,
   Droplets,
   Coffee,
@@ -27,6 +29,8 @@ import {
   Utensils,
   Droplet,
   BedDouble,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,9 +77,11 @@ function fmtTime(d: Date) {
 
 function greeting() {
   const h = new Date().getHours();
+  if (h < 6) return "สวัสดีตอนดึก";
   if (h < 12) return "สวัสดีตอนเช้า";
+  if (h < 13) return "สวัสดีตอนเที่ยง";
   if (h < 18) return "สวัสดีตอนบ่าย";
-  return "สวัสดีตอนเย็น";
+  return "สวัสดีตอนดึก";
 }
 
 
@@ -245,12 +251,39 @@ const Index = () => {
     switchBaby,
     deleteBaby,
     addLog,
+    deleteLog,
+    updateLog,
     clearData,
   } = useBabyData();
 
-  console.log("DEBUG: Index render logs:", logs?.length);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const isToday = useMemo(() => {
+    const now = new Date();
+    return (
+      selectedDate.getFullYear() === now.getFullYear() &&
+      selectedDate.getMonth() === now.getMonth() &&
+      selectedDate.getDate() === now.getDate()
+    );
+  }, [selectedDate]);
+
+  const navigateDay = useCallback((direction: 'prev' | 'next') => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + (direction === 'prev' ? -1 : 1));
+      return d;
+    });
+  }, []);
+
+  const goToToday = useCallback(() => setSelectedDate(new Date()), []);
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+
+  // Editing log state  
+  const [editingLog, setEditingLog] = useState<{ id: string; type: string; raw: any } | null>(null);
+
+  // Date picker ref
+  const dateInputRef = React.useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     const originalBodyOverflow = document.body.style.overflow;
@@ -270,40 +303,52 @@ const Index = () => {
   const isModalOpen = Boolean(activeModal);
   const contentScrollClass = isModalOpen ? "overflow-hidden" : "overflow-y-auto";
 
-  const handleSaveFeeding = (data: AnyData) => {
-    addLog("feeding", data);
+  const handleSaveFeeding = async (data: AnyData) => {
+    if (editingLog) {
+      await updateLog(editingLog.id, "feeding", data);
+      setEditingLog(null);
+      toast({ title: "แก้ไขสำเร็จ ✓" });
+    } else {
+      addLog("feeding", data);
+      toast({ title: "บันทึกสำเร็จ ✓" });
+    }
     setActiveModal(null);
-    toast({
-      title: "บันทึกสำเร็จ ✓",
-      description: "บันทึกการกินนมเรียบร้อยแล้ว",
-    });
   };
 
-  const handleSaveDiaper = (data: AnyData) => {
-    addLog("diaper", data);
+  const handleSaveDiaper = async (data: AnyData) => {
+    if (editingLog) {
+      await updateLog(editingLog.id, "diaper", data);
+      setEditingLog(null);
+      toast({ title: "แก้ไขสำเร็จ ✓" });
+    } else {
+      addLog("diaper", data);
+      toast({ title: "บันทึกสำเร็จ ✓" });
+    }
     setActiveModal(null);
-    toast({
-      title: "บันทึกสำเร็จ ✓",
-      description: "บันทึกการเปลี่ยนผ้าอ้อมเรียบร้อยแล้ว",
-    });
   };
 
-  const handleSavePumping = (data: AnyData) => {
-    addLog("pump", data);
+  const handleSavePumping = async (data: AnyData) => {
+    if (editingLog) {
+      await updateLog(editingLog.id, "pump", data);
+      setEditingLog(null);
+      toast({ title: "แก้ไขสำเร็จ ✓" });
+    } else {
+      addLog("pump", data);
+      toast({ title: "บันทึกสำเร็จ ✓" });
+    }
     setActiveModal(null);
-    toast({
-      title: "บันทึกสำเร็จ ✓",
-      description: "บันทึกการปั๊มนมเรียบร้อยแล้ว",
-    });
   };
 
-  const handleSaveSleep = (data: AnyData) => {
-    addLog("sleep", data);
+  const handleSaveSleep = async (data: AnyData) => {
+    if (editingLog) {
+      await updateLog(editingLog.id, "sleep", data);
+      setEditingLog(null);
+      toast({ title: "แก้ไขสำเร็จ ✓" });
+    } else {
+      addLog("sleep", data);
+      toast({ title: "บันทึกสำเร็จ ✓" });
+    }
     setActiveModal(null);
-    toast({
-      title: "บันทึกสำเร็จ ✓",
-      description: "บันทึกการนอนเรียบร้อยแล้ว",
-    });
   };
 
   const handleSaveBaby = async (data: AnyData) => {
@@ -372,36 +417,47 @@ const Index = () => {
   // ---------- derive dashboard data from logs ----------
   const recent = useMemo(() => {
     const arr = Array.isArray(logs) ? [...logs] : [];
-    // try sorting by createdAt / time / date
-    arr.sort((a: AnyData, b: AnyData) => {
+
+    // Filter by selectedDate
+    const dayStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0, 0);
+    const dayEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59, 999);
+
+    const filtered = arr.filter((l: AnyData) => {
+      const d = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date);
+      return d ? d.getTime() >= dayStart.getTime() && d.getTime() <= dayEnd.getTime() : false;
+    });
+
+    filtered.sort((a: AnyData, b: AnyData) => {
       const da = safeDate(a?.timestamp ?? a?.createdAt ?? a?.time ?? a?.date) ?? new Date(0);
       const db = safeDate(b?.timestamp ?? b?.createdAt ?? b?.time ?? b?.date) ?? new Date(0);
       return db.getTime() - da.getTime();
     });
 
-    return arr.slice(0, 4).map(buildRecentItem);
-  }, [logs]);
+    return filtered.slice(0, 10).map((log: AnyData) => ({
+      ...buildRecentItem(log),
+      id: String(log?.id ?? log?._id ?? log?.logId ?? ''),
+      type: String(log?.type ?? log?.logType ?? log?.category ?? 'unknown'),
+      raw: log,
+    }));
+  }, [logs, selectedDate]);
 
   const dailySummary = useMemo(() => {
-    console.log("DEBUG: Recalculating dailySummary, logs count:", logs?.length);
     const arr = Array.isArray(logs) ? logs : [];
 
-    // “วันนี้” (ตาม local)
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    // Use selectedDate for filtering
+    const dayStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0, 0);
+    const dayEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59, 999);
 
-    const today = arr.filter((l: AnyData) => {
+    const dayLogs = arr.filter((l: AnyData) => {
       const d = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date);
-      return d ? d.getTime() >= start.getTime() : false;
+      return d ? d.getTime() >= dayStart.getTime() && d.getTime() <= dayEnd.getTime() : false;
     });
 
-    console.log("DEBUG: Today's logs count:", today.length);
-
     // diapers count
-    const diaperCount = today.filter((l: AnyData) => String(l?.type ?? l?.logType ?? "").includes("diaper")).length;
+    const diaperCount = dayLogs.filter((l: AnyData) => String(l?.type ?? l?.logType ?? "").includes("diaper")).length;
 
     // feeding volume ml
-    const feeds = today.filter((l: AnyData) => String(l?.type ?? l?.logType ?? "").includes("feeding"));
+    const feeds = dayLogs.filter((l: AnyData) => String(l?.type ?? l?.logType ?? "").includes("feeding"));
     let totalMl = 0;
     for (const f of feeds as AnyData[]) {
       const details = f?.details ?? f ?? {};
@@ -409,15 +465,16 @@ const Index = () => {
       else if (typeof details?.amountOz === "number") totalMl += Math.round(details.amountOz * 29.5735);
     }
 
-    // sleep minutes: best-effort pairing start/end
-    const sleepLogs = today
+    // sleep minutes
+    const sleepLogs = dayLogs
       .filter((l: AnyData) => String(l?.type ?? l?.logType ?? "").includes("sleep"))
       .map((l: AnyData) => {
         const at = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date) ?? new Date();
         const details = l?.details ?? l ?? {};
-        const action = details?.action ?? details?.event ?? details?.type ?? "start"; // start/end if exists
+        const action = details?.action ?? details?.event ?? details?.type ?? "start";
         const duration = typeof details?.durationMinutes === "number" ? details.durationMinutes : 0;
-        return { at, action: String(action), duration };
+        const endTime = details?.endTime ? safeDate(details.endTime) : null;
+        return { at, action: String(action), duration, endTime };
       })
       .sort((a: AnyData, b: AnyData) => a.at.getTime() - b.at.getTime());
 
@@ -440,7 +497,7 @@ const Index = () => {
       }
     }
 
-    // If still sleeping, count until now (optional)
+    const now = new Date();
     if (currentStart) sleepMins += minutesBetween(currentStart, now);
 
     const sleepH = Math.floor(sleepMins / 60);
@@ -452,18 +509,35 @@ const Index = () => {
       sleepH,
       sleepR,
       babyStatus: (() => {
-        // show “Sleeping” if latest sleep start not ended (best-effort)
-        const lastSleep = [...sleepLogs].reverse()[0];
+        // Check ALL sleep logs for current status
+        const allSleepLogs = arr
+          .filter((l: AnyData) => String(l?.type ?? l?.logType ?? "").includes("sleep"))
+          .map((l: AnyData) => {
+            const at = safeDate(l?.timestamp ?? l?.createdAt ?? l?.time ?? l?.date) ?? new Date();
+            const details = l?.details ?? l ?? {};
+            const duration = typeof details?.durationMinutes === "number" ? details.durationMinutes : 0;
+            const endTime = details?.endTime ? safeDate(details.endTime) : null;
+            return { at, duration, endTime };
+          })
+          .sort((a, b) => b.at.getTime() - a.at.getTime());
+
+        const lastSleep = allSleepLogs[0];
         if (!lastSleep) return { text: "ตื่นอยู่", tone: "awake" as const };
 
-        // If last sleep has duration, it means it's a completed sleep record -> Awake
+        // If last sleep has duration and endTime in the future -> still sleeping
+        if (lastSleep.duration > 0 && lastSleep.endTime) {
+          if (lastSleep.endTime.getTime() > now.getTime()) {
+            return { text: "หลับอยู่", tone: "sleep" as const };
+          }
+          return { text: "ตื่นอยู่", tone: "awake" as const };
+        }
+
         if (lastSleep.duration > 0) return { text: "ตื่นอยู่", tone: "awake" as const };
 
-        const isEnd = lastSleep.action.includes("end") || lastSleep.action.includes("wake") || lastSleep.action.includes("woke");
-        return isEnd ? { text: "ตื่นอยู่", tone: "awake" as const } : { text: "กำลังนอน", tone: "sleep" as const };
+        return { text: "ตื่นอยู่", tone: "awake" as const };
       })(),
     };
-  }, [logs]);
+  }, [logs, selectedDate]);
 
   // ---------------- loading ----------------
   if (loading) {
@@ -639,9 +713,50 @@ const Index = () => {
               <div className="relative rounded-[32px] border border-white/70 dark:border-white/10 bg-white/75 dark:bg-white/5 backdrop-blur-xl p-6 md:p-8 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)]">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                   <div className="space-y-3 text-center lg:text-left">
-                    <div className="inline-flex items-center justify-center lg:justify-start gap-2 rounded-full bg-white/80 dark:bg-white/10 px-3 py-1 text-sm font-bold uppercase tracking-[0.25em] text-muted-foreground border border-white/70 dark:border-white/10">
-                      <span className={`size-2 rounded-full ${statusDot}`} />
-                      <span>วันนี้</span>
+                    {/* Date Selector */}
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 px-2 py-1 border border-white/70 dark:border-white/10">
+                      <button
+                        onClick={() => navigateDay('prev')}
+                        className="size-8 rounded-full bg-white/90 dark:bg-white/10 flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white transition"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <div className="flex items-center gap-2 px-2">
+                        <span className={`size-2 rounded-full ${statusDot}`} />
+                        <input
+                          ref={dateInputRef}
+                          type="date"
+                          value={selectedDate.toISOString().split('T')[0]}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const [y, m, d] = e.target.value.split('-').map(Number);
+                              setSelectedDate(new Date(y, m - 1, d));
+                            }
+                          }}
+                          max={new Date().toISOString().split('T')[0]}
+                          className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                        />
+                        <span
+                          onClick={() => dateInputRef.current?.showPicker?.()}
+                          className="text-sm font-bold text-foreground min-w-[100px] text-center cursor-pointer hover:text-primary transition">
+                          {isToday ? 'วันนี้' : selectedDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => navigateDay('next')}
+                        disabled={isToday}
+                        className="size-8 rounded-full bg-white/90 dark:bg-white/10 flex items-center justify-center text-gray-600 dark:text-gray-200 hover:bg-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                      {!isToday && (
+                        <button
+                          onClick={goToToday}
+                          className="text-xs font-bold text-primary hover:underline px-2"
+                        >
+                          วันนี้
+                        </button>
+                      )}
                     </div>
                     <h1 className="text-3xl md:text-5xl font-black leading-tight tracking-[-0.035em]">
                       {greeting()}, {babyName}
@@ -744,9 +859,42 @@ const Index = () => {
                               </div>
                             </div>
 
-                            <div className="pt-1">
+                            <div className="pt-1 flex-1 min-w-0">
                               <p className="font-extrabold text-sm text-gray-900 dark:text-white">{item.label}</p>
                               <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{item.sub}</p>
+                            </div>
+
+                            <div className="flex gap-1 pt-1 flex-none">
+                              <button
+                                onClick={() => {
+                                  const logType = item.type;
+                                  setEditingLog({ id: item.id, type: logType, raw: item.raw });
+                                  if (logType.includes('feeding')) setActiveModal('feeding');
+                                  else if (logType.includes('diaper')) setActiveModal('diaper');
+                                  else if (logType.includes('sleep')) setActiveModal('sleep');
+                                  else if (logType.includes('pump')) setActiveModal('pump');
+                                }}
+                                className="size-7 rounded-full bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 flex items-center justify-center text-blue-400 hover:text-blue-500 transition"
+                                title="แก้ไข"
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (globalThis.confirm('ต้องการลบรายการนี้?')) {
+                                    deleteLog(item.id);
+                                    toast({
+                                      title: "ลบสำเร็จ",
+                                      description: "ลบรายการเรียบร้อยแล้ว",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }}
+                                className="size-7 rounded-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 flex items-center justify-center text-red-400 hover:text-red-500 transition"
+                                title="ลบ"
+                              >
+                                <Trash2 size={13} />
+                              </button>
                             </div>
                           </motion.div>
                         );
@@ -958,10 +1106,38 @@ const Index = () => {
 
           {/* Modals */}
           <AnimatePresence>
-            {activeModal === "feeding" && <FeedingModal onClose={() => setActiveModal(null)} onSave={handleSaveFeeding} />}
-            {activeModal === "diaper" && <DiaperModal onClose={() => setActiveModal(null)} onSave={handleSaveDiaper} />}
-            {activeModal === "sleep" && <SleepModal onClose={() => setActiveModal(null)} onSave={handleSaveSleep} />}
-            {activeModal === "pumping" && <PumpingModal onClose={() => setActiveModal(null)} onSave={handleSavePumping} />}
+            {activeModal === "feeding" && <FeedingModal
+                onClose={() => { setActiveModal(null); setEditingLog(null); }}
+                onSave={handleSaveFeeding}
+                initialData={editingLog?.type?.includes('feeding') ? {
+                  timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
+                  details: editingLog.raw?.details ?? editingLog.raw ?? {},
+                } : undefined}
+              />}
+            {activeModal === "diaper" && <DiaperModal
+                onClose={() => { setActiveModal(null); setEditingLog(null); }}
+                onSave={handleSaveDiaper}
+                initialData={editingLog?.type?.includes('diaper') ? {
+                  timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
+                  details: editingLog.raw?.details ?? editingLog.raw ?? {},
+                } : undefined}
+              />}
+            {activeModal === "sleep" && <SleepModal
+                onClose={() => { setActiveModal(null); setEditingLog(null); }}
+                onSave={handleSaveSleep}
+                initialData={editingLog?.type?.includes('sleep') ? {
+                  timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
+                  details: editingLog.raw?.details ?? editingLog.raw ?? {},
+                } : undefined}
+              />}
+            {activeModal === "pumping" && <PumpingModal
+                onClose={() => { setActiveModal(null); setEditingLog(null); }}
+                onSave={handleSavePumping}
+                initialData={editingLog?.type?.includes('pump') ? {
+                  timestamp: new Date(editingLog.raw?.timestamp ?? editingLog.raw?.createdAt ?? editingLog.raw?.time ?? Date.now()),
+                  details: editingLog.raw?.details ?? editingLog.raw ?? {},
+                } : undefined}
+              />}
 
             {activeModal === "add-baby" && (
               <BabyProfileModal baby={null} onClose={() => setActiveModal(null)} onSave={handleSaveBaby} />

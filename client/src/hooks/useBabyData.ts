@@ -257,6 +257,45 @@ export const useBabyData = () => {
     }
   };
 
+  // Update a log entry via API
+  const updateLog = async (logId: string, type: LogType, data: { timestamp: Date; details: Record<string, unknown> }) => {
+    if (!token) return false;
+    try {
+      const response = await fetch(`${API_BASE_URL}/logs/${logId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          timestamp: Math.floor(data.timestamp.getTime() / 1000),
+          details: data.details,
+        }),
+      });
+
+      if (response.status === 401) {
+        await logout();
+        return false;
+      }
+      const result = await response.json();
+
+      if (result.success) {
+        setLogs(prevLogs => prevLogs.map(log => {
+          if (log.id === logId) {
+            return {
+              ...log,
+              timestamp: data.timestamp,
+              details: data.details as any,
+            };
+          }
+          return log;
+        }));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error updating log:", error);
+      return false;
+    }
+  };
+
   // Get logs for current baby only
   const currentBabyLogs = logs.filter(log =>
     (log as LogEntry & { babyId?: string }).babyId === currentBabyId || !(log as LogEntry & { babyId?: string }).babyId
@@ -292,6 +331,7 @@ export const useBabyData = () => {
     deleteBaby,
     addLog,
     deleteLog,
+    updateLog,
     getLogsByType,
     getRecentLog,
     clearData,

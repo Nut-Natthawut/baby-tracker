@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, Check } from 'lucide-react';
+import { X, Check, CalendarDays , ChevronLeft, ChevronRight} from 'lucide-react';
 import { DiaperDetails, POO_COLORS, POO_TEXTURES } from '@/types/baby';
 import { roundToNearest30, formatTime } from '@/lib/babyUtils';
 
 interface DiaperModalProps {
   onClose: () => void;
   onSave: (data: { timestamp: Date; details: DiaperDetails }) => void;
+  initialData?: { timestamp: Date; details: DiaperDetails };
 }
 
 type DiaperStatus = 'clean' | 'pee' | 'poo' | 'mixed';
@@ -65,12 +66,13 @@ const getTextureVisual = (id: string, fillColor: string) => {
   }
 };
 
-const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
-  const [status, setStatus] = useState<DiaperStatus>('clean');
-  const [pooColor, setPooColor] = useState<string>('');
-  const [pooTexture, setPooTexture] = useState<string>('');
-  const [startTime, setStartTime] = useState<Date>(roundToNearest30(new Date()));
-  const [notes, setNotes] = useState('');
+const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData }) => {
+  const [status, setStatus] = useState<DiaperStatus>((initialData?.details?.status as DiaperStatus) || 'clean');
+  const [pooColor, setPooColor] = useState<string>(initialData?.details?.pooColor || '');
+  const [pooTexture, setPooTexture] = useState<string>(initialData?.details?.pooTexture || '');
+  const [startTime, setStartTime] = useState<Date>(initialData?.timestamp || roundToNearest30(new Date()));
+  const datePickerRef = useRef<HTMLInputElement>(null);
+  const [notes, setNotes] = useState(initialData?.details?.notes || '');
 
   const handleSave = () => {
     const details: DiaperDetails = {
@@ -92,6 +94,26 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
   const adjustTime = (minutes: number) => {
     const newTime = new Date(startTime.getTime() + minutes * 60000);
     setStartTime(newTime);
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value) {
+      const [y, m, d] = e.target.value.split('-').map(Number);
+      setStartTime(prev => {
+        const newDate = new Date(prev);
+        newDate.setFullYear(y, m - 1, d);
+        return newDate;
+      });
+    }
+  };
+
+
+  const handlePrevDay = () => setStartTime(prev => new Date(prev.getTime() - 86400000));
+  const handleNextDay = () => setStartTime(prev => new Date(prev.getTime() + 86400000));
+  const handleToday = () => setStartTime(new Date());
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   const showPooOptions = status === 'poo' || status === 'mixed';
@@ -122,44 +144,40 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <button
               onClick={() => setStatus('clean')}
-              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${
-                status === 'clean'
+              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'clean'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
                   : 'bg-card border border-border text-muted-foreground'
-              }`}
+                }`}
             >
               <span className="text-2xl">✨</span>
               <span className="text-sm">สะอาด</span>
             </button>
             <button
               onClick={() => setStatus('pee')}
-              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${
-                status === 'pee'
+              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'pee'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
                   : 'bg-card border border-border text-muted-foreground'
-              }`}
+                }`}
             >
               <span className="text-2xl">💧</span>
               <span className="text-sm">ฉี่</span>
             </button>
             <button
               onClick={() => setStatus('poo')}
-              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${
-                status === 'poo'
+              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'poo'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
                   : 'bg-card border border-border text-muted-foreground'
-              }`}
+                }`}
             >
               <span className="text-2xl">💩</span>
               <span className="text-sm">อึ</span>
             </button>
             <button
               onClick={() => setStatus('mixed')}
-              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${
-                status === 'mixed'
+              className={`py-5 rounded-2xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'mixed'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper'
                   : 'bg-card border border-border text-muted-foreground'
-              }`}
+                }`}
             >
               <span className="text-2xl">💧💩</span>
               <span className="text-sm">ฉี่+อึ</span>
@@ -182,11 +200,10 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
                 <button
                   key={color.id}
                   onClick={() => setPooColor(color.id)}
-                  className={`relative p-1 rounded-full transition-all ${
-                    pooColor === color.id 
-                      ? 'ring-2 ring-diaper ring-offset-2 ring-offset-background' 
+                  className={`relative p-1 rounded-full transition-all ${pooColor === color.id
+                      ? 'ring-2 ring-diaper ring-offset-2 ring-offset-background'
                       : ''
-                  }`}
+                    }`}
                 >
                   <div
                     className="w-12 h-12 rounded-full border-2 border-border"
@@ -222,18 +239,16 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
                   <button
                     key={texture.id}
                     onClick={() => setPooTexture(texture.id)}
-                    className={`flex flex-col items-center py-4 px-3 rounded-xl transition-all ${
-                      pooTexture === texture.id
+                    className={`flex flex-col items-center py-4 px-3 rounded-xl transition-all ${pooTexture === texture.id
                         ? 'bg-diaper/20 border-2 border-diaper'
                         : 'bg-card border border-border'
-                    }`}
+                      }`}
                   >
                     <div className="mb-2">
                       {getTextureVisual(texture.id, pooFillColor)}
                     </div>
-                    <span className={`text-sm font-medium text-center ${
-                      pooTexture === texture.id ? 'text-foreground' : 'text-muted-foreground'
-                    }`}>
+                    <span className={`text-sm font-medium text-center ${pooTexture === texture.id ? 'text-foreground' : 'text-muted-foreground'
+                      }`}>
                       {texture.label}
                     </span>
                   </button>
@@ -244,11 +259,44 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave }) => {
         )}
 
         {/* Time Adjuster */}
+                {/* Date Selector */}
+        <div className="mb-4 text-center w-full">
+          <div className="flex items-center justify-between gap-3 bg-card rounded-2xl border border-border p-3">
+            <button
+              onClick={handlePrevDay}
+              className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <div className="flex-1 flex flex-col items-center justify-center relative">
+              <input
+                ref={datePickerRef}
+                type="date"
+                value={startTime.toISOString().split('T')[0]}
+                onChange={handleDateChange}
+                className="absolute opacity-0 w-full h-full cursor-pointer z-10 top-0 left-0"
+              />
+              <div className="flex items-center justify-center gap-2 py-1 cursor-pointer pointer-events-none">
+                <span className="text-lg font-bold truncate">
+                  {startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear() ? 
+                    'วันนี้' : formatDate(startTime)}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={handleNextDay}
+              disabled={startTime.getDate() === new Date().getDate() && startTime.getMonth() === new Date().getMonth() && startTime.getFullYear() === new Date().getFullYear()}
+              className="size-8 rounded-full bg-white/90 flex items-center justify-center text-gray-600 hover:opacity-80 transition disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
         <div className="mb-6">
           <p className="text-base font-semibold text-muted-foreground mb-2 block">
             เวลา
           </p>
-          <div className="flex items-center gap-3 bg-card rounded-2xl border border-border p-3">
+          <div className="flex items-center justify-center gap-3 bg-card rounded-2xl border border-border p-3">
             <button
               onClick={() => adjustTime(-30)}
               className="px-4 py-2.5 rounded-xl bg-secondary text-base font-semibold text-muted-foreground"
