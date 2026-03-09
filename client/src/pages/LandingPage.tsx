@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Baby, Droplets, Moon, Heart, BarChart3, Clock, Shield } from 'lucide-react';
+import { Baby, Droplets, Moon, Heart, BarChart3, Clock, Shield, Users, List, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BabyCareLogo from '@/components/baby/BabyCareLogo';
 
@@ -26,14 +26,28 @@ const LandingPage = () => {
     {
       icon: <Moon className="w-8 h-8" />,
       title: "บันทึกการนอน",
-      description: "ติดตามรูปแบบการนอนของลูกน้อย",
+      description: "ติดตามรูปแบบและระยะเวลาการนอนของลูกน้อย",
       tone: "from-sleep/25 via-white/80 to-white/60",
       iconWrap: "bg-sleep/20 text-sleep",
     },
     {
+      icon: <Heart className="w-8 h-8" />,
+      title: "บันทึกการปั๊มนม",
+      description: "เก็บประวัติปริมาณการปั๊มนมของคุณแม่",
+      tone: "from-pink-400/25 via-white/80 to-white/60",
+      iconWrap: "bg-pink-500/20 text-pink-500",
+    },
+    {
+      icon: <Users className="w-8 h-8" />,
+      title: "แชร์กับครอบครัว",
+      description: "เชิญผู้ดูแลร่วม บันทึกและดูข้อมูลได้แบบเรียลไทม์",
+      tone: "from-purple-400/25 via-white/80 to-white/60",
+      iconWrap: "bg-purple-500/20 text-purple-500",
+    },
+    {
       icon: <BarChart3 className="w-8 h-8" />,
       title: "สถิติและรายงาน",
-      description: "ดูสรุปรายวันและรายเดือนอย่างง่าย",
+      description: "ดูภาพรวมและแนวโน้มแบบเข้าใจง่าย",
       tone: "from-papaya/25 via-white/80 to-white/60",
       iconWrap: "bg-mint/20 text-mint",
     },
@@ -118,7 +132,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-lg md:text-2xl text-muted-foreground font-semibold"
+                className="text-lg md:text-2xl text-muted-foreground dark:text-foreground/90 font-semibold"
               >
                 บันทึกทุกช่วงเวลา ดูสรุปได้ทันที และเข้าใจลูกน้อยมากขึ้น
               </motion.p>
@@ -127,16 +141,22 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs font-semibold text-muted-foreground"
+                className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs font-semibold text-muted-foreground dark:text-white/90"
               >
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
-                  🍼 บันทึกการกินนม
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2 ">
+                  🍼 บันทึกให้นม
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
                   👶 ผ้าอ้อม
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
                   😴 การนอน
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
+                  🤱 ปั๊มนม
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
+                  👥 แชร์ครอบครัว
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
                   📈 รายงาน
@@ -202,7 +222,7 @@ const LandingPage = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
