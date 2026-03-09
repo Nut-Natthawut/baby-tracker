@@ -148,7 +148,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
                 onClick={() => setStatus('clean')}
                 className={`py-5 rounded-3xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'clean'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper border border-white/20'
-                  : 'bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
+                  : 'bg-white/90 dark:bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
                   }`}
               >
                 <span className="text-2xl">✨</span>
@@ -158,7 +158,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
                 onClick={() => setStatus('pee')}
                 className={`py-5 rounded-3xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'pee'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper border border-white/20'
-                  : 'bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
+                  : 'bg-white/90 dark:bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
                   }`}
               >
                 <span className="text-2xl">💧</span>
@@ -168,7 +168,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
                 onClick={() => setStatus('poo')}
                 className={`py-5 rounded-3xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'poo'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper border border-white/20'
-                  : 'bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
+                  : 'bg-white/90 dark:bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
                   }`}
               >
                 <span className="text-2xl">💩</span>
@@ -178,7 +178,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
                 onClick={() => setStatus('mixed')}
                 className={`py-5 rounded-3xl text-base font-semibold flex flex-col items-center gap-2 transition-all ${status === 'mixed'
                   ? 'bg-diaper text-accent-foreground shadow-glow-diaper border border-white/20'
-                  : 'bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
+                  : 'bg-white/90 dark:bg-card/50 border border-white/5 text-muted-foreground hover:bg-card/80 backdrop-blur-sm'
                   }`}
               >
                 <span className="text-2xl">💧💩</span>
@@ -243,7 +243,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
                       onClick={() => setPooTexture(texture.id)}
                       className={`flex flex-col items-center py-4 px-3 rounded-2xl transition-all ${pooTexture === texture.id
                         ? 'bg-diaper/20 border-2 border-diaper shadow-sm'
-                        : 'bg-card/50 border border-white/5 backdrop-blur-sm hover:bg-card/80'
+                        : 'bg-white/90 dark:bg-card/50 border border-white/5 backdrop-blur-sm hover:bg-card/80'
                         }`}
                     >
                       <div className="mb-2">
@@ -262,7 +262,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
 
           {/* Date Selector */}
           <div className="mb-4 text-center w-full">
-            <div className="flex items-center justify-between gap-3 bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
+            <div className="flex items-center justify-between gap-3 bg-white/90 dark:bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
               <button
                 onClick={handlePrevDay}
                 className="size-8 rounded-full bg-secondary/50 flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
@@ -299,7 +299,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
             <p className="text-base font-semibold text-muted-foreground mb-2 block">
               เวลา
             </p>
-            <div className="flex items-center justify-center gap-3 bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
+            <div className="flex items-center justify-center gap-3 bg-white/90 dark:bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
               <button
                 onClick={() => adjustTime(-30)}
                 className="px-4 py-2.5 rounded-2xl bg-secondary/50 hover:bg-secondary text-base font-semibold text-foreground transition-colors"
@@ -337,7 +337,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="เพิ่มบันทึกเพิ่มเติม..."
-              className="w-full bg-card/50 backdrop-blur-sm border border-white/5 rounded-3xl p-5 text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-diaper/50 transition-all"
+              className="w-full bg-white/90 dark:bg-card/50 backdrop-blur-sm border border-white/5 rounded-3xl p-5 text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-diaper/50 transition-all"
               rows={4}
             />
           </div>

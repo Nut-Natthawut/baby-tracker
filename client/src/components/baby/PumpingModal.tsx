@@ -100,7 +100,7 @@ const PumpingModal: React.FC<PumpingModalProps> = ({ onClose, onSave, initialDat
           {/* Amount Input Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             {/* Left Breast */}
-            <div className="p-5 rounded-3xl border border-white/5 bg-card/50 backdrop-blur-sm shadow-sm flex flex-col items-center">
+            <div className="p-5 rounded-3xl border border-white/5 bg-white/90 dark:bg-card/50 backdrop-blur-sm shadow-sm flex flex-col items-center">
               <span className="text-3xl mb-2 block">🤱</span>
               <p className="text-sm text-muted-foreground mb-3 font-semibold uppercase tracking-wider">ซ้าย</p>
               <div className="flex items-center justify-center gap-2">
@@ -118,7 +118,7 @@ const PumpingModal: React.FC<PumpingModalProps> = ({ onClose, onSave, initialDat
             </div>
 
             {/* Right Breast */}
-            <div className="p-5 rounded-3xl border border-white/5 bg-card/50 backdrop-blur-sm shadow-sm flex flex-col items-center">
+            <div className="p-5 rounded-3xl border border-white/5 bg-white/90 dark:bg-card/50 backdrop-blur-sm shadow-sm flex flex-col items-center">
               <span className="text-3xl mb-2 block">🤱</span>
               <p className="text-sm text-muted-foreground mb-3 font-semibold uppercase tracking-wider">ขวา</p>
               <div className="flex items-center justify-center gap-2">
@@ -153,7 +153,7 @@ const PumpingModal: React.FC<PumpingModalProps> = ({ onClose, onSave, initialDat
             <p className="text-base font-semibold text-muted-foreground mb-2 block">
               ระยะเวลาปั๊ม
             </p>
-            <div className="flex items-center gap-4 bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-4">
+            <div className="flex items-center gap-4 bg-white/90 dark:bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-4">
               <button
                 onClick={() => setDurationMinutes(Math.max(5, durationMinutes - 5))}
                 className="p-3 rounded-2xl bg-secondary/80 text-foreground hover:bg-secondary transition-colors"
@@ -175,7 +175,7 @@ const PumpingModal: React.FC<PumpingModalProps> = ({ onClose, onSave, initialDat
 
           {/* Date Selector */}
           <div className="mb-4 text-center w-full">
-            <div className="flex items-center justify-between gap-3 bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
+            <div className="flex items-center justify-between gap-3 bg-white/90 dark:bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
               <button
                 onClick={handlePrevDay}
                 className="size-8 rounded-full bg-secondary/50 flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
@@ -212,7 +212,7 @@ const PumpingModal: React.FC<PumpingModalProps> = ({ onClose, onSave, initialDat
             <p className="text-base font-semibold text-muted-foreground mb-2 block">
               เวลา
             </p>
-            <div className="flex items-center gap-3 bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
+            <div className="flex items-center gap-3 bg-white/90 dark:bg-card/50 backdrop-blur-sm rounded-3xl border border-white/5 p-3">
               <button
                 onClick={() => adjustTime(-30)}
                 className="px-4 py-2.5 rounded-2xl bg-secondary/50 hover:bg-secondary text-base font-semibold text-foreground transition-colors"
@@ -249,7 +249,7 @@ const PumpingModal: React.FC<PumpingModalProps> = ({ onClose, onSave, initialDat
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="เพิ่มบันทึกเพิ่มเติม..."
-              className="w-full bg-card/50 backdrop-blur-sm border border-white/5 rounded-3xl p-5 text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/50 transition-all shadow-inner"
+              className="w-full bg-white/90 dark:bg-card/50 backdrop-blur-sm border border-white/5 rounded-3xl p-5 text-base text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-orange-400/50 transition-all shadow-inner"
               rows={4}
             />
           </div>

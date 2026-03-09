@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({
 
       <button
         onClick={onOpenSettings}
-        className="p-2.5 rounded-full bg-card/50 backdrop-blur-sm border border-white/10 hover:bg-card/80 transition-colors shadow-sm"
+        className="p-2.5 rounded-full bg-white/90 dark:bg-card/50 backdrop-blur-sm border border-white/10 hover:bg-card/80 transition-colors shadow-sm"
       >
         <Settings size={20} className="text-muted-foreground" />
       </button>

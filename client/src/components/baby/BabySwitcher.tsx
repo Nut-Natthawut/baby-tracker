@@ -33,7 +33,7 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
     <div className={`relative ${containerClassName ?? ''}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-card/50 backdrop-blur-sm border border-white/10 hover:bg-card/80 transition-colors shadow-sm ${buttonClassName ?? ''}`}
+        className={`flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/90 dark:bg-card/50 backdrop-blur-sm border border-white/10 hover:bg-card/80 transition-colors shadow-sm ${buttonClassName ?? ''}`}
       >
         <BabyAvatar baby={currentBaby} size="sm" />
         <span className={`font-semibold text-foreground text-base max-w-[140px] truncate ${nameClassName ?? ''}`}>
@@ -78,8 +78,8 @@ const BabySwitcher: React.FC<BabySwitcherProps> = ({
                       setIsOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors ${currentBaby.id === baby.id
-                        ? 'bg-primary/10'
-                        : 'hover:bg-secondary'
+                      ? 'bg-primary/10'
+                      : 'hover:bg-secondary'
                       }`}
                   >
                     <BabyAvatar baby={baby} size="sm" />

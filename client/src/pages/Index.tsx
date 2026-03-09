@@ -859,7 +859,7 @@ const Index = () => {
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full lg:w-auto">
-                    <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 shadow-soft">
+                    <div className="rounded-3xl bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/20 p-4 shadow-soft">
                       <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                         <span className="size-2 rounded-full bg-sleep" />
                         <span>นอน</span>
@@ -868,7 +868,7 @@ const Index = () => {
                         {dailySummary.sleepH}ชม. {dailySummary.sleepR}น.
                       </p>
                     </div>
-                    <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 shadow-soft">
+                    <div className="rounded-3xl bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/20 p-4 shadow-soft">
                       <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                         <span className="size-2 rounded-full bg-diaper" />
                         <span>ผ้าอ้อม</span>
@@ -877,7 +877,7 @@ const Index = () => {
                         {dailySummary.diaperCount} ครั้ง
                       </p>
                     </div>
-                    <div className="rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-4 shadow-soft col-span-2 sm:col-span-1">
+                    <div className="rounded-3xl bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/20 p-4 shadow-soft col-span-2 sm:col-span-1">
                       <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                         <span className="size-2 rounded-full bg-feeding" />
                         <span>นม</span>
@@ -895,7 +895,7 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 max-w-[1240px] mx-auto items-start">
               {/* Left Column: Timeline */}
               <div className="lg:col-span-3 order-2 lg:order-1">
-                <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-soft border border-white/20 h-full">
+                <div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-soft border border-white/40 dark:border-white/20 h-full">
                   <div className="flex items-start justify-between mb-6">
                     <div>
                       <h3 className="text-lg font-extrabold">กิจกรรมล่าสุด</h3>
@@ -997,17 +997,17 @@ const Index = () => {
                     transition={{ duration: 0.5, delay: 0.1 }}
                     whileHover={{ y: -6, scale: 1.02 }}
                     whileTap={{ scale: 0.96 }}
-                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft"
+                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/20 shadow-soft"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-feeding/30 via-white/5 to-transparent opacity-80" />
                     <div className="absolute -top-10 -right-10 size-24 rounded-full bg-feeding/20 blur-2xl" />
                     <div className="relative flex flex-col items-center gap-4 text-center">
-                      <div className="size-16 md:size-20 rounded-2xl bg-white/40 dark:bg-white/10 shadow-sm flex items-center justify-center text-feeding group-hover:scale-110 transition-transform duration-300">
+                      <div className="size-16 md:size-20 rounded-2xl bg-rose-50 dark:bg-white/10 shadow-sm flex items-center justify-center text-rose-500 dark:text-feeding group-hover:scale-110 transition-transform duration-300">
                         <Utensils className="w-9 h-9" />
                       </div>
                       <div>
                         <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">บันทึกการกินนม</span>
-                        <span className="text-sm font-semibold text-feeding/80">
+                        <span className="text-sm font-semibold text-rose-500/80 dark:text-feeding/80">
                           ขวดนมหรือเข้าเต้า
                         </span>
                       </div>
@@ -1022,17 +1022,17 @@ const Index = () => {
                     transition={{ duration: 0.5, delay: 0.15 }}
                     whileHover={{ y: -6, scale: 1.02 }}
                     whileTap={{ scale: 0.96 }}
-                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft"
+                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/20 shadow-soft"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-diaper/30 via-white/5 to-transparent opacity-80" />
                     <div className="absolute -bottom-10 -left-10 size-24 rounded-full bg-diaper/20 blur-2xl" />
                     <div className="relative flex flex-col items-center gap-4 text-center">
-                      <div className="size-16 md:size-20 rounded-2xl bg-white/40 dark:bg-white/10 shadow-sm flex items-center justify-center text-diaper group-hover:scale-110 transition-transform duration-300">
+                      <div className="size-16 md:size-20 rounded-2xl bg-amber-50 dark:bg-white/10 shadow-sm flex items-center justify-center text-amber-500 dark:text-diaper group-hover:scale-110 transition-transform duration-300">
                         <Droplet className="w-9 h-9" />
                       </div>
                       <div>
                         <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">บันทึกผ้าอ้อม</span>
-                        <span className="text-sm font-semibold text-diaper/80">ฉี่/อึ/ผสม</span>
+                        <span className="text-sm font-semibold text-amber-500/80 dark:text-diaper/80">ฉี่/อึ/ผสม</span>
                       </div>
                     </div>
                   </motion.button>
@@ -1045,17 +1045,17 @@ const Index = () => {
                     transition={{ duration: 0.5, delay: 0.2 }}
                     whileHover={{ y: -6, scale: 1.02 }}
                     whileTap={{ scale: 0.96 }}
-                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft"
+                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/20 shadow-soft"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-sleep/30 via-white/5 to-transparent opacity-80" />
                     <div className="absolute -top-10 -left-10 size-24 rounded-full bg-sleep/20 blur-2xl" />
                     <div className="relative flex flex-col items-center gap-4 text-center">
-                      <div className="size-16 md:size-20 rounded-2xl bg-white/40 dark:bg-white/10 shadow-sm flex items-center justify-center text-sleep group-hover:scale-110 transition-transform duration-300">
+                      <div className="size-16 md:size-20 rounded-2xl bg-sky-50 dark:bg-white/10 shadow-sm flex items-center justify-center text-sky-500 dark:text-sleep group-hover:scale-110 transition-transform duration-300">
                         <BedDouble className="w-9 h-9" />
                       </div>
                       <div>
                         <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">บันทึกการนอน</span>
-                        <span className="text-sm font-semibold text-sleep/80">
+                        <span className="text-sm font-semibold text-sky-500/80 dark:text-sleep/80">
                           เริ่มหรือตื่นนอน
                         </span>
                       </div>
@@ -1070,17 +1070,17 @@ const Index = () => {
                     transition={{ duration: 0.5, delay: 0.25 }}
                     whileHover={{ y: -6, scale: 1.02 }}
                     whileTap={{ scale: 0.96 }}
-                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/10 backdrop-blur-xl border border-white/20 shadow-soft"
+                    className="group relative overflow-hidden rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center gap-4 min-h-[230px] bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/40 dark:border-white/20 shadow-soft"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-pump/30 via-white/5 to-transparent opacity-80" />
                     <div className="absolute -bottom-10 -right-10 size-24 rounded-full bg-pump/20 blur-2xl" />
                     <div className="relative flex flex-col items-center gap-4 text-center">
-                      <div className="size-16 md:size-20 rounded-2xl bg-white/40 dark:bg-white/10 shadow-sm flex items-center justify-center text-pump group-hover:scale-110 transition-transform duration-300">
+                      <div className="size-16 md:size-20 rounded-2xl bg-purple-50 dark:bg-white/10 shadow-sm flex items-center justify-center text-purple-500 dark:text-pump group-hover:scale-110 transition-transform duration-300">
                         <Milk className="w-9 h-9" />
                       </div>
                       <div>
                         <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">ปั๊มนม</span>
-                        <span className="text-sm font-semibold text-pump/80">รายละเอียดการปั๊ม</span>
+                        <span className="text-sm font-semibold text-purple-500/80 dark:text-pump/80">รายละเอียดการปั๊ม</span>
                       </div>
                     </div>
                   </motion.button>
@@ -1089,7 +1089,7 @@ const Index = () => {
 
               {/* Right Column: Daily Summary */}
               <div className="lg:col-span-3 order-3">
-                <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-soft border border-white/20 h-full flex flex-col gap-6">
+                <div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl rounded-3xl p-6 shadow-soft border border-white/40 dark:border-white/20 h-full flex flex-col gap-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-extrabold">สรุปประจำวัน</h3>
