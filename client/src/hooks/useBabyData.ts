@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Baby, LogEntry, LogType } from '@/types/baby';
 import { API_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
@@ -57,7 +57,12 @@ export const useBabyData = () => {
     }
   };
 
-  // Load data initially
+  const loadDataRef = useRef(loadData);
+  useEffect(() => {
+    loadDataRef.current = loadData;
+  }, [loadData]);
+
+  // Load data initially and start polling
   useEffect(() => {
     if (!token) {
       setBabies([]);
@@ -67,11 +72,17 @@ export const useBabyData = () => {
       return;
     }
 
-    loadData();
-  }, [token, logout]);
+    loadDataRef.current();
+
+    const interval = setInterval(() => {
+      loadDataRef.current();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [token]);
 
   // Expose loadData as refreshBabyData
-  const refreshBabyData = () => loadData();
+  const refreshBabyData = () => loadDataRef.current();
   // But for now, we'll keep it simple or refactor slightly.
 
 

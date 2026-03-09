@@ -246,7 +246,7 @@ function buildRecentItem(log: AnyData): RecentItem {
 // --------------------------------------------
 
 const Index = () => {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   const {
     baby,
     babies,
@@ -689,6 +689,16 @@ const Index = () => {
               >
                 เริ่มต้นใช้งาน
               </motion.button>
+
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                onClick={logout}
+                className="w-full mt-4 py-3 text-muted-foreground hover:text-foreground font-bold text-sm transition-colors"
+              >
+                ออกจากระบบ
+              </motion.button>
             </motion.div>
           </div>
 
@@ -917,7 +927,7 @@ const Index = () => {
                     <div className="flex flex-col gap-6 relative">
                       <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary/40 dark:from-white/10 to-transparent -z-10" />
 
-                      {recent.map((item, idx) => {
+                      {recent.slice(0, 5).map((item, idx) => {
                         const Icon = item.icon;
                         const toneClass = getRecentToneClass(item.tone);
 
