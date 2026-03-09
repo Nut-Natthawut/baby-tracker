@@ -605,17 +605,24 @@ const Index = () => {
                 transition={{ delay: 0.4 }}
                 className="grid grid-cols-2 gap-3 mb-8"
               >
-                <div className="bg-card p-4 rounded-2xl border border-border">
-                  <div className="w-10 h-10 rounded-xl bg-feeding/20 flex items-center justify-center mb-2 mx-auto">
+                <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 rounded-[28px] border border-white/70 dark:border-white/10 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                  <div className="w-10 h-10 rounded-xl bg-feeding/20 dark:bg-feeding/30 flex items-center justify-center mb-2 mx-auto">
                     <span className="text-xl">🍼</span>
                   </div>
                   <p className="text-sm font-medium text-foreground">บันทึกการกินนม</p>
                 </div>
-                <div className="bg-card p-4 rounded-2xl border border-border">
-                  <div className="w-10 h-10 rounded-xl bg-diaper/20 flex items-center justify-center mb-2 mx-auto">
+                <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 rounded-[28px] border border-white/70 dark:border-white/10 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                  <div className="w-10 h-10 rounded-xl bg-diaper/20 dark:bg-diaper/30 flex items-center justify-center mb-2 mx-auto">
                     <span className="text-xl">👶</span>
                   </div>
                   <p className="text-sm font-medium text-foreground">บันทึกผ้าอ้อม</p>
+                </div>
+                <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 rounded-[28px] border border-white/70 dark:border-white/10 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] col-span-2">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center mb-2 mx-auto">
+                    <span className="text-xl">💤</span>
+                  </div>
+                  <p className="text-sm font-medium text-foreground">บันทึกการนอน</p>
+                  <p className="text-xs text-muted-foreground mt-1 text-center">ติดตามรูปแบบการนอนของลูกน้อย</p>
                 </div>
               </motion.div>
 
@@ -703,10 +710,11 @@ const Index = () => {
               {/* profile bubble */}
               <button
                 onClick={() => setActiveModal("settings")}
-                className="relative size-9 sm:size-10 rounded-full bg-gradient-to-br from-papaya/30 via-white/80 to-sky/20 border-2 border-white/80 dark:border-white/10 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)]"
+                className="relative flex items-center justify-center size-9 sm:size-10 rounded-full bg-white dark:bg-white/10 border-2 border-slate-200 dark:border-white/10 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)] text-lg hover:scale-105 transition-transform"
                 aria-label="Open settings"
               >
-                <span className="absolute inset-0 rounded-full ring-1 ring-white/60 dark:ring-white/10" />
+                👶
+                <span className="absolute inset-0 rounded-full ring-1 ring-black/5 dark:ring-white/10 pointer-events-none" />
               </button>
             </div>
           </header>
@@ -847,7 +855,7 @@ const Index = () => {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-6 relative">
-                      <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary/40 to-transparent -z-10" />
+                      <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary/40 dark:from-white/10 to-transparent -z-10" />
 
                       {recent.map((item, idx) => {
                         const Icon = item.icon;
@@ -862,10 +870,12 @@ const Index = () => {
                             className="flex gap-4"
                           >
                             <div className="relative flex-none">
+                              {/* Solid backdrop to prevent the timeline line from showing through the transparent circle */}
+                              <div className="absolute inset-1 rounded-full bg-white dark:bg-[#1a1c23]" />
                               <div
-                                className={`size-10 rounded-full flex items-center justify-center z-10 border-4 border-white/90 dark:border-white/10 ${toneClass}`}
+                                className={`relative size-10 rounded-full flex items-center justify-center z-10 border-4 border-white/90 dark:border-[#2a2d36] ${toneClass}`}
                               >
-                                <Icon className="w-5 h-5" />
+                                <Icon className="w-5 h-5 relative z-20" />
                               </div>
                             </div>
 
