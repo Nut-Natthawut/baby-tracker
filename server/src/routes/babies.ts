@@ -400,7 +400,7 @@ babies.post("/:id/invite-code", async (c) => {
   // Generate 6-digit code
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const now = nowSeconds();
-  const expiresAt = now + 5 * 60; // 5 minutes
+  const expiresAt = now + 24 * 60 * 60; // 24 hours
 
   await c.env.baby_tracker_db
     .prepare("UPDATE babies SET invite_code = ?, invite_expires_at = ? WHERE id = ?")

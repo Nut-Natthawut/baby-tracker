@@ -1,6 +1,6 @@
 import { Hono, type Context } from "hono";
 import type { Bindings } from "../types";
-import { hashPassword, hashToken, signJwt } from "../lib/auth";
+import { hashPassword, hashToken, signJwt, verifyPassword } from "../lib/auth";
 import { tryGetAuthUser, type AuthVariables } from "../middleware/auth";
 
 const invitations = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
@@ -183,39 +183,10 @@ invitations.post("/join", async (c) => {
 
   if (existingUser) {
     userId = existingUser.id;
-    // Verify password if they are joining (Login check)
-    // Note: If they are already logged in on client, they might send a token header?
-    // But this constitutes a "Login & Join" action.
-    // Let's verify password if provided.
-    // NOTE: This might be insecure if we don't handle rate limits, but for this assignment it's likely fine.
-    // If they are just "joining", maybe we don't force login if they are arguably "authenticated" by the room code?
-    // No, that's bad security. They need to prove they own the account.
-
-    // For simplicity: If user exists, we REQUIRE password match to "Join" as that user.
-    // Or we fail and say "User exists, please login first".
-    // Let's try to verify password.
-
-    /* 
-       Wait, if the user is already logged in, the CLIENT should just call `POST /invitations/join` (authenticated) 
-       or we handle it here by checking `c.get('user')`?
-       `invitations` router doesn't use `requireAuth` globally.
-       Let's check if we can get the user from context if middleware was applied? 
-       It seems `invitations.ts` does NOT have `use('*', requireAuth)`.
-    */
-
-    // Let's stick to the prompt flow: Code -> Role -> Name -> Password.
-    // Implies creating a new user or logging in.
-
-    // If user exists:
-    // We could return error: "Email already registered. Please login to join."
-    // OR we verify password and proceed.
-    // Let's verify password.
-    // const valid = await verifyPassword(password, existingUser.passwordHash); // Implementation needed
-    // But we don't have `verifyPassword` imported here easily (only `hashPassword`).
-    // Actually `hashPassword` usually implies we can compare? No, bcrypt need `compare`.
-    // We only have `hashToken` and `signJwt`. We need to check `lib/auth` for password verification.
-
-    return c.json({ success: false, message: "Email already in use. Please login first." }, 409);
+    const valid = await verifyPassword(password, existingUser.password_hash);
+    if (!valid) {
+      return c.json({ success: false, message: "อีเมลนี้มีผู้ใช้งานแล้ว และรหัสผ่านไม่ถูกต้อง กรุณาเข้าสู่ระบบก่อน" }, 401);
+    }
   } else {
     // Create new user
     userId = crypto.randomUUID();

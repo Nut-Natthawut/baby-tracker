@@ -34,15 +34,22 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave, initialData })
   const datePickerRef = useRef<HTMLInputElement>(null);
   const [notes, setNotes] = useState(initialData?.details?.notes || '');
 
-  const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
-  const pad2 = (value: number) => value.toString().padStart(2, '0');
+  let displayEndTime = new Date(endTime);
+  if (displayEndTime < startTime) {
+    displayEndTime = new Date(displayEndTime.getTime() + 24 * 60 * 60000);
+  }
+  const durationMinutes = Math.round((displayEndTime.getTime() - startTime.getTime()) / 60000);
+  const pad2 = (value: number) => {
+    if (isNaN(value)) return '00';
+    return value.toString().padStart(2, '0');
+  };
 
   const cardClass = 'rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl';
 
   const handleSave = () => {
-    let finalEndTime = endTime;
-    if (finalEndTime <= startTime) {
-      finalEndTime = new Date(endTime.getTime() + 24 * 60 * 60000);
+    let finalEndTime = new Date(endTime);
+    if (finalEndTime < startTime) {
+      finalEndTime = new Date(finalEndTime.getTime() + 24 * 60 * 60000);
     }
 
     const finalDuration = Math.round((finalEndTime.getTime() - startTime.getTime()) / 60000);
@@ -186,6 +193,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave, initialData })
                     type="time"
                     value={`${pad2(startTime.getHours())}:${pad2(startTime.getMinutes())}`}
                     onChange={(e) => {
+                      if (!e.target.value) return;
                       const [h, m] = e.target.value.split(':').map(Number);
                       const newStart = new Date(startTime);
                       newStart.setHours(h, m);
@@ -213,6 +221,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave, initialData })
                     type="time"
                     value={`${pad2(endTime.getHours())}:${pad2(endTime.getMinutes())}`}
                     onChange={(e) => {
+                      if (!e.target.value) return;
                       const [h, m] = e.target.value.split(':').map(Number);
                       const newEnd = new Date(endTime);
                       newEnd.setHours(h, m);
