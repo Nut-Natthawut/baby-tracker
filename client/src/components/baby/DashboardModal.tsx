@@ -424,7 +424,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
 
                     <div className="grid gap-6 lg:grid-cols-2">
                       <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-100/70 via-white/80 to-white/60 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-100/70 dark:from-amber-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
                         <div className="relative p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -455,7 +455,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </div>
 
                       <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/70 via-white/80 to-white/60 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/70 dark:from-emerald-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
                         <div className="relative p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -484,7 +484,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </div>
 
                       <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/70 via-white/80 to-white/60 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/70 dark:from-indigo-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
                         <div className="relative p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -521,7 +521,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </div>
 
                       <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                        <div className="absolute inset-0 bg-gradient-to-br from-rose-100/70 via-white/80 to-white/60 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-rose-100/70 dark:from-rose-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
                         <div className="relative p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">

@@ -55,11 +55,11 @@ const LandingPage = () => {
           className="absolute top-6 left-6 right-6 flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-papaya/70 shadow-glow-primary flex items-center justify-center overflow-hidden">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-papaya/70 shadow-[0_4px_12px_rgba(253,164,175,0.4)] flex items-center justify-center overflow-hidden">
               <BabyCareLogo size="sm" />
             </div>
             <div className="leading-tight">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Baby Tracker</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">Baby Tracker</p>
               <span className="font-black text-lg text-foreground">ดูแลลูกน้อย</span>
             </div>
           </div>
@@ -178,9 +178,9 @@ const LandingPage = () => {
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
-            className="w-7 h-11 rounded-full border-2 border-white/60 dark:border-white/10 flex items-start justify-center p-2 bg-white/40 dark:bg-white/5"
+            className="w-7 h-11 rounded-full border-2 border-slate-300 dark:border-white/30 flex items-start justify-center p-2 bg-white/40 dark:bg-white/5 backdrop-blur-md shadow-sm"
           >
-            <div className="w-1.5 h-3 bg-primary rounded-full" />
+            <div className="w-1.5 h-3 bg-slate-400 dark:bg-slate-300 rounded-full" />
           </motion.div>
         </motion.div>
       </section>
@@ -212,7 +212,9 @@ const LandingPage = () => {
                 transition={{ delay: index * 0.1 }}
                 className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl p-6 shadow-[0_20px_45px_-32px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.tone} opacity-90`} />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/40 dark:from-white/5 to-transparent opacity-90" />
+                <div className={`absolute inset-0 bg-gradient-to-br ${feature.tone} opacity-90 dark:opacity-0`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${feature.tone.replace('via-white/80', 'via-white/5').replace('to-white/60', 'to-white/5')} opacity-0 dark:opacity-20`} />
                 <div className="relative">
                   <div className={`w-16 h-16 rounded-2xl ${feature.iconWrap} flex items-center justify-center mb-4`}>
                     {feature.icon}
@@ -354,7 +356,7 @@ const LandingPage = () => {
               <Button
                 onClick={() => navigate('/app')}
                 size="lg"
-                className="bg-saguaro hover:bg-saguaro/90 text-white font-bold text-lg px-8 py-6 rounded-2xl shadow-glow-saguaro transition-all"
+                className="bg-saguaro hover:bg-saguaro/90 text-[hsl(var(--foreground))] dark:text-[#f8fafc] font-black text-lg px-8 py-6 rounded-2xl shadow-[0_4px_20px_rgba(110,231,183,0.3)] transition-all"
               >
                 เริ่มใช้งานฟรี
               </Button>
