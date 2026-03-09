@@ -47,12 +47,14 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave, initialData })
   const cardClass = 'rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl';
 
   const handleSave = () => {
+    let finalStartTime = new Date(startTime);
     let finalEndTime = new Date(endTime);
-    if (finalEndTime < startTime) {
+
+    if (finalEndTime < finalStartTime) {
       finalEndTime = new Date(finalEndTime.getTime() + 24 * 60 * 60000);
     }
 
-    const finalDuration = Math.round((finalEndTime.getTime() - startTime.getTime()) / 60000);
+    const finalDuration = Math.round((finalEndTime.getTime() - finalStartTime.getTime()) / 60000);
 
     const details: SleepDetails = {
       durationMinutes: Math.max(0, finalDuration),
@@ -61,7 +63,7 @@ const SleepModal: React.FC<SleepModalProps> = ({ onClose, onSave, initialData })
     };
 
     onSave({
-      timestamp: startTime,
+      timestamp: finalStartTime,
       details,
     });
   };

@@ -342,14 +342,32 @@ const Index = () => {
   const isModalOpen = Boolean(activeModal);
   const contentScrollClass = isModalOpen ? "overflow-hidden" : "overflow-y-auto";
 
+  const handleAutoNavigation = (logData: AnyData) => {
+    const logTimestamp = logData.timestamp || logData.createdAt || logData.time || logData.date;
+    if (logTimestamp) {
+      const logDate = new Date(logTimestamp);
+      if (
+        logDate.getDate() !== selectedDate.getDate() ||
+        logDate.getMonth() !== selectedDate.getMonth() ||
+        logDate.getFullYear() !== selectedDate.getFullYear()
+      ) {
+        setSelectedDate(logDate);
+        return true; // Navigated
+      }
+    }
+    return false; // Did not navigate
+  };
+
   const handleSaveFeeding = async (data: AnyData) => {
     if (editingLog) {
       await updateLog(editingLog.id, "feeding", data);
       setEditingLog(null);
-      toast({ title: "แก้ไขสำเร็จ ✓" });
+      const navigated = handleAutoNavigation(data);
+      toast({ title: "แก้ไขสำเร็จ ✓", description: navigated ? "สลับไปยังวันที่ของบันทึกอัตโนมัติ" : undefined });
     } else {
       addLog("feeding", data);
-      toast({ title: "บันทึกสำเร็จ ✓" });
+      const navigated = handleAutoNavigation(data);
+      toast({ title: "บันทึกสำเร็จ ✓", description: navigated ? "ระบบบันทึกไปยังเมื่อวานเนื่องจากเวลาที่เลือก" : undefined });
     }
     setActiveModal(null);
   };
@@ -358,10 +376,12 @@ const Index = () => {
     if (editingLog) {
       await updateLog(editingLog.id, "diaper", data);
       setEditingLog(null);
-      toast({ title: "แก้ไขสำเร็จ ✓" });
+      const navigated = handleAutoNavigation(data);
+      toast({ title: "แก้ไขสำเร็จ ✓", description: navigated ? "สลับไปยังวันที่ของบันทึกอัตโนมัติ" : undefined });
     } else {
       addLog("diaper", data);
-      toast({ title: "บันทึกสำเร็จ ✓" });
+      const navigated = handleAutoNavigation(data);
+      toast({ title: "บันทึกสำเร็จ ✓", description: navigated ? "ระบบบันทึกไปยังเมื่อวานเนื่องจากเวลาที่เลือก" : undefined });
     }
     setActiveModal(null);
   };
@@ -370,10 +390,12 @@ const Index = () => {
     if (editingLog) {
       await updateLog(editingLog.id, "pump", data);
       setEditingLog(null);
-      toast({ title: "แก้ไขสำเร็จ ✓" });
+      const navigated = handleAutoNavigation(data);
+      toast({ title: "แก้ไขสำเร็จ ✓", description: navigated ? "สลับไปยังวันที่ของบันทึกอัตโนมัติ" : undefined });
     } else {
       addLog("pump", data);
-      toast({ title: "บันทึกสำเร็จ ✓" });
+      const navigated = handleAutoNavigation(data);
+      toast({ title: "บันทึกสำเร็จ ✓", description: navigated ? "ระบบบันทึกไปยังเมื่อวานเนื่องจากเวลาที่เลือก" : undefined });
     }
     setActiveModal(null);
   };
@@ -382,10 +404,12 @@ const Index = () => {
     if (editingLog) {
       await updateLog(editingLog.id, "sleep", data);
       setEditingLog(null);
-      toast({ title: "แก้ไขสำเร็จ ✓" });
+      const navigated = handleAutoNavigation(data);
+      toast({ title: "แก้ไขสำเร็จ ✓", description: navigated ? "สลับไปยังวันที่ของบันทึกอัตโนมัติ" : undefined });
     } else {
       addLog("sleep", data);
-      toast({ title: "บันทึกสำเร็จ ✓" });
+      const navigated = handleAutoNavigation(data);
+      toast({ title: "บันทึกสำเร็จ ✓", description: navigated ? "ระบบบันทึกไปยังเมื่อวานเนื่องจากเวลาที่เลือก" : undefined });
     }
     setActiveModal(null);
   };
@@ -564,8 +588,9 @@ const Index = () => {
         if (!lastSleep) return { text: "ตื่นอยู่", tone: "awake" as const };
 
         // If last sleep has duration and endTime in the future -> still sleeping
+        // But ONLY if the sleep has actually started!
         if (lastSleep.duration > 0 && lastSleep.endTime) {
-          if (lastSleep.endTime.getTime() > now.getTime()) {
+          if (lastSleep.endTime.getTime() > now.getTime() && lastSleep.at.getTime() <= now.getTime()) {
             return { text: "หลับอยู่", tone: "sleep" as const };
           }
           return { text: "ตื่นอยู่", tone: "awake" as const };
