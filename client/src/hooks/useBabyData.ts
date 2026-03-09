@@ -20,6 +20,44 @@ export const useBabyData = () => {
   const baby = babies.find(b => b.id === currentBabyId) || null;
 
   // Load data
+  const loadData = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/babies`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status === 401) {
+        await logout();
+        return;
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        const mappedBabies = result.data.map((b: Baby & { birth_date?: string | Date }) => ({
+          ...b,
+          birthDate: b.birth_date || b.birthDate,
+        }));
+        setBabies(mappedBabies);
+
+        const savedCurrentId = localStorage.getItem(STORAGE_KEYS.CURRENT_BABY_ID);
+
+        if (savedCurrentId && result.data.some((b: Baby) => b.id === savedCurrentId)) {
+          setCurrentBabyId(savedCurrentId);
+        } else if (result.data.length > 0 && !currentBabyId) {
+          setCurrentBabyId(result.data[0].id);
+        } else if (result.data.length === 0) {
+          setCurrentBabyId(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data initially
   useEffect(() => {
     if (!token) {
       setBabies([]);
@@ -29,47 +67,11 @@ export const useBabyData = () => {
       return;
     }
 
-    const loadData = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/babies`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (response.status === 401) {
-          await logout();
-          return;
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-          const mappedBabies = result.data.map((b: Baby & { birth_date?: string | Date }) => ({
-            ...b,
-            birthDate: b.birth_date || b.birthDate,
-          }));
-          setBabies(mappedBabies);
-
-          const savedCurrentId = localStorage.getItem(STORAGE_KEYS.CURRENT_BABY_ID);
-
-          if (savedCurrentId && result.data.some((b: Baby) => b.id === savedCurrentId)) {
-            setCurrentBabyId(savedCurrentId);
-          } else if (result.data.length > 0) {
-            setCurrentBabyId(result.data[0].id);
-          } else {
-            setCurrentBabyId(null);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadData();
   }, [token, logout]);
 
-  // NOTE: In a real app, we might want to separate log fetching into a separate useEffect dependent on currentBabyId
+  // Expose loadData as refreshBabyData
+  const refreshBabyData = () => loadData();
   // But for now, we'll keep it simple or refactor slightly.
 
 
@@ -335,5 +337,6 @@ export const useBabyData = () => {
     getLogsByType,
     getRecentLog,
     clearData,
+    refreshBabyData,
   };
 };

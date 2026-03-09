@@ -400,7 +400,7 @@ babies.post("/:id/invite-code", async (c) => {
   // Generate 6-digit code
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   const now = nowSeconds();
-  const expiresAt = now + 5 * 60; // 5 minutes
+  const expiresAt = now + 10 * 60; // 10 minutes
 
   await c.env.baby_tracker_db
     .prepare("UPDATE babies SET invite_code = ?, invite_expires_at = ? WHERE id = ?")
@@ -495,6 +495,113 @@ babies.delete("/:id/caregivers/:userId", async (c) => {
     .run();
 
   return c.json({ success: true });
+});
+
+// Get pending requests (owner only)
+babies.get("/:id/requests", async (c) => {
+  const babyId = c.req.param("id");
+  const user = c.get("user");
+
+  const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
+  if (membership?.role !== "owner") {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
+
+  const requestsResult = await c.env.baby_tracker_db
+    .prepare(
+      "SELECT i.id, i.email, i.role, i.status, i.created_at, u.name as requester_name FROM invitations i INNER JOIN users u ON u.id = i.invited_by WHERE i.baby_id = ? AND i.status = 'requested' ORDER BY i.created_at DESC"
+    )
+    .bind(babyId)
+    .all();
+
+  const requests = (requestsResult.results ?? []).map((row: any) => ({
+    id: row.id,
+    email: row.email,
+    role: row.role,
+    status: row.status,
+    createdAt: row.created_at,
+    requesterName: row.requester_name,
+  }));
+
+  return c.json({ success: true, data: requests });
+});
+
+// Approve request (owner only)
+babies.post("/:id/requests/:requestId/approve", async (c) => {
+  try {
+    const babyId = c.req.param("id");
+    const requestId = c.req.param("requestId");
+    const user = c.get("user");
+
+    const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
+    if (membership?.role !== "owner") {
+      return c.json({ success: false, message: "Forbidden" }, 403);
+    }
+
+    const request: any = await c.env.baby_tracker_db
+      .prepare("SELECT * FROM invitations WHERE id = ? AND baby_id = ? AND status = 'requested'")
+      .bind(requestId, babyId)
+      .first();
+
+    if (!request) {
+      return c.json({ success: false, message: "Request not found or already processed" }, 404);
+    }
+
+    const now = nowSeconds();
+
+    // Add to baby_members
+    const existingMember = await c.env.baby_tracker_db
+      .prepare("SELECT id FROM baby_members WHERE baby_id = ? AND user_id = ?")
+      .bind(babyId, request.invited_by)
+      .first();
+
+    if (!existingMember) {
+      await c.env.baby_tracker_db
+        .prepare(
+          "INSERT INTO baby_members (id, baby_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)"
+        )
+        .bind(crypto.randomUUID(), babyId, request.invited_by, request.role, now)
+        .run();
+    }
+
+    // Update invitation status to accepted
+    await c.env.baby_tracker_db
+      .prepare("UPDATE invitations SET status = 'accepted', accepted_at = ? WHERE id = ?")
+      .bind(now, requestId)
+      .run();
+
+    return c.json({ success: true, message: "Request approved" });
+  } catch (error: any) {
+    return c.json({ success: false, message: error.message || "Internal server error" }, 500);
+  }
+});
+
+// Reject request (owner only)
+babies.post("/:id/requests/:requestId/reject", async (c) => {
+  const babyId = c.req.param("id");
+  const requestId = c.req.param("requestId");
+  const user = c.get("user");
+
+  const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
+  if (membership?.role !== "owner") {
+    return c.json({ success: false, message: "Forbidden" }, 403);
+  }
+
+  const request: any = await c.env.baby_tracker_db
+    .prepare("SELECT * FROM invitations WHERE id = ? AND baby_id = ? AND status = 'requested'")
+    .bind(requestId, babyId)
+    .first();
+
+  if (!request) {
+    return c.json({ success: false, message: "Request not found or already processed" }, 404);
+  }
+
+  await c.env.baby_tracker_db
+    .prepare("UPDATE invitations SET status = 'expired' WHERE id = ?")  // Or 'rejected' if we had it, but expired serves the same purpose of ignoring it
+    .bind(requestId)
+    .run();
+
+  return c.json({ success: true, message: "Request rejected" });
 });
 
 export default babies;
