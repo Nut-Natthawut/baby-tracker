@@ -722,28 +722,16 @@ const Index = () => {
   return (
     <div className="h-screen relative overflow-hidden bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <motion.div
-          className="absolute -top-32 -right-24 h-[360px] w-[360px] rounded-full bg-papaya/25 blur-3xl"
-          animate={{ y: [0, 18, 0], x: [0, -12, 0] }}
-          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-[20%] -left-32 h-[420px] w-[420px] rounded-full bg-sky/25 blur-3xl"
-          animate={{ y: [0, -14, 0], x: [0, 10, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-0 right-[8%] h-[280px] w-[280px] rounded-full bg-saguaro/20 blur-3xl"
-          animate={{ y: [0, 12, 0] }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <div className="landing-blob-1 absolute -top-32 -right-24 h-[360px] w-[360px] rounded-full bg-papaya/25 blur-3xl" />
+        <div className="landing-blob-2 absolute top-[20%] -left-32 h-[420px] w-[420px] rounded-full bg-sky/25 blur-3xl" />
+        <div className="landing-blob-3 absolute bottom-0 right-[8%] h-[280px] w-[280px] rounded-full bg-saguaro/20 blur-3xl" />
       </div>
 
       {/* Decorative background icon */}
       <div className="fixed top-16 right-[-120px] -z-10 opacity-10 dark:opacity-5 pointer-events-none">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 80, repeat: Infinity, ease: "linear" }}>
+        <div className="animate-[spin_80s_linear_infinite]">
           <Baby className="w-[320px] h-[320px] text-primary" />
-        </motion.div>
+        </div>
       </div>
 
       <div

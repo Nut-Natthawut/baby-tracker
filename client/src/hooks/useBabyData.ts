@@ -38,7 +38,11 @@ export const useBabyData = () => {
           ...b,
           birthDate: b.birth_date || b.birthDate,
         }));
-        setBabies(mappedBabies);
+        setBabies(prev => {
+          const newStr = JSON.stringify(mappedBabies);
+          const oldStr = JSON.stringify(prev);
+          return newStr === oldStr ? prev : mappedBabies;
+        });
 
         const savedCurrentId = localStorage.getItem(STORAGE_KEYS.CURRENT_BABY_ID);
 

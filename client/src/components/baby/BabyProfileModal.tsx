@@ -13,7 +13,7 @@ interface BabyProfileModalProps {
 const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSave }) => {
   const [name, setName] = useState(baby?.name || '');
   // Ensure birthDate is strictly YYYY-MM-DD for input[type="date"]
-  const [birthDate, setBirthDate] = useState(() => {
+  const [birthDate, setBirthDate]  = useState(() => {
     if (!baby?.birthDate) return '';
     try {
       return new Date(baby.birthDate).toISOString().split('T')[0];
