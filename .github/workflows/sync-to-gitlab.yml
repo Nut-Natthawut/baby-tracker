@@ -40,8 +40,18 @@ jobs:
       - name: Push branches and tags to GitLab
         run: |
           git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/baby_tracker/baby_tracker.git
-          git fetch gitlab
-          git push gitlab --all --force
+          
+          for i in 1 2 3; do
+            echo "Attempt $i: fetching and pushing..."
+            git fetch gitlab
+            if git push gitlab --all --force; then
+              echo "✅ Push succeeded on attempt $i"
+              break
+            fi
+            echo "⚠️ Push failed, retrying in 3s..."
+            sleep 3
+          done
+          
           git push gitlab --tags --force
 
   create-mr:
