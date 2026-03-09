@@ -199,19 +199,40 @@ invitations.post("/join", async (c) => {
       .run();
   }
 
-  // 4. Add to Baby Members
+  // 4. Create Join Request if not already a member
   const existingMember = await c.env.baby_tracker_db
     .prepare("SELECT id FROM baby_members WHERE baby_id = ? AND user_id = ?")
     .bind(baby.id, userId)
     .first();
 
   if (!existingMember) {
-    await c.env.baby_tracker_db
+    // Check if there is already a pending request
+    const pendingRequest = await c.env.baby_tracker_db
       .prepare(
-        "INSERT INTO baby_members (id, baby_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)"
+        "SELECT id FROM invitations WHERE baby_id = ? AND email = ? AND status IN ('pending', 'requested')"
       )
-      .bind(crypto.randomUUID(), baby.id, userId, role, now)
-      .run();
+      .bind(baby.id, email)
+      .first();
+
+    if (!pendingRequest) {
+      // Create a requested invitation
+      await c.env.baby_tracker_db
+        .prepare(
+          "INSERT INTO invitations (id, baby_id, email, role, token_hash, expires_at, status, invited_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(
+          crypto.randomUUID(),
+          baby.id,
+          email,
+          role,
+          `request_${crypto.randomUUID()}`,
+          now + 30 * 24 * 60 * 60, // 30 days expiry for requests
+          "requested",
+          userId, // They requested it themselves
+          now
+        )
+        .run();
+    }
   }
 
   // 5. Generate Token for the user (Auto-login)
@@ -223,10 +244,12 @@ invitations.post("/join", async (c) => {
 
   return c.json({
     success: true,
+    message: existingMember ? "You are already a member" : "Request sent successfully",
     data: {
       token,
       userId,
-      babyId: baby.id
+      babyId: existingMember ? baby.id : null, // If not a member, they don't have access yet
+      status: existingMember ? "active" : "requested",
     },
   });
 });

@@ -10,8 +10,11 @@ import SettingsModal from "@/components/baby/SettingsModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
 import CaregiversModal from "@/components/baby/CaregiversModal";
 import DashboardModal from "@/components/baby/DashboardModal";
+import NotificationsModal from "@/components/baby/NotificationsModal";
 import BabyCareLogo from "@/components/baby/BabyCareLogo";
 import BabySwitcher from "@/components/baby/BabySwitcher";
+import { useAuth } from "@/hooks/useAuth";
+import { API_BASE_URL } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
 // Lucide Icons (แทน Material Symbols)
@@ -47,6 +50,7 @@ type ModalType =
   | "caregivers"
   | "dashboard"
   | "delete-confirm"
+  | "notifications"
   | null;
 
 // ---------- helpers (safe/defensive) ----------
@@ -242,6 +246,7 @@ function buildRecentItem(log: AnyData): RecentItem {
 // --------------------------------------------
 
 const Index = () => {
+  const { token } = useAuth();
   const {
     baby,
     babies,
@@ -254,7 +259,31 @@ const Index = () => {
     deleteLog,
     updateLog,
     clearData,
+    refreshBabyData, // To refresh members count
   } = useBabyData();
+
+  const [hasUnreadRequests, setHasUnreadRequests] = useState(false);
+
+  useEffect(() => {
+    if (baby?.id && token) {
+      const checkRequests = async () => {
+        try {
+          const res = await fetch(`${API_BASE_URL}/babies/${baby.id}/requests`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const json = await res.json();
+          if (json.success && json.data?.length > 0) {
+            setHasUnreadRequests(true);
+          } else {
+            setHasUnreadRequests(false);
+          }
+        } catch (e) { }
+      };
+      checkRequests();
+      const interval = setInterval(checkRequests, 30000); // Check every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [baby?.id, token]);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const isToday = useMemo(() => {
@@ -701,10 +730,16 @@ const Index = () => {
 
             <div className="flex gap-3 items-center">
               <button
-                onClick={() => setActiveModal("dashboard")}
-                className="flex items-center justify-center size-9 sm:size-10 rounded-full bg-white/90 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 border border-white/70 dark:border-white/10 text-gray-600 dark:text-gray-200 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all backdrop-blur-xl"
+                onClick={() => {
+                  setActiveModal("notifications");
+                  setHasUnreadRequests(false); // Predictively clear badge
+                }}
+                className="relative flex items-center justify-center size-9 sm:size-10 rounded-full bg-white/90 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 border border-white/70 dark:border-white/10 text-gray-600 dark:text-gray-200 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all backdrop-blur-xl"
               >
                 <Bell className="w-5 h-5" />
+                {hasUnreadRequests && (
+                  <span className="absolute top-0 right-0 size-2.5 rounded-full bg-rose-500 animate-pulse ring-2 ring-white dark:ring-slate-900" />
+                )}
               </button>
 
               {/* profile bubble */}
@@ -1191,6 +1226,13 @@ const Index = () => {
             )}
             {activeModal === "caregivers" && (
               <CaregiversModal babyId={baby?.id || null} onClose={() => setActiveModal(null)} />
+            )}
+            {activeModal === "notifications" && (
+              <NotificationsModal
+                baby={baby}
+                onClose={() => setActiveModal(null)}
+                onMembersUpdated={() => refreshBabyData()}
+              />
             )}
             {activeModal === "dashboard" && <DashboardModal logs={logs} onClose={() => setActiveModal(null)} />}
           </AnimatePresence>
