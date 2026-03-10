@@ -1364,7 +1364,6 @@ const Index = () => {
                         {dailySummary.totalMl} <span className="text-lg text-gray-400 font-medium">มล.</span>
                       </span>
                       <span className="text-sm font-semibold text-gray-400">{dailySummary.feedCount} ครั้ง</span>
-
                     </div>
 
                     <div className="w-full bg-slate-100/80 dark:bg-white/10 h-2 rounded-full mt-3 overflow-hidden">
