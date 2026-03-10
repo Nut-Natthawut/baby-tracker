@@ -331,7 +331,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                 </div>
               </div>
               <div className="hidden md:flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                <span className="size-2 rounded-full bg-emerald-400" />
+                <span className="size-2 rounded-full bg-slate-400" />
                 {viewMode === 'daily'
                   ? `${dailyStats.totalEntries} บันทึก`
                   : `${monthlyTotals.totalEntries} บันทึก`}
@@ -424,12 +424,12 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
 
                     <div className="grid gap-6 lg:grid-cols-2">
                       <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-100/70 dark:from-amber-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-rose-100/70 dark:from-rose-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
                         <div className="relative p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="size-11 rounded-2xl bg-amber-100/80 dark:bg-amber-900/20 flex items-center justify-center">
-                                <Utensils className="w-5 h-5 text-amber-600" />
+                              <div className="size-11 rounded-2xl bg-rose-100/80 dark:bg-rose-900/20 flex items-center justify-center">
+                                <Utensils className="w-5 h-5 text-rose-500" />
                               </div>
                               <div>
                                 <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Feeding</p>
@@ -442,12 +442,12 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                           <div className="mt-4 grid grid-cols-2 gap-3">
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">ขวดนม</p>
-                              <p className="text-2xl font-black text-amber-600">{dailyStats.totalBottleMl}</p>
+                              <p className="text-2xl font-black text-rose-500">{dailyStats.totalBottleMl}</p>
                               <p className="text-sm text-muted-foreground">มล. • {dailyStats.bottleCount} ครั้ง</p>
                             </div>
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">เข้าเต้า</p>
-                              <p className="text-2xl font-black text-amber-600">{dailyStats.totalBreastMinutes}</p>
+                              <p className="text-2xl font-black text-rose-500">{dailyStats.totalBreastMinutes}</p>
                               <p className="text-sm text-muted-foreground">นาที • {dailyStats.breastCount} ครั้ง</p>
                             </div>
                           </div>
@@ -455,12 +455,12 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </div>
 
                       <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/70 dark:from-emerald-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-100/70 dark:from-amber-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
                         <div className="relative p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="size-11 rounded-2xl bg-emerald-100/80 dark:bg-emerald-900/30 flex items-center justify-center">
-                                <Droplets className="w-5 h-5 text-emerald-600" />
+                              <div className="size-11 rounded-2xl bg-amber-100/80 dark:bg-amber-900/30 flex items-center justify-center">
+                                <Droplets className="w-5 h-5 text-amber-600" />
                               </div>
                               <div>
                                 <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Diaper</p>
@@ -472,11 +472,11 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
 
                           <div className="mt-4 grid grid-cols-2 gap-3">
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
-                              <p className="text-2xl font-black text-emerald-600">{dailyStats.peeCount}</p>
+                              <p className="text-2xl font-black text-amber-600">{dailyStats.peeCount}</p>
                               <p className="text-sm text-muted-foreground mt-1">💧 ฉี่</p>
                             </div>
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
-                              <p className="text-2xl font-black text-emerald-600">{dailyStats.pooCount}</p>
+                              <p className="text-2xl font-black text-amber-600">{dailyStats.pooCount}</p>
                               <p className="text-sm text-muted-foreground mt-1">💩 อึ</p>
                             </div>
                           </div>
@@ -484,12 +484,12 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </div>
 
                       <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/70 dark:from-indigo-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-sky-100/70 dark:from-sky-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
                         <div className="relative p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="size-11 rounded-2xl bg-indigo-100/80 dark:bg-indigo-900/30 flex items-center justify-center">
-                                <Moon className="w-5 h-5 text-indigo-600" />
+                              <div className="size-11 rounded-2xl bg-sky-100/80 dark:bg-sky-900/30 flex items-center justify-center">
+                                <Moon className="w-5 h-5 text-sky-600" />
                               </div>
                               <div>
                                 <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Sleep</p>
@@ -502,14 +502,14 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                           <div className="mt-4 grid grid-cols-2 gap-3">
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">เวลารวม</p>
-                              <p className="text-2xl font-black text-indigo-600">
+                              <p className="text-2xl font-black text-sky-600">
                                 {sleepHours}h {sleepMins}m
                               </p>
                               <p className="text-sm text-muted-foreground">วันนี้</p>
                             </div>
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">เฉลี่ย/ครั้ง</p>
-                              <p className="text-2xl font-black text-indigo-600">
+                              <p className="text-2xl font-black text-sky-600">
                                 {dailyStats.sleepCount > 0
                                   ? Math.round(dailyStats.sleepMinutes / dailyStats.sleepCount)
                                   : 0}
@@ -521,12 +521,12 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </div>
 
                       <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                        <div className="absolute inset-0 bg-gradient-to-br from-rose-100/70 dark:from-rose-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-100/70 dark:from-purple-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
                         <div className="relative p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <div className="size-11 rounded-2xl bg-rose-100/80 dark:bg-rose-900/30 flex items-center justify-center">
-                                <Milk className="w-5 h-5 text-rose-500" />
+                              <div className="size-11 rounded-2xl bg-purple-100/80 dark:bg-purple-900/30 flex items-center justify-center">
+                                <Milk className="w-5 h-5 text-purple-500" />
                               </div>
                               <div>
                                 <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Pumping</p>
@@ -539,12 +539,12 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                           <div className="mt-4 grid grid-cols-2 gap-3">
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">ปริมาณรวม</p>
-                              <p className="text-2xl font-black text-rose-500">{dailyStats.pumpMl}</p>
+                              <p className="text-2xl font-black text-purple-500">{dailyStats.pumpMl}</p>
                               <p className="text-sm text-muted-foreground">มล.</p>
                             </div>
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">เวลาปั๊ม</p>
-                              <p className="text-2xl font-black text-rose-500">
+                              <p className="text-2xl font-black text-purple-500">
                                 {pumpHours > 0 ? `${pumpHours}h ${pumpMins}m` : `${pumpMins}m`}
                               </p>
                               <p className="text-sm text-muted-foreground">รวมทั้งหมด</p>
@@ -564,19 +564,19 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                           <span className="inline-flex items-center gap-1">
-                            <span className="size-2 rounded-full bg-amber-400" />
+                            <span className="size-2 rounded-full bg-rose-400" />
                             <span>กินนม</span>
                           </span>
                           <span className="inline-flex items-center gap-1">
-                            <span className="size-2 rounded-full bg-emerald-400" />
+                            <span className="size-2 rounded-full bg-amber-400" />
                             <span>ผ้าอ้อม</span>
                           </span>
                           <span className="inline-flex items-center gap-1">
-                            <span className="size-2 rounded-full bg-indigo-400" />
+                            <span className="size-2 rounded-full bg-sky-400" />
                             <span>นอน</span>
                           </span>
                           <span className="inline-flex items-center gap-1">
-                            <span className="size-2 rounded-full bg-rose-400" />
+                            <span className="size-2 rounded-full bg-purple-400" />
                             <span>ปั๊มนม</span>
                           </span>
                         </div>
@@ -613,10 +613,10 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                               <span className="text-sm font-bold">{format(day.date, 'd')}</span>
                               {day.hasData && (
                                 <div className="flex gap-0.5 mt-1">
-                                  {day.feedingCount > 0 && <span className="size-1.5 rounded-full bg-amber-400" />}
-                                  {day.diaperCount > 0 && <span className="size-1.5 rounded-full bg-emerald-400" />}
-                                  {day.sleepCount > 0 && <span className="size-1.5 rounded-full bg-indigo-400" />}
-                                  {day.pumpCount > 0 && <span className="size-1.5 rounded-full bg-rose-400" />}
+                                  {day.feedingCount > 0 && <span className="size-1.5 rounded-full bg-rose-400" />}
+                                  {day.diaperCount > 0 && <span className="size-1.5 rounded-full bg-amber-400" />}
+                                  {day.sleepCount > 0 && <span className="size-1.5 rounded-full bg-sky-400" />}
+                                  {day.pumpCount > 0 && <span className="size-1.5 rounded-full bg-purple-400" />}
                                 </div>
                               )}
                             </button>
@@ -632,26 +632,26 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </h3>
 
                       <div className="mt-4 grid grid-cols-2 gap-3">
-                        <div className="rounded-2xl bg-amber-50/70 dark:bg-amber-900/20 p-3">
+                        <div className="rounded-2xl bg-rose-50/70 dark:bg-rose-900/20 p-3">
                           <p className="text-sm text-muted-foreground">กินนม</p>
-                          <p className="text-2xl font-black text-amber-600">{monthlyTotals.feedingCount}</p>
+                          <p className="text-2xl font-black text-rose-500">{monthlyTotals.feedingCount}</p>
                           <p className="text-sm text-muted-foreground">ครั้ง</p>
                         </div>
-                        <div className="rounded-2xl bg-emerald-50/70 dark:bg-emerald-900/20 p-3">
+                        <div className="rounded-2xl bg-amber-50/70 dark:bg-amber-900/20 p-3">
                           <p className="text-sm text-muted-foreground">ผ้าอ้อม</p>
-                          <p className="text-2xl font-black text-emerald-600">{monthlyTotals.diaperCount}</p>
+                          <p className="text-2xl font-black text-amber-600">{monthlyTotals.diaperCount}</p>
                           <p className="text-sm text-muted-foreground">ครั้ง</p>
                         </div>
-                        <div className="rounded-2xl bg-indigo-50/70 dark:bg-indigo-900/20 p-3">
+                        <div className="rounded-2xl bg-sky-50/70 dark:bg-sky-900/20 p-3">
                           <p className="text-sm text-muted-foreground">การนอน</p>
-                          <p className="text-2xl font-black text-indigo-600">
+                          <p className="text-2xl font-black text-sky-600">
                             {monthSleepHours}h {monthSleepMins}m
                           </p>
                           <p className="text-sm text-muted-foreground">รวม</p>
                         </div>
-                        <div className="rounded-2xl bg-rose-50/70 dark:bg-rose-900/20 p-3">
+                        <div className="rounded-2xl bg-purple-50/70 dark:bg-purple-900/20 p-3">
                           <p className="text-sm text-muted-foreground">ปั๊มนม</p>
-                          <p className="text-2xl font-black text-rose-500">{monthlyTotals.pumpMl}</p>
+                          <p className="text-2xl font-black text-purple-500">{monthlyTotals.pumpMl}</p>
                           <p className="text-sm text-muted-foreground">มล.</p>
                         </div>
                       </div>

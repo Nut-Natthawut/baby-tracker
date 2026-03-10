@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Users, UserPlus, Mail, X, Crown, Trash2, LogOut } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Users, UserPlus, Crown, Trash2, LogOut } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
