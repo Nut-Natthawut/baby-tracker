@@ -232,6 +232,7 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
               members.map((caregiver, index) => {
                 const isLast = index === members.length - 1;
                 const displayName = caregiver.name || caregiver.email.split("@")[0];
+                const roleLabel = caregiver.role === 'owner' ? 'เจ้าของห้อง' : caregiver.role === 'parent' ? 'พ่อ/แม่' : 'ผู้ช่วยเลี้ยง';
 
                 return (
                   <div
@@ -250,7 +251,7 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
                           <Crown size={16} className="text-feeding flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground truncate">{caregiver.email}</p>
+                      <p className="text-sm text-muted-foreground truncate">{roleLabel}</p>
                     </div>
 
                     {caregiver.role !== 'owner' && isOwner && (

@@ -4,9 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import { Baby, Droplets, Moon, Heart, BarChart3, Clock, Shield, Users, List, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BabyCareLogo from '@/components/baby/BabyCareLogo';
+import { useAuth } from '@/hooks/useAuth';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleJoinClick = () => {
+    if (user) {
+      navigate('/join');
+    } else {
+      navigate('/login', { state: { from: '/join' } });
+    }
+  };
 
   const features = [
     {
@@ -79,7 +89,7 @@ const LandingPage = () => {
           </div>
           <div className="flex gap-2">
             <Button
-              onClick={() => navigate('/join')}
+              onClick={handleJoinClick}
               size="sm"
               variant="ghost"
               className="rounded-full text-slate-600 dark:text-slate-200 hover:text-foreground font-semibold"

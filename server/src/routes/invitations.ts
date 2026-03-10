@@ -163,7 +163,7 @@ invitations.post("/join", async (c) => {
     .first();
 
   if (!baby) {
-    return c.json({ success: false, message: "Invalid or expired code" }, 404);
+    return c.json({ success: false, message: "รหัสไม่ถูกต้องหรือหมดอายุ" }, 404);
   }
 
   // 2. Require authenticated user for room-code join flow
@@ -208,7 +208,7 @@ invitations.post("/join", async (c) => {
 
   return c.json({
     success: true,
-    message: existingMember ? "You are already a member" : "Request sent successfully",
+    message: existingMember ? "คุณเป็นสมาชิกอยู่แล้ว" : "ส่งคำขอเข้าร่วมสำเร็จ",
     data: {
       token: null,
       userId,

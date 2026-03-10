@@ -5,12 +5,16 @@ stages:
 deploy-vercel:
   stage: deploy
   image: node:22
+  only:
+    - main
   variables:
     TOKEN: $VERCEL_TOKEN
+    VERCEL_ORG_ID: "team_A4LbHXKVgWj1E42KGGy1BNrA"
+    VERCEL_PROJECT_ID: "prj_Q88DmULObqytANTuCTsXaWHjhLrr"
 
   script:
-
     - npm install --global vercel
     - vercel pull --yes --environment=production --token="$TOKEN"
     - vercel build --prod --token="$TOKEN"
+    - rm -rf .git
     - vercel deploy --prebuilt --prod --token="$TOKEN"
