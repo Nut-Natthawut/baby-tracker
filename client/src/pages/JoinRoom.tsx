@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Lock, Mail, Baby, Users } from "lucide-react";
+import { ArrowLeft, Users, CheckCircle, User, Baby } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,25 +9,19 @@ import BabyCareLogo from "@/components/baby/BabyCareLogo";
 
 const JoinRoom = () => {
     const navigate = useNavigate();
-    const { setToken, refreshMe } = useAuth();
+    const { user, authFetch, refreshMe } = useAuth();
 
     const [step, setStep] = useState<1 | 2>(1);
     const [code, setCode] = useState(["", "", "", "", "", ""]);
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        password: "",
-        role: "caregiver", // Default
-    });
+    const [role, setRole] = useState("caregiver");
     const [loading, setLoading] = useState(false);
 
     const handleCodeChange = (index: number, value: string) => {
-        if (value.length > 1) return; // Only 1 char
+        if (value.length > 1) return;
         const newCode = [...code];
         newCode[index] = value;
         setCode(newCode);
 
-        // Auto focus next
         if (value && index < 5) {
             const nextInput = document.getElementById(`code-${index + 1}`);
             nextInput?.focus();
@@ -41,44 +35,45 @@ const JoinRoom = () => {
         }
     };
 
-    const verifyCode = async () => {
+    const handlePaste = (e: React.ClipboardEvent) => {
+        e.preventDefault();
+        const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+        if (pasted.length > 0) {
+            const newCode = [...code];
+            for (let i = 0; i < 6; i++) {
+                newCode[i] = pasted[i] || "";
+            }
+            setCode(newCode);
+            const focusIndex = Math.min(pasted.length, 5);
+            const input = document.getElementById(`code-${focusIndex}`);
+            input?.focus();
+        }
+    };
+
+    const verifyCode = () => {
         const fullCode = code.join("");
         if (fullCode.length !== 6) {
             toast({ title: "กรุณากรอกรหัส 6 หลัก", variant: "destructive" });
             return;
         }
-        // Setup for step 2 (Role & Info)
         setStep(2);
     };
 
     const handleJoin = async () => {
-        if (!formData.name || !formData.email || !formData.password) {
-            toast({ title: "กรุณากรอกข้อมูลให้ครบ", variant: "destructive" });
-            return;
-        }
-
+        const fullCode = code.join("");
         setLoading(true);
         try {
-            const fullCode = code.join("");
-            const response = await fetch(`${API_BASE_URL}/invitations/join`, {
+            const response = await authFetch(`${API_BASE_URL}/invitations/join`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    code: fullCode,
-                    ...formData, // email, name, password, role
-                }),
+                body: JSON.stringify({ code: fullCode, role }),
             });
 
             const result = await response.json();
 
             if (result.success) {
                 toast({ title: "เข้าร่วมสำเร็จ!", description: "กำลังพาไปที่หน้าหลัก..." });
-
-                if (result?.data?.token) {
-                    setToken(result.data.token);
-                    await refreshMe(result.data.token);
-                }
-                localStorage.removeItem("token");
+                await refreshMe();
 
                 if (result.data.babyId) {
                     navigate(`/app/baby/${result.data.babyId}`, { replace: true });
@@ -141,10 +136,26 @@ const JoinRoom = () => {
                         </div>
                         <h1 className="text-3xl font-bold mb-2">เข้าร่วมครอบครัว</h1>
                         <p className="text-muted-foreground">
-                            {step === 1 ? "กรอกรหัส 6 หลักที่ได้รับจากเจ้าของห้อง" : "ตั้งค่าโปรไฟล์ของคุณสำหรับห้องนี้"}
+                            {step === 1 ? "กรอกรหัส 6 หลักที่ได้รับจากเจ้าของห้อง" : "เลือกบทบาทของคุณในห้องนี้"}
                         </p>
                     </motion.div>
 
+                    {/* Logged-in user badge */}
+                    {user && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex items-center gap-3 mb-6 px-4 py-3 rounded-2xl bg-saguaro/10 border border-saguaro/20"
+                        >
+                            <CheckCircle className="w-5 h-5 text-saguaro flex-shrink-0" />
+                            <div className="text-sm">
+                                <p className="font-semibold text-foreground">เข้าสู่ระบบแล้ว</p>
+                                <p className="text-muted-foreground">{user.name || user.email}</p>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Step 1: Enter Code */}
                     {step === 1 && (
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
@@ -162,6 +173,7 @@ const JoinRoom = () => {
                                         value={digit}
                                         onChange={(e) => handleCodeChange(idx, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(idx, e)}
+                                        onPaste={idx === 0 ? handlePaste : undefined}
                                         className="w-12 h-16 rounded-xl border-2 border-border bg-card text-center text-2xl font-bold focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all"
                                     />
                                 ))}
@@ -169,74 +181,42 @@ const JoinRoom = () => {
 
                             <button
                                 onClick={verifyCode}
-                                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg shadow-glow-primary active:scale-[0.98] transition-transform"
+                                disabled={code.join("").length !== 6}
+                                className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg shadow-glow-primary active:scale-[0.98] transition-transform disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 ถัดไป
                             </button>
                         </motion.div>
                     )}
 
+                    {/* Step 2: Choose Role */}
                     {step === 2 && (
                         <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="space-y-5"
+                            className="space-y-6"
                         >
-                            {/* Role Selection */}
-                            <div className="grid grid-cols-2 gap-3 mb-2">
+                            <div className="grid grid-cols-2 gap-3">
                                 <button
-                                    onClick={() => setFormData({ ...formData, role: 'caregiver' })}
-                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${formData.role === 'caregiver'
-                                        ? 'border-primary bg-primary/5 text-primary'
-                                        : 'border-border bg-card text-muted-foreground'
+                                    onClick={() => setRole("caregiver")}
+                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${role === "caregiver"
+                                        ? "border-primary bg-primary/5 text-primary"
+                                        : "border-border bg-card text-muted-foreground"
                                         }`}
                                 >
                                     <User size={24} />
                                     <span className="font-semibold">ผู้ช่วยเลี้ยง</span>
                                 </button>
                                 <button
-                                    onClick={() => setFormData({ ...formData, role: 'parent' })}
-                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${formData.role === 'parent'
-                                        ? 'border-primary bg-primary/5 text-primary'
-                                        : 'border-border bg-card text-muted-foreground'
+                                    onClick={() => setRole("parent")}
+                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${role === "parent"
+                                        ? "border-primary bg-primary/5 text-primary"
+                                        : "border-border bg-card text-muted-foreground"
                                         }`}
                                 >
                                     <Baby size={24} />
                                     <span className="font-semibold">พ่อ/แม่</span>
                                 </button>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="relative">
-                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                                    <input
-                                        type="text"
-                                        placeholder="ชื่อของคุณ (เช่น แม่, พ่อ, น้า)"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-4 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                    />
-                                </div>
-                                <div className="relative">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                                    <input
-                                        type="email"
-                                        placeholder="อีเมล"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-4 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                    />
-                                </div>
-                                <div className="relative">
-                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                                    <input
-                                        type="password"
-                                        placeholder="รหัสผ่านมาตรฐาน (สำหรับเข้าสู่ระบบ)"
-                                        value={formData.password}
-                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        className="w-full pl-12 pr-4 py-4 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                    />
-                                </div>
                             </div>
 
                             <button
@@ -248,10 +228,9 @@ const JoinRoom = () => {
                             </button>
                         </motion.div>
                     )}
-
                 </div>
-            </main >
-        </div >
+            </main>
+        </div>
     );
 };
 
