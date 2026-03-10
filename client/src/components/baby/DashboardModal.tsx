@@ -443,12 +443,12 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">ขวดนม</p>
                               <p className="text-2xl font-black text-rose-500">{dailyStats.totalBottleMl}</p>
-                              <p className="text-sm text-muted-foreground">มล. • {dailyStats.bottleCount} ครั้ง</p>
+                              <p className="text-sm text-muted-foreground">มล.  {dailyStats.bottleCount} ครั้ง</p>
                             </div>
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">เข้าเต้า</p>
                               <p className="text-2xl font-black text-rose-500">{dailyStats.totalBreastMinutes}</p>
-                              <p className="text-sm text-muted-foreground">นาที • {dailyStats.breastCount} ครั้ง</p>
+                              <p className="text-sm text-muted-foreground">นาที  {dailyStats.breastCount} ครั้ง</p>
                             </div>
                           </div>
                         </div>
