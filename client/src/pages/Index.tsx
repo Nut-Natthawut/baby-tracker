@@ -164,9 +164,11 @@ type MemberRole = "owner" | "parent" | "caregiver";
 type BabyStatus = { text: string; tone: "sleep" | "awake" };
 type DailySummary = {
   diaperCount: number;
+  feedCount: number;
   totalMl: number;
   pumpCount: number;
   pumpMl: number;
+  sleepCount: number;
   sleepH: number;
   sleepR: number;
   babyStatus: BabyStatus;
@@ -333,6 +335,7 @@ function computeSleepMinutes(dayLogs: any[]): number {
 
 function buildDailySummary(logs: any[], selectedDate: Date): DailySummary {
   const dayLogs = filterLogsBySelectedDate(logs, selectedDate);
+  const sleepLogs = dayLogs.filter((log: any) => String(log?.type ?? log?.logType ?? "").includes("sleep"));
   const diaperCount = dayLogs.filter((log: any) => String(log?.type ?? log?.logType ?? "").includes("diaper")).length;
   const feedLogs = dayLogs.filter((log: any) => String(log?.type ?? log?.logType ?? "").includes("feeding"));
   const pumpLogs = dayLogs.filter((log: any) => String(log?.type ?? log?.logType ?? "").includes("pump"));
@@ -342,9 +345,11 @@ function buildDailySummary(logs: any[], selectedDate: Date): DailySummary {
 
   return {
     diaperCount,
+    feedCount: feedLogs.length,
     totalMl: Math.round(totalMl),
     pumpCount: pumpLogs.length,
     pumpMl: Math.round(pumpMl),
+    sleepCount: sleepLogs.length,
     sleepH: Math.floor(sleepMins / 60),
     sleepR: sleepMins % 60,
     babyStatus: computeBabyStatus(logs),
@@ -1303,10 +1308,11 @@ const Index = () => {
                     <div className="flex items-end justify-between">
                       <span className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
                         {dailySummary.sleepH}
-                        <span className="text-lg text-gray-400 font-medium">ชม.</span>{" "}
+                        <span className="text-lg text-gray-400 font-medium ml-2">ชม.</span>{" "}
                         {dailySummary.sleepR}
-                        <span className="text-lg text-gray-400 font-medium">น.</span>
+                        <span className="text-lg text-gray-400 font-medium ml-2">น.</span>
                       </span>
+                      <span className="text-sm font-semibold text-gray-400">{dailySummary.sleepCount} ครั้ง</span>
                     </div>
 
                     <div className="w-full bg-slate-100/80 dark:bg-white/10 h-2 rounded-full mt-3 overflow-hidden">
@@ -1330,6 +1336,7 @@ const Index = () => {
                       <span className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
                         {dailySummary.diaperCount} <span className="text-lg text-gray-400 font-medium">ครั้ง</span>
                       </span>
+                      <span className="text-sm font-semibold text-gray-400">{dailySummary.diaperCount} ครั้ง</span>
                     </div>
 
                     <div className="flex gap-1 mt-3">
@@ -1356,6 +1363,8 @@ const Index = () => {
                       <span className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
                         {dailySummary.totalMl} <span className="text-lg text-gray-400 font-medium">มล.</span>
                       </span>
+                      <span className="text-sm font-semibold text-gray-400">{dailySummary.feedCount} ครั้ง</span>
+
                     </div>
 
                     <div className="w-full bg-slate-100/80 dark:bg-white/10 h-2 rounded-full mt-3 overflow-hidden">
@@ -1363,7 +1372,9 @@ const Index = () => {
                         className="bg-rose-400 h-full rounded-full"
                         style={{ width: `${Math.min(100, Math.round((dailySummary.totalMl / 600) * 100))}%` }}
                       />
+                      
                     </div>
+                    
                   </div>
 
                   {/* Pumping */}
