@@ -24,6 +24,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
   Moon,
   Droplets,
   Coffee,
@@ -280,7 +281,7 @@ const Index = () => {
         } catch (e) { }
       };
       checkRequests();
-      const interval = setInterval(checkRequests, 30000); // Check every 30 seconds
+      const interval = setInterval(checkRequests, 5000); // Check every 5 seconds
       return () => clearInterval(interval);
     }
   }, [baby?.id, token]);
@@ -622,7 +623,15 @@ const Index = () => {
   // ---------------- onboarding ----------------
   if (showOnboarding) {
     return (
-      <div className={`h-screen ${contentScrollClass} no-scrollbar bg-background`}>
+      <div className={`h-screen ${contentScrollClass} no-scrollbar bg-background relative`}>
+        {/* Back Button for Logout */}
+        <button
+          onClick={logout}
+          className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 border border-white/70 dark:border-white/10 text-gray-700 dark:text-gray-200 shadow-sm backdrop-blur-xl transition-all z-20"
+        >
+          <ArrowLeft size={18} />
+          <span className="font-semibold text-sm"></span>
+        </button>
         <div className="min-h-full flex flex-col">
           <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">

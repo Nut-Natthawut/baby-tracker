@@ -31,27 +31,34 @@ const NotificationsModal: React.FC<NotificationsModalProps> = ({
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
-    const fetchRequests = async () => {
+    const fetchRequests = async (isInitial = false) => {
         if (!baby || !token) return;
         try {
-            setLoading(true);
+            if (isInitial) setLoading(true);
             const res = await fetch(`${API_BASE_URL}/babies/${baby.id}/requests`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const json = await res.json();
             if (json.success) {
-                setRequests(json.data);
+                setRequests(prev => {
+                    if (JSON.stringify(prev) !== JSON.stringify(json.data)) {
+                        return json.data;
+                    }
+                    return prev;
+                });
             }
         } catch (err) {
             console.error("Failed to fetch requests", err);
         } finally {
-            setLoading(false);
+            if (isInitial) setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchRequests();
-    }, [baby?.id]);
+        fetchRequests(true);
+        const interval = setInterval(() => fetchRequests(false), 5000); // 5 sec background polling
+        return () => clearInterval(interval);
+    }, [baby?.id, token]);
 
     const handleAction = async (requestId: string, action: 'approve' | 'reject') => {
         if (!baby || !token) return;
