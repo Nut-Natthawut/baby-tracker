@@ -176,11 +176,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 ) : (
                   <div className="rounded-[28px] border border-amber-200/60 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-500/10 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] p-6">
                     <p className="text-sm uppercase tracking-[0.3em] text-amber-500">Role</p>
-                    <h3 className="text-xl font-black text-amber-600 mt-1">{canEditBaby ? "Parent" : "Caregiver"}</h3>
+                    <h3 className="text-xl font-black text-amber-600 mt-1">{canEditBaby ? "ผู้ปกครอง หรือ พ่อแม่" : "ผู้ดูแลร่วม"}</h3>
                     <p className="text-sm text-amber-700 dark:text-amber-200 mt-2">
                       {canEditBaby
-                        ? "This role can edit records but cannot delete data."
-                        : "This role can only add records and cannot edit or delete baby data."}
+                        ? "บทบาทนี้สามารถแก้ไขรายการข้อมูลได้ แต่ไม่สามารถลบข้อมูลได้"
+                        : "บทบาทนี้สามารถเพิ่มรายการข้อมูลได้เท่านั้น และไม่สามารถแก้ไขหรือลบข้อมูลทารกได้"}
                     </p>
                   </div>
                 )}
