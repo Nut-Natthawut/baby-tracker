@@ -137,14 +137,14 @@ invitations.post("/:token/accept", async (c) => {
   });
 });
 
-// Join via Room Code (Public)
+// Join via Room Code
 invitations.post("/join", async (c) => {
   const body = await c.req.json();
-  const { code, name, password } = body;
-  const role = CAREGIVER_ROLE;
+  const { code } = body;
+  const role = body.role === "parent" ? "parent" : CAREGIVER_ROLE;
 
-  if (!code || !name || !password) {
-    return c.json({ success: false, message: "Missing required fields" }, 400);
+  if (!code) {
+    return c.json({ success: false, message: "Room code is required" }, 400);
   }
 
   const now = nowSeconds();
@@ -156,61 +156,71 @@ invitations.post("/join", async (c) => {
     .first();
 
   if (!baby) {
-    return c.json({ success: false, message: "Invalid or expired code" }, 404);
+    return c.json({ success: false, message: "รหัสไม่ถูกต้องหรือหมดอายุ" }, 404);
   }
 
-  // 2. Check if user exists (by email/name? No email provided in requirement for Room Code flow, 
-  // but to create a user we usually need an email or unique ID. 
-  // The prompt says "Input: { code, role, name, password }". 
-  // It does NOT mention Email.
-  // HOWEVER, existing `users` table requires `email`.
-  // If we don't have email, we can't create a standard user easily unless we generate a fake one or require email.
-  // Let's assume the UI asks for Email too, OR we generate one?
-  // Use Case: "Guest travels to the site -> Enters Code -> Selects Role -> Joins"
-  // If they don't provide email, how do they log in again?
-  // Maybe they just use Name + Password? (Not supported by current auth which uses Email).
-  // I will add `email` to the input requirements to be safe and consistent.
-
-  const email = body.email ? normalizeEmail(body.email) : null;
-  if (!email) {
-    return c.json({ success: false, message: "Email is required for account creation" }, 400);
-  }
-
-  // 3. Create or Get User
-  // Check if user exists
-  const existingUser: any = await c.env.baby_tracker_db
-    .prepare("SELECT id, password_hash, name FROM users WHERE email = ?")
-    .bind(email)
-    .first();
-
+  // 2. Resolve user — prefer authenticated user, fallback to body credentials
+  const authUser = await tryGetAuthUser(c);
   let userId = "";
+  let email = "";
+  let name: string | null = null;
+  let issuedToken: string | null = null;
 
-  if (existingUser) {
-    userId = existingUser.id;
-    const valid = await verifyPassword(password, existingUser.password_hash);
-    if (!valid) {
-      return c.json({ success: false, message: "อีเมลนี้มีผู้ใช้งานแล้ว และรหัสผ่านไม่ถูกต้อง กรุณาเข้าสู่ระบบก่อน" }, 401);
-    }
+  if (authUser) {
+    // Authenticated user — use their identity directly
+    userId = authUser.sub;
+    email = authUser.email;
+    name = authUser.name ?? null;
   } else {
-    // Create new user
-    userId = crypto.randomUUID();
-    const passwordHash = await hashPassword(password);
-    await c.env.baby_tracker_db
-      .prepare(
-        "INSERT INTO users (id, email, password_hash, name, created_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?)"
-      )
-      .bind(userId, email, passwordHash, name, now, now)
-      .run();
+    // Fallback: require email/name/password for unauthenticated users
+    const bodyEmail = body.email ? normalizeEmail(body.email) : null;
+    const bodyName = body.name ? String(body.name).trim() : null;
+    const bodyPassword = body.password ? String(body.password) : null;
+
+    if (!bodyEmail || !bodyName || !bodyPassword) {
+      return c.json({ success: false, message: "กรุณาเข้าสู่ระบบก่อน" }, 401);
+    }
+
+    email = bodyEmail;
+    name = bodyName;
+
+    const existingUser: any = await c.env.baby_tracker_db
+      .prepare("SELECT id, password_hash, name FROM users WHERE email = ?")
+      .bind(email)
+      .first();
+
+    if (existingUser) {
+      userId = existingUser.id;
+      const valid = await verifyPassword(bodyPassword, existingUser.password_hash);
+      if (!valid) {
+        return c.json({ success: false, message: "อีเมลนี้มีผู้ใช้งานแล้ว กรุณาเข้าสู่ระบบก่อน" }, 401);
+      }
+    } else {
+      userId = crypto.randomUUID();
+      const passwordHash = await hashPassword(bodyPassword);
+      await c.env.baby_tracker_db
+        .prepare(
+          "INSERT INTO users (id, email, password_hash, name, created_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?)"
+        )
+        .bind(userId, email, passwordHash, name, now, now)
+        .run();
+    }
+
+    // Issue token for newly authenticated user
+    const jwtSecret = c.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return c.json({ success: false, message: "Server error" }, 500);
+    }
+    issuedToken = await signJwt({ sub: userId, email, name }, jwtSecret);
   }
 
-  // 4. Create Join Request if not already a member
+  // 3. Create Join Request if not already a member
   const existingMember = await c.env.baby_tracker_db
     .prepare("SELECT id FROM baby_members WHERE baby_id = ? AND user_id = ?")
     .bind(baby.id, userId)
     .first();
 
   if (!existingMember) {
-    // Check if there is already a pending request
     const pendingRequest = await c.env.baby_tracker_db
       .prepare(
         "SELECT id FROM invitations WHERE baby_id = ? AND email = ? AND status IN ('pending', 'requested')"
@@ -219,7 +229,6 @@ invitations.post("/join", async (c) => {
       .first();
 
     if (!pendingRequest) {
-      // Create a requested invitation
       await c.env.baby_tracker_db
         .prepare(
           "INSERT INTO invitations (id, baby_id, email, role, token_hash, expires_at, status, invited_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -230,29 +239,22 @@ invitations.post("/join", async (c) => {
           email,
           role,
           `request_${crypto.randomUUID()}`,
-          now + 30 * 24 * 60 * 60, // 30 days expiry for requests
+          now + 30 * 24 * 60 * 60,
           "requested",
-          userId, // They requested it themselves
+          userId,
           now
         )
         .run();
     }
   }
 
-  // 5. Generate Token for the user (Auto-login)
-  const jwtSecret = c.env.JWT_SECRET;
-  if (!jwtSecret) {
-    return c.json({ success: false, message: "Server error" }, 500);
-  }
-  const token = await signJwt({ sub: userId, email, name }, jwtSecret);
-
   return c.json({
     success: true,
-    message: existingMember ? "You are already a member" : "Request sent successfully",
+    message: existingMember ? "คุณเป็นสมาชิกอยู่แล้ว" : "ส่งคำขอเข้าร่วมสำเร็จ",
     data: {
-      token,
+      token: issuedToken,
       userId,
-      babyId: existingMember ? baby.id : null, // If not a member, they don't have access yet
+      babyId: existingMember ? baby.id : null,
       status: existingMember ? "active" : "requested",
     },
   });
