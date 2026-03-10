@@ -6,6 +6,8 @@ import { toast } from "@/hooks/use-toast";
 import { API_BASE_URL } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
+const CODE_INPUT_SLOTS = ["slot-0", "slot-1", "slot-2", "slot-3", "slot-4", "slot-5"] as const;
+
 const JoinRoom = () => {
   const navigate = useNavigate();
   const { token: authToken, loading: authLoading, user } = useAuth();
@@ -170,14 +172,14 @@ const JoinRoom = () => {
               className="space-y-8"
             >
               <div className="flex justify-between gap-2">
-                {code.map((digit, idx) => (
+                {CODE_INPUT_SLOTS.map((slot, idx) => (
                   <input
-                    key={idx}
+                    key={slot}
                     id={`code-${idx}`}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
-                    value={digit}
+                    value={code[idx] ?? ""}
                     onChange={(e) => handleCodeChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     className="w-12 h-16 rounded-xl border-2 border-border bg-card text-center text-2xl font-bold focus:border-primary focus:ring-4 focus:ring-primary/20 outline-none transition-all"
