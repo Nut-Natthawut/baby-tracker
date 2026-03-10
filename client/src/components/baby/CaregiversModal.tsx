@@ -30,6 +30,12 @@ interface CaregiversModalProps {
   onClose: () => void;
 }
 
+const ROLE_LABEL_BY_MEMBER_ROLE: Record<CaregiverMember["role"], string> = {
+  owner: "เจ้าของห้อง",
+  parent: "พ่อ/แม่",
+  caregiver: "ผู้ช่วยเลี้ยง",
+};
+
 const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) => {
   const { authFetch, user } = useAuth();
   const navigate = useNavigate();
@@ -232,7 +238,7 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
               members.map((caregiver, index) => {
                 const isLast = index === members.length - 1;
                 const displayName = caregiver.name || caregiver.email.split("@")[0];
-                const roleLabel = caregiver.role === 'owner' ? 'เจ้าของห้อง' : caregiver.role === 'parent' ? 'พ่อ/แม่' : 'ผู้ช่วยเลี้ยง';
+                const roleLabel = ROLE_LABEL_BY_MEMBER_ROLE[caregiver.role];
 
                 return (
                   <div

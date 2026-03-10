@@ -41,9 +41,9 @@ async function resolveUserFromInvite(
     return { userId: authUser.sub, issuedToken: null };
   }
 
-  const body = await c.req.json().catch(() => ({}));
-  const password = String((body as any)?.password ?? "");
-  const name = (body as any)?.name ? String((body as any).name).trim() : null;
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const password = String(body.password ?? "");
+  const name = typeof body.name === "string" ? body.name.trim() : null;
 
   if (!password) {
     return { response: c.json({ success: false, message: "Password is required" }, 400) };
@@ -146,9 +146,9 @@ invitations.post("/:token/accept", async (c) => {
 
 // Join via Room Code (Authenticated)
 invitations.post("/join", async (c) => {
-  const body = await c.req.json().catch(() => ({}));
-  const code = String((body as any)?.code ?? "").trim();
-  const role = normalizeInviteRole((body as any)?.role);
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const code = String(body.code ?? "").trim();
+  const role = normalizeInviteRole(body.role);
 
   if (!code) {
     return c.json({ success: false, message: "Missing required fields" }, 400);
