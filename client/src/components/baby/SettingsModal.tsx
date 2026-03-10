@@ -1,14 +1,15 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, LogOut, Trash2, Users } from 'lucide-react';
-import { Baby } from '@/types/baby';
-import { calculateAge } from '@/lib/babyUtils';
-import BabyAvatar from './BabyAvatar';
-import ThemeToggle from './ThemeToggle';
-import { useAuth } from '@/hooks/useAuth';
+import React from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft, LogOut, Trash2, Users } from "lucide-react";
+import { Baby } from "@/types/baby";
+import { calculateAge } from "@/lib/babyUtils";
+import BabyAvatar from "./BabyAvatar";
+import ThemeToggle from "./ThemeToggle";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SettingsModalProps {
   baby: Baby | null;
+  canManageBaby: boolean;
   onClose: () => void;
   onEditBaby: () => void;
   onClearData: () => void;
@@ -18,9 +19,10 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
   baby,
+  canManageBaby,
   onClose,
   onEditBaby,
-  onClearData,
+  onClearData: _onClearData,
   onOpenCaregivers,
   onDeleteBaby,
 }) => {
@@ -28,32 +30,31 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: '100%' }}
+      initial={{ opacity: 0, x: "100%" }}
       animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: '100%' }}
-      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      exit={{ opacity: 0, x: "100%" }}
+      transition={{ type: "spring", damping: 25, stiffness: 200 }}
       className="fixed inset-0 z-50 bg-background text-foreground overflow-hidden"
     >
       <div className="pointer-events-none absolute inset-0 -z-10">
         <motion.div
           className="absolute -top-20 -right-20 h-[320px] w-[320px] rounded-full bg-papaya/25 blur-3xl"
           animate={{ y: [0, 16, 0], x: [0, -10, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute top-[30%] -left-28 h-[360px] w-[360px] rounded-full bg-sky/25 blur-3xl"
           animate={{ y: [0, -12, 0], x: [0, 10, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute bottom-0 right-[10%] h-[240px] w-[240px] rounded-full bg-saguaro/20 blur-3xl"
           animate={{ y: [0, 12, 0] }}
-          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
       <div className="relative z-10 flex h-full flex-col">
-        {/* Header */}
         <div className="sticky top-0 z-20 border-b border-white/70 dark:border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur-xl">
           <div className="mx-auto flex items-center gap-3 px-4 md:px-8 py-4 max-w-[1100px]">
             <button
@@ -72,7 +73,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="flex-1 overflow-y-auto no-scrollbar">
           <div className="mx-auto w-full max-w-[1100px] px-4 md:px-8 pb-10">
             <div className="mt-6 grid gap-6 md:gap-8">
-              {/* Baby Profile Card */}
               {baby && (
                 <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl p-6 md:p-8 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.45)]">
                   <div className="absolute inset-0 bg-gradient-to-br from-papaya/20 via-white/40 to-sky/20 opacity-90" />
@@ -99,17 +99,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={onEditBaby}
-                      className="w-full md:w-auto px-6 py-3.5 rounded-full bg-primary text-primary-foreground text-base font-bold shadow-glow-primary hover:brightness-95 active:scale-[0.98] transition"
-                    >
-                      แก้ไขข้อมูล
-                    </button>
+                    {canManageBaby && (
+                      <button
+                        onClick={onEditBaby}
+                        className="w-full md:w-auto px-6 py-3.5 rounded-full bg-primary text-primary-foreground text-base font-bold shadow-glow-primary hover:brightness-95 active:scale-[0.98] transition"
+                      >
+                        แก้ไขข้อมูล
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
 
-              {/* Menu Cards */}
               <div className="grid gap-6 lg:grid-cols-3">
                 <div className="lg:col-span-2 rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                   <div className="px-6 pt-6">
@@ -148,30 +149,39 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                 </div>
 
-                <div className="rounded-[28px] border border-rose-200/60 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-500/10 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                  <div className="px-6 pt-6">
-                    <p className="text-sm uppercase tracking-[0.3em] text-rose-400">Danger Zone</p>
-                    <h3 className="text-xl font-black text-rose-600">ลบข้อมูล</h3>
-                    <p className="text-sm text-rose-400 mt-1">การลบข้อมูลจะไม่สามารถกู้คืนได้</p>
+                {canManageBaby ? (
+                  <div className="rounded-[28px] border border-rose-200/60 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-500/10 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                    <div className="px-6 pt-6">
+                      <p className="text-sm uppercase tracking-[0.3em] text-rose-400">Danger Zone</p>
+                      <h3 className="text-xl font-black text-rose-600">ลบข้อมูล</h3>
+                      <p className="text-sm text-rose-400 mt-1">การลบข้อมูลไม่สามารถกู้คืนได้</p>
+                    </div>
+                    <div className="p-2 md:p-3">
+                      <button
+                        onClick={onDeleteBaby}
+                        className="w-full flex items-center gap-4 px-4 py-5 rounded-2xl hover:bg-rose-100/80 dark:hover:bg-rose-500/10 transition-colors text-left"
+                      >
+                        <div className="p-2 rounded-2xl bg-rose-200/70 dark:bg-rose-500/20">
+                          <Trash2 size={20} className="text-rose-500" />
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold text-rose-600">ลบข้อมูลเด็กคนนี้</p>
+                          <p className="text-sm text-rose-400">ข้อมูลจะถูกลบถาวรจากระบบ</p>
+                        </div>
+                      </button>
+                    </div>
                   </div>
-                  <div className="p-2 md:p-3">
-                    <button
-                      onClick={onDeleteBaby}
-                      className="w-full flex items-center gap-4 px-4 py-5 rounded-2xl hover:bg-rose-100/80 dark:hover:bg-rose-500/10 transition-colors text-left"
-                    >
-                      <div className="p-2 rounded-2xl bg-rose-200/70 dark:bg-rose-500/20">
-                        <Trash2 size={20} className="text-rose-500" />
-                      </div>
-                      <div>
-                        <p className="text-base font-semibold text-rose-600">ลบข้อมูลเด็กคนนี้</p>
-                        <p className="text-sm text-rose-400">ข้อมูลจะถูกลบถาวรจากระบบ</p>
-                      </div>
-                    </button>
+                ) : (
+                  <div className="rounded-[28px] border border-amber-200/60 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-500/10 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] p-6">
+                    <p className="text-sm uppercase tracking-[0.3em] text-amber-500">Role</p>
+                    <h3 className="text-xl font-black text-amber-600 mt-1">ผู้ดูแลร่วม</h3>
+                    <p className="text-sm text-amber-700 dark:text-amber-200 mt-2">
+                      สิทธิ์นี้บันทึกกิจกรรมได้อย่างเดียว และไม่สามารถแก้ไขหรือลบข้อมูลเด็กได้
+                    </p>
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* App Info */}
               <div className="pt-2 text-center">
                 <p className="text-base text-muted-foreground">Baby Tracker v1.0</p>
                 <p className="text-sm text-muted-foreground mt-1">ระบบบันทึกการดูแลทารก</p>

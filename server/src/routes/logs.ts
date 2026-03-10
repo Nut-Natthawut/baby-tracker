@@ -6,11 +6,33 @@ const logs = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
 
 logs.use("*", requireAuth);
 
+const OWNER_ROLE = "owner";
+const CAREGIVER_ROLE = "caregiver";
+
+function normalizeMemberRole(raw: unknown): typeof OWNER_ROLE | typeof CAREGIVER_ROLE | null {
+  const role = String(raw ?? "").trim().toLowerCase();
+  if (role === OWNER_ROLE || role === "parent") return OWNER_ROLE;
+  if (role === CAREGIVER_ROLE) return CAREGIVER_ROLE;
+  return null;
+}
+
 async function getMembership(db: D1Database, babyId: string, userId: string) {
-  return db
-    .prepare("SELECT role FROM baby_members WHERE baby_id = ? AND user_id = ?")
+  const membership: any = await db
+    .prepare(
+      `SELECT
+        CASE
+          WHEN SUM(CASE WHEN lower(trim(role)) IN ('owner', 'parent') THEN 1 ELSE 0 END) > 0 THEN 'owner'
+          WHEN SUM(CASE WHEN lower(trim(role)) = 'caregiver' THEN 1 ELSE 0 END) > 0 THEN 'caregiver'
+          ELSE NULL
+        END AS role
+      FROM baby_members
+      WHERE baby_id = ? AND user_id = ?`
+    )
     .bind(babyId, userId)
     .first();
+  if (!membership) return null;
+  const role = normalizeMemberRole(membership.role);
+  return role ? { role } : null;
 }
 
 // GET /:babyId/details - Get all logs with details for a baby
@@ -223,7 +245,7 @@ logs.put("/:id", async (c) => {
   }
 
   const membership = await getMembership(c.env.baby_tracker_db, log.baby_id, user.sub);
-  if (!membership) {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
@@ -325,7 +347,7 @@ logs.delete("/:id", async (c) => {
   }
 
   const membership = await getMembership(c.env.baby_tracker_db, log.baby_id, user.sub);
-  if (!membership) {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 

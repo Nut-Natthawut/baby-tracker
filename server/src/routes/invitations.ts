@@ -5,6 +5,8 @@ import { tryGetAuthUser, type AuthVariables } from "../middleware/auth";
 
 const invitations = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
 
+const CAREGIVER_ROLE = "caregiver";
+
 function nowSeconds() {
   return Math.floor(Date.now() / 1000);
 }
@@ -112,11 +114,12 @@ invitations.post("/:token/accept", async (c) => {
     .first();
 
   if (!existingMember) {
+    const approvedRole = CAREGIVER_ROLE;
     await c.env.baby_tracker_db
       .prepare(
         "INSERT INTO baby_members (id, baby_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)"
       )
-      .bind(crypto.randomUUID(), invite.baby_id, userId, invite.role, now)
+      .bind(crypto.randomUUID(), invite.baby_id, userId, approvedRole, now)
       .run();
   }
 
@@ -137,9 +140,10 @@ invitations.post("/:token/accept", async (c) => {
 // Join via Room Code (Public)
 invitations.post("/join", async (c) => {
   const body = await c.req.json();
-  const { code, role, name, password } = body;
+  const { code, name, password } = body;
+  const role = CAREGIVER_ROLE;
 
-  if (!code || !role || !name || !password) {
+  if (!code || !name || !password) {
     return c.json({ success: false, message: "Missing required fields" }, 400);
   }
 
