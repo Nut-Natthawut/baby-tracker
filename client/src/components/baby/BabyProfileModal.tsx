@@ -136,7 +136,7 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
             <label htmlFor="baby-name" className="text-sm sm:text-base font-semibold text-muted-foreground mb-2 block">
               ชื่อ *
             </label>
-            <div className="relative w-full min-w-0">
+            <div className="relative w-full min-w-0 rounded-2xl overflow-hidden">
               <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 id="baby-name"
@@ -153,14 +153,14 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
             <label htmlFor="baby-birthdate" className="text-sm sm:text-base font-semibold text-muted-foreground mb-2 block">
               วันเกิด *
             </label>
-            <div className="relative w-full min-w-0">
+            <div className="relative w-full min-w-0 rounded-2xl overflow-hidden">
               <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 id="baby-birthdate"
                 type="date"
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
-                className="w-full min-w-0 max-w-full h-12 sm:h-14 bg-card border border-border rounded-2xl pl-11 sm:pl-12 pr-12 sm:pr-14 text-[16px] text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full min-w-0 max-w-full h-12 sm:h-14 bg-card border border-border rounded-2xl pl-11 sm:pl-12 pr-12 sm:pr-14 text-[16px] text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
           </div>
@@ -169,7 +169,7 @@ const BabyProfileModal: React.FC<BabyProfileModalProps> = ({ baby, onClose, onSa
             <label htmlFor="baby-weight" className="text-sm sm:text-base font-semibold text-muted-foreground mb-2 block">
               น้ำหนัก (กก.) - ไม่บังคับ
             </label>
-            <div className="relative w-full min-w-0">
+            <div className="relative w-full min-w-0 rounded-2xl overflow-hidden">
               <Scale size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 id="baby-weight"
