@@ -1,11 +1,12 @@
 import { Hono, type Context } from "hono";
 import type { Bindings } from "../types";
-import { hashPassword, hashToken, signJwt, verifyPassword } from "../lib/auth";
+import { hashPassword, hashToken, signJwt } from "../lib/auth";
 import { tryGetAuthUser, type AuthVariables } from "../middleware/auth";
 
 const invitations = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
 
 const CAREGIVER_ROLE = "caregiver";
+const PARENT_ROLE = "parent";
 
 function nowSeconds() {
   return Math.floor(Date.now() / 1000);
@@ -13,6 +14,12 @@ function nowSeconds() {
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
+}
+
+function normalizeInviteRole(raw: unknown): typeof CAREGIVER_ROLE | typeof PARENT_ROLE {
+  if (typeof raw !== "string") return CAREGIVER_ROLE;
+  const role = raw.trim().toLowerCase();
+  return role === PARENT_ROLE ? PARENT_ROLE : CAREGIVER_ROLE;
 }
 
 type ResolveUserResult =
@@ -114,7 +121,7 @@ invitations.post("/:token/accept", async (c) => {
     .first();
 
   if (!existingMember) {
-    const approvedRole = CAREGIVER_ROLE;
+    const approvedRole = normalizeInviteRole(invite.role);
     await c.env.baby_tracker_db
       .prepare(
         "INSERT INTO baby_members (id, baby_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)"
@@ -137,19 +144,19 @@ invitations.post("/:token/accept", async (c) => {
   });
 });
 
-// Join via Room Code (Public)
+// Join via Room Code (Authenticated)
 invitations.post("/join", async (c) => {
-  const body = await c.req.json();
-  const { code, name, password } = body;
-  const role = CAREGIVER_ROLE;
+  const body = await c.req.json().catch(() => ({}));
+  const code = String((body as any)?.code ?? "").trim();
+  const role = normalizeInviteRole((body as any)?.role);
 
-  if (!code || !name || !password) {
+  if (!code) {
     return c.json({ success: false, message: "Missing required fields" }, 400);
   }
 
   const now = nowSeconds();
 
-  // 1. Validate Code
+  // 1. Validate code
   const baby: any = await c.env.baby_tracker_db
     .prepare("SELECT id FROM babies WHERE invite_code = ? AND invite_expires_at > ?")
     .bind(code, now)
@@ -159,67 +166,27 @@ invitations.post("/join", async (c) => {
     return c.json({ success: false, message: "Invalid or expired code" }, 404);
   }
 
-  // 2. Check if user exists (by email/name? No email provided in requirement for Room Code flow, 
-  // but to create a user we usually need an email or unique ID. 
-  // The prompt says "Input: { code, role, name, password }". 
-  // It does NOT mention Email.
-  // HOWEVER, existing `users` table requires `email`.
-  // If we don't have email, we can't create a standard user easily unless we generate a fake one or require email.
-  // Let's assume the UI asks for Email too, OR we generate one?
-  // Use Case: "Guest travels to the site -> Enters Code -> Selects Role -> Joins"
-  // If they don't provide email, how do they log in again?
-  // Maybe they just use Name + Password? (Not supported by current auth which uses Email).
-  // I will add `email` to the input requirements to be safe and consistent.
-
-  const email = body.email ? normalizeEmail(body.email) : null;
-  if (!email) {
-    return c.json({ success: false, message: "Email is required for account creation" }, 400);
+  // 2. Require authenticated user for room-code join flow
+  const authUser = await tryGetAuthUser(c);
+  if (!authUser) {
+    return c.json({ success: false, message: "Login required" }, 401);
   }
+  const userId = authUser.sub;
+  const email = normalizeEmail(authUser.email);
 
-  // 3. Create or Get User
-  // Check if user exists
-  const existingUser: any = await c.env.baby_tracker_db
-    .prepare("SELECT id, password_hash, name FROM users WHERE email = ?")
-    .bind(email)
-    .first();
-
-  let userId = "";
-
-  if (existingUser) {
-    userId = existingUser.id;
-    const valid = await verifyPassword(password, existingUser.password_hash);
-    if (!valid) {
-      return c.json({ success: false, message: "อีเมลนี้มีผู้ใช้งานแล้ว และรหัสผ่านไม่ถูกต้อง กรุณาเข้าสู่ระบบก่อน" }, 401);
-    }
-  } else {
-    // Create new user
-    userId = crypto.randomUUID();
-    const passwordHash = await hashPassword(password);
-    await c.env.baby_tracker_db
-      .prepare(
-        "INSERT INTO users (id, email, password_hash, name, created_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?)"
-      )
-      .bind(userId, email, passwordHash, name, now, now)
-      .run();
-  }
-
-  // 4. Create Join Request if not already a member
+  // 3. Create join request if not already a member
   const existingMember = await c.env.baby_tracker_db
     .prepare("SELECT id FROM baby_members WHERE baby_id = ? AND user_id = ?")
     .bind(baby.id, userId)
     .first();
 
   if (!existingMember) {
-    // Check if there is already a pending request
     const pendingRequest = await c.env.baby_tracker_db
-      .prepare(
-        "SELECT id FROM invitations WHERE baby_id = ? AND email = ? AND status IN ('pending', 'requested')"
-      )
+      .prepare("SELECT id FROM invitations WHERE baby_id = ? AND email = ? AND status IN ('pending', 'requested')")
       .bind(baby.id, email)
       .first();
 
     if (!pendingRequest) {
-      // Create a requested invitation
       await c.env.baby_tracker_db
         .prepare(
           "INSERT INTO invitations (id, baby_id, email, role, token_hash, expires_at, status, invited_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -230,32 +197,25 @@ invitations.post("/join", async (c) => {
           email,
           role,
           `request_${crypto.randomUUID()}`,
-          now + 30 * 24 * 60 * 60, // 30 days expiry for requests
+          now + 30 * 24 * 60 * 60,
           "requested",
-          userId, // They requested it themselves
+          userId,
           now
         )
         .run();
     }
   }
 
-  // 5. Generate Token for the user (Auto-login)
-  const jwtSecret = c.env.JWT_SECRET;
-  if (!jwtSecret) {
-    return c.json({ success: false, message: "Server error" }, 500);
-  }
-  const token = await signJwt({ sub: userId, email, name }, jwtSecret);
-
   return c.json({
     success: true,
     message: existingMember ? "You are already a member" : "Request sent successfully",
     data: {
-      token,
+      token: null,
       userId,
-      babyId: existingMember ? baby.id : null, // If not a member, they don't have access yet
+      babyId: existingMember ? baby.id : null,
       status: existingMember ? "active" : "requested",
     },
   });
 });
-
 export default invitations;
+

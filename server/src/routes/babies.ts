@@ -10,13 +10,27 @@ babies.use("*", requireAuth);
 
 const OWNER_ROLE = "owner";
 const CAREGIVER_ROLE = "caregiver";
+const PARENT_ROLE = "parent";
 
-function normalizeMemberRole(raw: unknown): typeof OWNER_ROLE | typeof CAREGIVER_ROLE | null {
+type MemberRole = typeof OWNER_ROLE | typeof PARENT_ROLE | typeof CAREGIVER_ROLE;
+
+function normalizeMemberRole(raw: unknown): MemberRole | null {
   if (typeof raw !== "string") return null;
   const role = raw.trim().toLowerCase();
-  if (role === OWNER_ROLE || role === "parent") return OWNER_ROLE;
+  if (role === OWNER_ROLE) return OWNER_ROLE;
+  if (role === PARENT_ROLE) return PARENT_ROLE;
   if (role === CAREGIVER_ROLE) return CAREGIVER_ROLE;
   return null;
+}
+
+function normalizeRequestRole(raw: unknown): typeof CAREGIVER_ROLE | typeof PARENT_ROLE {
+  if (typeof raw !== "string") return CAREGIVER_ROLE;
+  const role = raw.trim().toLowerCase();
+  return role === PARENT_ROLE ? PARENT_ROLE : CAREGIVER_ROLE;
+}
+
+function canEditBabyData(role: MemberRole | null | undefined) {
+  return role === OWNER_ROLE || role === PARENT_ROLE;
 }
 
 function nowSeconds() {
@@ -43,12 +57,13 @@ async function getMembership(
   db: D1Database,
   babyId: string,
   userId: string
-): Promise<{ role: string } | null> {
+): Promise<{ role: MemberRole } | null> {
   const membership: any = await db
     .prepare(
       `SELECT
         CASE
-          WHEN SUM(CASE WHEN lower(trim(role)) IN ('owner', 'parent') THEN 1 ELSE 0 END) > 0 THEN 'owner'
+          WHEN SUM(CASE WHEN lower(trim(role)) = 'owner' THEN 1 ELSE 0 END) > 0 THEN 'owner'
+          WHEN SUM(CASE WHEN lower(trim(role)) = 'parent' THEN 1 ELSE 0 END) > 0 THEN 'parent'
           WHEN SUM(CASE WHEN lower(trim(role)) = 'caregiver' THEN 1 ELSE 0 END) > 0 THEN 'caregiver'
           ELSE NULL
         END AS role
@@ -70,8 +85,9 @@ babies.get("/", async (c) => {
       `SELECT
         b.*,
         CASE
-          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 2 THEN 'owner'
-          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 1 THEN 'caregiver'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) = 'owner' THEN 3 WHEN lower(trim(bm.role)) = 'parent' THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 3 THEN 'owner'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) = 'owner' THEN 3 WHEN lower(trim(bm.role)) = 'parent' THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 2 THEN 'parent'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) = 'owner' THEN 3 WHEN lower(trim(bm.role)) = 'parent' THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 1 THEN 'caregiver'
           ELSE NULL
         END AS my_role
       FROM babies b
@@ -109,8 +125,9 @@ babies.get("/:id", async (c) => {
       `SELECT
         b.*,
         CASE
-          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 2 THEN 'owner'
-          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 1 THEN 'caregiver'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) = 'owner' THEN 3 WHEN lower(trim(bm.role)) = 'parent' THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 3 THEN 'owner'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) = 'owner' THEN 3 WHEN lower(trim(bm.role)) = 'parent' THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 2 THEN 'parent'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) = 'owner' THEN 3 WHEN lower(trim(bm.role)) = 'parent' THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 1 THEN 'caregiver'
           ELSE NULL
         END AS my_role
       FROM babies b
@@ -174,7 +191,7 @@ babies.put("/:id", async (c) => {
   const body = await c.req.json();
 
   const membership = await getMembership(c.env.baby_tracker_db, id, user.sub);
-  if (membership?.role !== OWNER_ROLE) {
+  if (!canEditBabyData(membership?.role)) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
@@ -287,8 +304,9 @@ babies.get("/:id/caregivers", async (c) => {
         u.name,
         u.email,
         CASE
-          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 2 THEN 'owner'
-          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 1 THEN 'caregiver'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) = 'owner' THEN 3 WHEN lower(trim(bm.role)) = 'parent' THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 3 THEN 'owner'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) = 'owner' THEN 3 WHEN lower(trim(bm.role)) = 'parent' THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 2 THEN 'parent'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) = 'owner' THEN 3 WHEN lower(trim(bm.role)) = 'parent' THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 1 THEN 'caregiver'
           ELSE NULL
         END AS role,
         MIN(bm.created_at) AS created_at
@@ -477,7 +495,7 @@ babies.post("/:id/invite-code", async (c) => {
   });
 });
 
-// Remove caregiver (owner only) or allow caregiver to leave with /:id/caregivers/me
+// Remove member (owner only) or allow non-owner members to leave with /:id/caregivers/me
 babies.delete("/:id/caregivers/:userId", async (c) => {
   const babyId = c.req.param("id");
   const targetUserId = c.req.param("userId");
@@ -495,11 +513,11 @@ babies.delete("/:id/caregivers/:userId", async (c) => {
     }
 
     await c.env.baby_tracker_db
-      .prepare("DELETE FROM baby_members WHERE baby_id = ? AND user_id = ? AND lower(trim(role)) = 'caregiver'")
+      .prepare("DELETE FROM baby_members WHERE baby_id = ? AND user_id = ? AND lower(trim(role)) IN ('caregiver', 'parent')")
       .bind(babyId, user.sub)
       .run();
 
-    return c.json({ success: true, message: "Left caregiver role" });
+    return c.json({ success: true, message: "Left family room" });
   }
 
   if (membership?.role !== OWNER_ROLE) {
@@ -586,7 +604,7 @@ babies.post("/:id/requests/:requestId/approve", async (c) => {
       .first();
 
     if (!existingMember) {
-      const approvedRole = CAREGIVER_ROLE;
+      const approvedRole = normalizeRequestRole(request.role);
       await c.env.baby_tracker_db
         .prepare(
           "INSERT INTO baby_members (id, baby_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)"

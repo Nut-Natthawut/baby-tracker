@@ -11,7 +11,7 @@ interface CaregiverMember {
   id: string;
   name?: string | null;
   email: string;
-  role: 'owner' | 'caregiver';
+  role: 'owner' | 'parent' | 'caregiver';
   createdAt?: number;
 }
 
@@ -34,13 +34,13 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
   const { authFetch, user } = useAuth();
   const navigate = useNavigate();
   const [members, setMembers] = useState<CaregiverMember[]>([]);
-  const [myRole, setMyRole] = useState<'owner' | 'caregiver' | null>(null);
+  const [myRole, setMyRole] = useState<'owner' | 'parent' | 'caregiver' | null>(null);
   const [loading, setLoading] = useState(true);
   const [leaving, setLeaving] = useState(false);
   const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
 
   const resolvedRole = useMemo(() => {
-    if (myRole === 'owner' || myRole === 'caregiver') return myRole;
+    if (myRole === 'owner' || myRole === 'parent' || myRole === 'caregiver') return myRole;
     if (!user) return null;
     return members.find((member) => member.id === user.id)?.role ?? null;
   }, [members, myRole, user]);
@@ -61,7 +61,11 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
         const result = await response.json();
         if (result.success) {
           setMembers(result.data.members || []);
-          setMyRole(result.data.myRole === 'owner' || result.data.myRole === 'caregiver' ? result.data.myRole : null);
+          setMyRole(
+            result.data.myRole === 'owner' || result.data.myRole === 'parent' || result.data.myRole === 'caregiver'
+              ? result.data.myRole
+              : null
+          );
         } else {
           setMyRole(null);
           toast({

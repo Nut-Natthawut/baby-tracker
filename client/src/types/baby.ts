@@ -4,7 +4,7 @@ export interface Baby {
   birthDate: string; // ISO Date string
   gender: 'boy' | 'girl';
   weight?: string; // e.g., "3.2" (kg)
-  myRole?: 'owner' | 'caregiver';
+  myRole?: 'owner' | 'parent' | 'caregiver';
 }
 
 export type LogType = 'feeding' | 'diaper' | 'sleep' | 'pump';

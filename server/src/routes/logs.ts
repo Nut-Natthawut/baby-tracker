@@ -7,13 +7,21 @@ const logs = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
 logs.use("*", requireAuth);
 
 const OWNER_ROLE = "owner";
+const PARENT_ROLE = "parent";
 const CAREGIVER_ROLE = "caregiver";
 
-function normalizeMemberRole(raw: unknown): typeof OWNER_ROLE | typeof CAREGIVER_ROLE | null {
+type MemberRole = typeof OWNER_ROLE | typeof PARENT_ROLE | typeof CAREGIVER_ROLE;
+
+function normalizeMemberRole(raw: unknown): MemberRole | null {
   const role = String(raw ?? "").trim().toLowerCase();
-  if (role === OWNER_ROLE || role === "parent") return OWNER_ROLE;
+  if (role === OWNER_ROLE) return OWNER_ROLE;
+  if (role === PARENT_ROLE) return PARENT_ROLE;
   if (role === CAREGIVER_ROLE) return CAREGIVER_ROLE;
   return null;
+}
+
+function canEditLog(role: MemberRole | null | undefined) {
+  return role === OWNER_ROLE || role === PARENT_ROLE;
 }
 
 async function getMembership(db: D1Database, babyId: string, userId: string) {
@@ -21,7 +29,8 @@ async function getMembership(db: D1Database, babyId: string, userId: string) {
     .prepare(
       `SELECT
         CASE
-          WHEN SUM(CASE WHEN lower(trim(role)) IN ('owner', 'parent') THEN 1 ELSE 0 END) > 0 THEN 'owner'
+          WHEN SUM(CASE WHEN lower(trim(role)) = 'owner' THEN 1 ELSE 0 END) > 0 THEN 'owner'
+          WHEN SUM(CASE WHEN lower(trim(role)) = 'parent' THEN 1 ELSE 0 END) > 0 THEN 'parent'
           WHEN SUM(CASE WHEN lower(trim(role)) = 'caregiver' THEN 1 ELSE 0 END) > 0 THEN 'caregiver'
           ELSE NULL
         END AS role
@@ -245,7 +254,7 @@ logs.put("/:id", async (c) => {
   }
 
   const membership = await getMembership(c.env.baby_tracker_db, log.baby_id, user.sub);
-  if (membership?.role !== OWNER_ROLE) {
+  if (!canEditLog(membership?.role)) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 

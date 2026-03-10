@@ -9,7 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface SettingsModalProps {
   baby: Baby | null;
-  canManageBaby: boolean;
+  canEditBaby: boolean;
+  canDeleteBaby: boolean;
   onClose: () => void;
   onEditBaby: () => void;
   onClearData: () => void;
@@ -19,7 +20,8 @@ interface SettingsModalProps {
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
   baby,
-  canManageBaby,
+  canEditBaby,
+  canDeleteBaby,
   onClose,
   onEditBaby,
   onClearData: _onClearData,
@@ -99,7 +101,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         </div>
                       </div>
                     </div>
-                    {canManageBaby && (
+                    {canEditBaby && (
                       <button
                         onClick={onEditBaby}
                         className="w-full md:w-auto px-6 py-3.5 rounded-full bg-primary text-primary-foreground text-base font-bold shadow-glow-primary hover:brightness-95 active:scale-[0.98] transition"
@@ -149,7 +151,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                 </div>
 
-                {canManageBaby ? (
+                {canDeleteBaby ? (
                   <div className="rounded-[28px] border border-rose-200/60 dark:border-rose-500/20 bg-rose-50/70 dark:bg-rose-500/10 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                     <div className="px-6 pt-6">
                       <p className="text-sm uppercase tracking-[0.3em] text-rose-400">Danger Zone</p>
@@ -174,9 +176,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 ) : (
                   <div className="rounded-[28px] border border-amber-200/60 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-500/10 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] p-6">
                     <p className="text-sm uppercase tracking-[0.3em] text-amber-500">Role</p>
-                    <h3 className="text-xl font-black text-amber-600 mt-1">ผู้ดูแลร่วม</h3>
+                    <h3 className="text-xl font-black text-amber-600 mt-1">{canEditBaby ? "Parent" : "Caregiver"}</h3>
                     <p className="text-sm text-amber-700 dark:text-amber-200 mt-2">
-                      สิทธิ์นี้บันทึกกิจกรรมได้อย่างเดียว และไม่สามารถแก้ไขหรือลบข้อมูลเด็กได้
+                      {canEditBaby
+                        ? "This role can edit records but cannot delete data."
+                        : "This role can only add records and cannot edit or delete baby data."}
                     </p>
                   </div>
                 )}
@@ -195,3 +199,5 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 };
 
 export default SettingsModal;
+
+
