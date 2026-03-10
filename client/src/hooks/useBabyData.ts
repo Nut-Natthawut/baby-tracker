@@ -44,8 +44,10 @@ export const useBabyData = () => {
           ) => {
             const rawRole = String(b.myRole ?? b.my_role ?? b.role ?? "").trim().toLowerCase();
             const normalizedRole: Baby["myRole"] =
-              rawRole === "owner" || rawRole === "parent"
+              rawRole === "owner"
                 ? "owner"
+                : rawRole === "parent"
+                  ? "parent"
                 : rawRole === "caregiver"
                   ? "caregiver"
                   : undefined;

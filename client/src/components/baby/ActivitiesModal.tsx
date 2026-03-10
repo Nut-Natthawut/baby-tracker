@@ -18,7 +18,8 @@ export type ActivityItem = {
 interface ActivitiesModalProps {
   selectedDate: Date;
   activities: ActivityItem[];
-  canManageActions?: boolean;
+  canEditActions?: boolean;
+  canDeleteActions?: boolean;
   onEditActivity?: (activity: ActivityItem) => void;
   onDeleteActivity?: (activity: ActivityItem) => void;
   onClose: () => void;
@@ -35,7 +36,8 @@ const toneClassMap: Record<ActivityTone, string> = {
 const ActivitiesModal: React.FC<ActivitiesModalProps> = ({
   selectedDate,
   activities,
-  canManageActions = false,
+  canEditActions = false,
+  canDeleteActions = false,
   onEditActivity,
   onDeleteActivity,
   onClose,
@@ -109,26 +111,30 @@ const ActivitiesModal: React.FC<ActivitiesModalProps> = ({
                       <p className="text-sm sm:text-base font-semibold text-foreground leading-tight">{activity.label}</p>
                       <p className="text-xs sm:text-sm text-muted-foreground mt-1">{activity.sub}</p>
                     </div>
-                    {canManageActions ? (
+                    {canEditActions || canDeleteActions ? (
                       <div className="flex gap-1 pt-0.5 flex-none">
-                        <button
-                          type="button"
-                          onClick={() => onEditActivity?.(activity)}
-                          className="size-8 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center text-muted-foreground transition"
-                          title="Edit"
-                          aria-label="Edit activity"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDeleteActivity?.(activity)}
-                          className="size-8 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center text-destructive transition"
-                          title="Delete"
-                          aria-label="Delete activity"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {canEditActions && (
+                          <button
+                            type="button"
+                            onClick={() => onEditActivity?.(activity)}
+                            className="size-8 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center text-muted-foreground transition"
+                            title="Edit"
+                            aria-label="Edit activity"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        )}
+                        {canDeleteActions && (
+                          <button
+                            type="button"
+                            onClick={() => onDeleteActivity?.(activity)}
+                            className="size-8 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center text-destructive transition"
+                            title="Delete"
+                            aria-label="Delete activity"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     ) : null}
                   </motion.div>

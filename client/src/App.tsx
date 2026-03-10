@@ -22,7 +22,14 @@ const router = createBrowserRouter(
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/join" element={<RequireAuth><JoinRoom /></RequireAuth>} />
+      <Route
+        path="/join"
+        element={
+          <RequireAuth>
+            <JoinRoom />
+          </RequireAuth>
+        }
+      />
       <Route path="/invite/:token" element={<InviteAccept />} />
       <Route
         path="/app"

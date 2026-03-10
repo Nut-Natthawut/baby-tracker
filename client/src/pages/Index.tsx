@@ -28,9 +28,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowLeft,
-  Moon,
-  Droplets,
-  Coffee,
   Ruler,
   Milk,
   Utensils,
@@ -163,7 +160,7 @@ type ActivityLogItem = RecentItem & {
   raw: any;
 };
 
-type MemberRole = "owner" | "caregiver";
+type MemberRole = "owner" | "parent" | "caregiver";
 type BabyStatus = { text: string; tone: "sleep" | "awake" };
 type DailySummary = {
   diaperCount: number;
@@ -177,14 +174,16 @@ type DailySummary = {
 
 function normalizeRole(rawRole: unknown): MemberRole | null {
   const role = typeof rawRole === "string" ? rawRole.trim().toLowerCase() : "";
-  if (role === "owner" || role === "parent") return "owner";
+  if (role === "owner") return "owner";
+  if (role === "parent") return "parent";
   if (role === "caregiver") return "caregiver";
   return null;
 }
 
 function getCurrentRoleLabel(hasBaby: boolean, role: MemberRole | null): string {
   if (!hasBaby) return "ยังไม่ได้เลือกเด็ก";
-  if (role === "owner") return "เจ้าของ";
+  if (role === "owner") return "เจ้าของเด็ก";
+  if (role === "parent") return "พ่อ/แม่";
   if (role === "caregiver") return "ผู้ดูแลร่วม";
   return "กำลังตรวจสิทธิ์";
 }
@@ -197,7 +196,8 @@ function getRoleFromMembers(members: any[], userId: string): MemberRole | null {
       .filter(Boolean)
   );
 
-  if (myRoles.has("owner") || myRoles.has("parent")) return "owner";
+  if (myRoles.has("owner")) return "owner";
+  if (myRoles.has("parent")) return "parent";
   if (myRoles.has("caregiver")) return "caregiver";
   return null;
 }
@@ -389,7 +389,7 @@ function buildRecentItem(log: any): RecentItem {
       type: "diaper",
       label,
       sub: `${fmtTime(at)} โดย ${timeAgo(at)}`,
-      icon: Droplets,
+      icon: Droplet,
       tone: "orange",
       key,
     };
@@ -400,7 +400,7 @@ function buildRecentItem(log: any): RecentItem {
       type: "sleep",
       label: buildSleepLabel(details),
       sub: `${fmtTime(at)} โดย ${timeAgo(at)}`,
-      icon: Moon,
+      icon: BedDouble,
       tone: "blue",
       key,
     };
@@ -412,7 +412,7 @@ function buildRecentItem(log: any): RecentItem {
       type: "feeding",
       label: buildFeedingLabel(details),
       sub: `${fmtTime(at)} โดย ${method}`,
-      icon: Coffee,
+      icon: Utensils,
       tone: "pink",
       key,
     };
@@ -461,10 +461,14 @@ const Index = () => {
   } = useBabyData();
 
   const normalizedMyRole = String(baby?.myRole ?? "").trim().toLowerCase();
-  const [resolvedRole, setResolvedRole] = useState<"owner" | "caregiver" | null>(null);
+  const [resolvedRole, setResolvedRole] = useState<"owner" | "parent" | "caregiver" | null>(null);
   const fallbackRole = normalizeRole(normalizedMyRole);
   const effectiveRole = resolvedRole ?? fallbackRole;
-  const isOwner = effectiveRole === "owner";
+  const canEditBaby = effectiveRole === "owner" || effectiveRole === "parent";
+  const canDeleteBaby = effectiveRole === "owner";
+  const canManageRequests = effectiveRole === "owner";
+  const canEditLogs = effectiveRole === "owner" || effectiveRole === "parent";
+  const canDeleteLogs = effectiveRole === "owner";
   const currentUserLabel = user?.name?.trim() || user?.email || "ผู้ใช้";
   const currentRoleLabel = getCurrentRoleLabel(Boolean(baby), effectiveRole);
   const [hasUnreadRequests, setHasUnreadRequests] = useState(false);
@@ -513,7 +517,7 @@ const Index = () => {
   }, [baby?.id, token, user?.id]);
 
   useEffect(() => {
-    if (!baby?.id || !token || !isOwner) {
+    if (!baby?.id || !token || !canManageRequests) {
       setHasUnreadRequests(false);
       return;
     }
@@ -536,7 +540,7 @@ const Index = () => {
     checkRequests();
     const interval = setInterval(checkRequests, 5000); // Check every 5 seconds
     return () => clearInterval(interval);
-  }, [baby?.id, token, isOwner]);
+  }, [baby?.id, token, canManageRequests]);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const isToday = useMemo(() => {
@@ -662,7 +666,7 @@ const Index = () => {
   }, [deleteLog]);
 
   const handleSaveBaby = async (data: any) => {
-    if (activeModal === "edit-baby" && !isOwner) {
+    if (activeModal === "edit-baby" && !canEditBaby) {
       toast({
         title: "ไม่มีสิทธิ์",
         description: "เฉพาะเจ้าของเด็กเท่านั้นที่แก้ไขข้อมูลได้",
@@ -703,7 +707,7 @@ const Index = () => {
   };
 
   const handleDeleteBaby = async () => {
-    if (!isOwner) {
+    if (!canDeleteBaby) {
       toast({
         title: "ไม่มีสิทธิ์",
         description: "เฉพาะเจ้าของเด็กเท่านั้นที่ลบข้อมูลได้",
@@ -925,7 +929,7 @@ const Index = () => {
               </div>
               <button
                 onClick={() => {
-                  if (!isOwner) {
+                  if (!canManageRequests) {
                     toast({
                       title: "เฉพาะเจ้าของ",
                       description: "การแจ้งเตือนคำขอเข้าร่วมดูได้เฉพาะเจ้าของเด็ก",
@@ -939,7 +943,7 @@ const Index = () => {
                 className="relative flex items-center justify-center size-9 sm:size-10 rounded-full bg-white/90 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 border border-white/70 dark:border-white/10 text-gray-600 dark:text-gray-200 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all backdrop-blur-xl"
               >
                 <Bell className="w-5 h-5" />
-                {isOwner && hasUnreadRequests && (
+                {canManageRequests && hasUnreadRequests && (
                   <span className="absolute top-0 right-0 size-2.5 rounded-full bg-rose-500 animate-pulse ring-2 ring-white dark:ring-slate-900" />
                 )}
               </button>
@@ -1142,21 +1146,25 @@ const Index = () => {
                               <p className="text-muted-foreground text-sm mt-0.5">{item.sub}</p>
                             </div>
 
-                            <div className={`flex gap-1 pt-1 flex-none ${isOwner ? "" : "hidden"}`}>
-                              <button
-                                onClick={() => handleEditLogItem(item)}
-                                className="size-7 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center text-muted-foreground transition"
-                                title="แก้ไข"
-                              >
-                                <Pencil size={13} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteLogItem(item)}
-                                className="size-7 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center text-destructive transition"
-                                title="ลบ"
-                              >
-                                <Trash2 size={13} />
-                              </button>
+                            <div className={`flex gap-1 pt-1 flex-none ${canEditLogs || canDeleteLogs ? "" : "hidden"}`}>
+                              {canEditLogs && (
+                                <button
+                                  onClick={() => handleEditLogItem(item)}
+                                  className="size-7 rounded-full bg-secondary hover:bg-secondary/80 flex items-center justify-center text-muted-foreground transition"
+                                  title="แก้ไข"
+                                >
+                                  <Pencil size={13} />
+                                </button>
+                              )}
+                              {canDeleteLogs && (
+                                <button
+                                  onClick={() => handleDeleteLogItem(item)}
+                                  className="size-7 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center text-destructive transition"
+                                  title="ลบ"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              )}
                             </div>
                           </motion.div>
                         );
@@ -1287,7 +1295,7 @@ const Index = () => {
                   <div className="bg-white/90 dark:bg-white/10 p-5 rounded-2xl border border-white/70 dark:border-white/10 shadow-[0_16px_35px_-30px_rgba(15,23,42,0.35)]">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="size-8 rounded-full bg-sky-100/80 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center">
-                        <Moon className="w-4 h-4" />
+                        <BedDouble className="w-4 h-4" />
                       </div>
                       <span className="text-sm font-semibold text-gray-500 dark:text-gray-300">เวลานอนรวม</span>
                     </div>
@@ -1313,7 +1321,7 @@ const Index = () => {
                   <div className="bg-white/90 dark:bg-white/10 p-5 rounded-2xl border border-white/70 dark:border-white/10 shadow-[0_16px_35px_-30px_rgba(15,23,42,0.35)]">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="size-8 rounded-full bg-amber-100/80 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center">
-                        <Droplets className="w-4 h-4" />
+                        <Droplet className="w-4 h-4" />
                       </div>
                       <span className="text-sm font-semibold text-gray-500 dark:text-gray-300">ผ้าอ้อม</span>
                     </div>
@@ -1339,7 +1347,7 @@ const Index = () => {
                   <div className="bg-white/90 dark:bg-white/10 p-5 rounded-2xl border border-white/70 dark:border-white/10 flex flex-col justify-center shadow-[0_16px_35px_-30px_rgba(15,23,42,0.35)]">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="size-8 rounded-full bg-rose-100/80 dark:bg-rose-900/30 text-rose-500 flex items-center justify-center">
-                        <Coffee className="w-4 h-4" />
+                        <Utensils className="w-4 h-4" />
                       </div>
                       <span className="text-sm font-semibold text-gray-500 dark:text-gray-300">ปริมาณการกินนม</span>
                     </div>
@@ -1446,7 +1454,8 @@ const Index = () => {
             {activeModal === "settings" && (
               <SettingsModal
                 baby={baby}
-                canManageBaby={isOwner}
+                canEditBaby={canEditBaby}
+                canDeleteBaby={canDeleteBaby}
                 onClose={() => setActiveModal(null)}
                 onEditBaby={() => setActiveModal("edit-baby")}
                 onClearData={handleClearData}
@@ -1457,7 +1466,7 @@ const Index = () => {
             {activeModal === "caregivers" && (
               <CaregiversModal babyId={baby?.id || null} onClose={() => setActiveModal(null)} />
             )}
-            {activeModal === "notifications" && isOwner && (
+            {activeModal === "notifications" && canManageRequests && (
               <NotificationsModal
                 baby={baby}
                 onClose={() => setActiveModal(null)}
@@ -1468,7 +1477,8 @@ const Index = () => {
               <ActivitiesModal
                 selectedDate={selectedDate}
                 activities={allActivities}
-                canManageActions={isOwner}
+                canEditActions={canEditLogs}
+                canDeleteActions={canDeleteLogs}
                 onEditActivity={handleEditLogItem}
                 onDeleteActivity={handleDeleteLogItem}
                 onClose={() => setActiveModal(null)}
