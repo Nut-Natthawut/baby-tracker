@@ -107,13 +107,13 @@ function getAmountMl(details: any) {
 
 function getRecentToneClass(tone: string) {
   const map: Record<string, string> = {
-    blue: "bg-blue-100 dark:bg-blue-900/30 text-primary",
-    purple: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600",
+    blue: "bg-sky-100 dark:bg-sky-900/30 text-sky-600",
+    purple: "bg-purple-100 dark:bg-purple-900/30 text-purple-500",
     orange: "bg-amber-100 dark:bg-amber-900/30 text-amber-600",
     pink: "bg-rose-100 dark:bg-rose-900/30 text-rose-500",
   };
 
-  return map[tone] ?? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600";
+  return map[tone] ?? "bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300";
 }
 
 function formatDiaperType(input: any) {
@@ -390,7 +390,7 @@ function buildRecentItem(log: any): RecentItem {
       label,
       sub: `${fmtTime(at)} โดย ${timeAgo(at)}`,
       icon: Droplets,
-      tone: "blue",
+      tone: "orange",
       key,
     };
   }
@@ -401,7 +401,7 @@ function buildRecentItem(log: any): RecentItem {
       label: buildSleepLabel(details),
       sub: `${fmtTime(at)} โดย ${timeAgo(at)}`,
       icon: Moon,
-      tone: "purple",
+      tone: "blue",
       key,
     };
   }
@@ -413,7 +413,7 @@ function buildRecentItem(log: any): RecentItem {
       label: buildFeedingLabel(details),
       sub: `${fmtTime(at)} โดย ${method}`,
       icon: Coffee,
-      tone: "orange",
+      tone: "pink",
       key,
     };
   }
@@ -424,7 +424,7 @@ function buildRecentItem(log: any): RecentItem {
       label: "ปั๊มนม",
       sub: `${fmtTime(at)} โดย ${timeAgo(at)}`,
       icon: Milk,
-      tone: "pink",
+      tone: "purple",
       key,
     };
   }
@@ -1286,7 +1286,7 @@ const Index = () => {
                   {/* Sleep */}
                   <div className="bg-white/90 dark:bg-white/10 p-5 rounded-2xl border border-white/70 dark:border-white/10 shadow-[0_16px_35px_-30px_rgba(15,23,42,0.35)]">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="size-8 rounded-full bg-indigo-100/80 dark:bg-indigo-900/30 text-indigo-500 flex items-center justify-center">
+                      <div className="size-8 rounded-full bg-sky-100/80 dark:bg-sky-900/30 text-sky-500 flex items-center justify-center">
                         <Moon className="w-4 h-4" />
                       </div>
                       <span className="text-sm font-semibold text-gray-500 dark:text-gray-300">เวลานอนรวม</span>
@@ -1303,7 +1303,7 @@ const Index = () => {
 
                     <div className="w-full bg-slate-100/80 dark:bg-white/10 h-2 rounded-full mt-3 overflow-hidden">
                       <div
-                        className="bg-indigo-400 h-full rounded-full"
+                        className="bg-sky-400 h-full rounded-full"
                         style={{ width: `${Math.min(100, Math.round(((dailySummary.sleepH * 60 + dailySummary.sleepR) / (12 * 60)) * 100))}%` }}
                       />
                     </div>
@@ -1312,7 +1312,7 @@ const Index = () => {
                   {/* Diapers */}
                   <div className="bg-white/90 dark:bg-white/10 p-5 rounded-2xl border border-white/70 dark:border-white/10 shadow-[0_16px_35px_-30px_rgba(15,23,42,0.35)]">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="size-8 rounded-full bg-emerald-100/80 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center">
+                      <div className="size-8 rounded-full bg-amber-100/80 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center">
                         <Droplets className="w-4 h-4" />
                       </div>
                       <span className="text-sm font-semibold text-gray-500 dark:text-gray-300">ผ้าอ้อม</span>
@@ -1328,7 +1328,7 @@ const Index = () => {
                       {DIAPER_BAR_KEYS.map((key, i) => (
                         <div
                           key={key}
-                          className={`h-2 flex-1 rounded-full ${i < Math.min(5, dailySummary.diaperCount) ? "bg-emerald-400" : "bg-slate-100/80 dark:bg-white/10"
+                          className={`h-2 flex-1 rounded-full ${i < Math.min(5, dailySummary.diaperCount) ? "bg-amber-400" : "bg-slate-100/80 dark:bg-white/10"
                             }`}
                         />
                       ))}

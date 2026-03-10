@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, Check, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DiaperDetails, POO_COLORS, POO_TEXTURES } from '@/types/baby';
 import { roundToNearest30, formatTime } from '@/lib/babyUtils';
 
@@ -110,7 +110,6 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
 
   const handlePrevDay = () => setStartTime(prev => new Date(prev.getTime() - 86400000));
   const handleNextDay = () => setStartTime(prev => new Date(prev.getTime() + 86400000));
-  const handleToday = () => setStartTime(new Date());
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });

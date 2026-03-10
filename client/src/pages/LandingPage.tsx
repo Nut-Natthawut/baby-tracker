@@ -66,7 +66,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-16 overflow-hidden">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-28 pb-16 md:py-16 overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="landing-blob-1 absolute -top-32 -right-24 h-[360px] w-[360px] rounded-full bg-papaya/25 blur-3xl" />
           <div className="landing-blob-2 absolute top-[20%] -left-32 h-[420px] w-[420px] rounded-full bg-sky/25 blur-3xl" />
@@ -76,15 +76,15 @@ const LandingPage = () => {
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-6 left-6 right-6 flex items-center justify-between"
+          className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex items-center justify-between rounded-2xl border border-white/80 dark:border-white/10 bg-white/92 dark:bg-slate-900/60 px-3 py-2 backdrop-blur-md shadow-[0_14px_35px_-26px_rgba(15,23,42,0.6)] md:rounded-none md:border-0 md:bg-transparent md:px-0 md:py-0 md:shadow-none md:backdrop-blur-0"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-papaya/70 shadow-[0_4px_12px_rgba(253,164,175,0.4)] flex items-center justify-center overflow-hidden">
               <BabyCareLogo size="sm" />
             </div>
             <div className="leading-tight">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">Baby Tracker</p>
-              <span className="font-black text-lg text-foreground">ดูแลลูกน้อย</span>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500 dark:text-slate-300 font-bold">Baby Tracker</p>
+              <span className="font-black text-lg text-slate-900 dark:text-white">ดูแลลูกน้อย</span>
             </div>
           </div>
           <div className="flex gap-2">
@@ -92,7 +92,7 @@ const LandingPage = () => {
               onClick={handleJoinClick}
               size="sm"
               variant="ghost"
-              className="rounded-full text-muted-foreground hover:text-foreground font-semibold"
+              className="rounded-full text-slate-600 dark:text-slate-200 hover:text-foreground font-semibold"
             >
               กรอกรหัสเข้าร่วม
             </Button>
@@ -100,7 +100,7 @@ const LandingPage = () => {
               onClick={() => navigate('/app')}
               size="sm"
               variant="ghost"
-              className="rounded-full bg-white/80 dark:bg-white/10 text-foreground border border-white/70 dark:border-white/10 px-5 py-2 font-bold shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)] hover:bg-white hover:text-foreground"
+              className="rounded-full bg-white dark:bg-white/10 text-foreground border border-slate-200 dark:border-white/10 px-5 py-2 font-bold shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)] hover:bg-white hover:text-foreground"
             >
               เข้าแอป
             </Button>
@@ -114,8 +114,8 @@ const LandingPage = () => {
             transition={{ duration: 0.5 }}
             className="relative"
           >
-            <div className="absolute inset-0 -z-10 rounded-[40px] bg-gradient-to-br from-white/70 via-white/40 to-sky/20 blur-3xl" />
-            <div className="relative rounded-[32px] border border-white/70 dark:border-white/10 bg-white/75 dark:bg-white/5 backdrop-blur-xl p-8 md:p-12 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)]">
+            <div className="absolute inset-0 -z-10 rounded-[40px] bg-gradient-to-br from-white/95 via-white/85 to-sky/25 blur-3xl" />
+            <div className="relative rounded-[32px] border border-slate-200/80 dark:border-white/15 bg-white/95 dark:bg-slate-900/65 backdrop-blur-xl p-7 sm:p-8 md:p-12 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)]">
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -134,7 +134,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-4xl md:text-6xl font-black tracking-[-0.03em] text-foreground mb-4"
+                className="text-[2.6rem] leading-[0.95] sm:text-5xl md:text-6xl font-black tracking-[-0.03em] text-slate-900 dark:text-white mb-4"
               >
                 <span className="text-gradient-papaya">Baby</span> Tracker
               </motion.h1>
@@ -142,7 +142,7 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-lg md:text-2xl text-muted-foreground dark:text-foreground/90 font-semibold"
+                className="text-lg md:text-2xl text-slate-700 dark:text-slate-100 font-semibold max-w-2xl mx-auto"
               >
                 บันทึกทุกช่วงเวลา ดูสรุปได้ทันที และเข้าใจลูกน้อยมากขึ้น
               </motion.p>
@@ -151,24 +151,24 @@ const LandingPage = () => {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs font-semibold text-muted-foreground dark:text-white/90"
+                className="mt-6 flex flex-wrap items-center justify-center gap-3 text-xs font-semibold text-slate-700 dark:text-slate-100"
               >
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2 ">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-white/10 border border-slate-200/80 dark:border-white/10 px-4 py-2 shadow-sm">
                   🍼 บันทึกให้นม
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-white/10 border border-slate-200/80 dark:border-white/10 px-4 py-2 shadow-sm">
                   👶 ผ้าอ้อม
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-white/10 border border-slate-200/80 dark:border-white/10 px-4 py-2 shadow-sm">
                   😴 การนอน
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-white/10 border border-slate-200/80 dark:border-white/10 px-4 py-2 shadow-sm">
                   🤱 ปั๊มนม
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-white/10 border border-slate-200/80 dark:border-white/10 px-4 py-2 shadow-sm">
                   👥 แชร์ครอบครัว
                 </span>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-4 py-2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-white/10 border border-slate-200/80 dark:border-white/10 px-4 py-2 shadow-sm">
                   📈 รายงาน
                 </span>
               </motion.div>
@@ -182,7 +182,7 @@ const LandingPage = () => {
                 <Button
                   onClick={() => navigate('/app')}
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-6 rounded-2xl shadow-glow-primary transition-all"
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-6 rounded-2xl shadow-glow-primary transition-all"
                 >
                   เริ่มใช้งานเลย
                 </Button>
@@ -190,7 +190,7 @@ const LandingPage = () => {
                   onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                   size="lg"
                   variant="outline"
-                  className="rounded-2xl border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 text-foreground font-bold text-lg px-8 py-6 hover:bg-white/90 dark:hover:bg-white/10 hover:text-foreground"
+                  className="w-full sm:w-auto rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/5 text-foreground font-bold text-lg px-8 py-6 hover:bg-white/90 dark:hover:bg-white/10 hover:text-foreground"
                 >
                   ดูฟีเจอร์
                 </Button>
