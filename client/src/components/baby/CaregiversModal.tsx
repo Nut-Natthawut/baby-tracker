@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Users, UserPlus, Mail, X, Crown, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, Mail, X, Crown, Trash2, LogOut } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 interface CaregiverMember {
   id: string;
@@ -30,24 +32,38 @@ interface CaregiversModalProps {
 
 const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) => {
   const { authFetch, user } = useAuth();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<CaregiverMember[]>([]);
+  const [myRole, setMyRole] = useState<'owner' | 'caregiver' | null>(null);
   const [loading, setLoading] = useState(true);
+  const [leaving, setLeaving] = useState(false);
+  const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
 
-  const isOwner = useMemo(() => {
-    if (!user) return false;
-    return members.some((member) => member.id === user.id && member.role === 'owner');
-  }, [members, user]);
+  const resolvedRole = useMemo(() => {
+    if (myRole === 'owner' || myRole === 'caregiver') return myRole;
+    if (!user) return null;
+    return members.find((member) => member.id === user.id)?.role ?? null;
+  }, [members, myRole, user]);
+
+  const isOwner = resolvedRole === 'owner';
+  const canLeaveCare = Boolean(user) && resolvedRole !== 'owner';
 
   useEffect(() => {
     const fetchCaregivers = async () => {
-      if (!babyId) return;
+      if (!babyId) {
+        setMyRole(null);
+        setMembers([]);
+        return;
+      }
       setLoading(true);
       try {
         const response = await authFetch(`${API_BASE_URL}/babies/${babyId}/caregivers`);
         const result = await response.json();
         if (result.success) {
           setMembers(result.data.members || []);
+          setMyRole(result.data.myRole === 'owner' || result.data.myRole === 'caregiver' ? result.data.myRole : null);
         } else {
+          setMyRole(null);
           toast({
             title: "โหลดข้อมูลไม่สำเร็จ",
             description: result.message || "กรุณาลองใหม่",
@@ -55,6 +71,7 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
           });
         }
       } catch (error) {
+        setMyRole(null);
         console.error("Load caregivers error:", error);
         toast({
           title: "เกิดข้อผิดพลาด",
@@ -93,6 +110,45 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
         variant: "destructive",
       });
     }
+  };
+
+  const handleLeaveCare = async () => {
+    if (!babyId) return;
+    setIsLeaveConfirmOpen(false);
+
+    setLeaving(true);
+    try {
+      const response = await authFetch(`${API_BASE_URL}/babies/${babyId}/caregivers/me`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        toast({
+          title: "Cannot leave care team",
+          description: result?.message || "Please try again",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({ title: "You left this baby's care team" });
+      onClose();
+      navigate("/app", { replace: true });
+    } catch (error) {
+      console.error("Leave caregiver error:", error);
+      toast({
+        title: "Something went wrong",
+        description: "Unable to leave care team",
+        variant: "destructive",
+      });
+    } finally {
+      setLeaving(false);
+    }
+  };
+
+  const openLeaveConfirm = () => {
+    if (!babyId || leaving) return;
+    setIsLeaveConfirmOpen(true);
   };
 
   if (!babyId) {
@@ -228,6 +284,35 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
           <GenerateCodeButton babyId={babyId} authFetch={authFetch} />
         </div>
       )}
+
+      {!isOwner && canLeaveCare && (
+        <div className="p-6 border-t border-border bg-card">
+          <button
+            type="button"
+            onClick={openLeaveConfirm}
+            disabled={leaving}
+            className="w-full py-3.5 rounded-2xl border border-destructive/50 dark:border-destructive/70 bg-destructive/5 dark:bg-destructive/25 text-destructive dark:text-rose-100 font-bold hover:bg-destructive/15 dark:hover:bg-destructive/35 shadow-[0_8px_24px_-14px_rgba(239,68,68,0.75)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <LogOut size={18} />
+            {leaving ? "Leaving..." : "Leave Care Team"}
+          </button>
+        </div>
+      )}
+
+      <ConfirmModal
+        isOpen={isLeaveConfirmOpen}
+        title="ออกจากทีมผู้ดูแล?"
+        description="หากยืนยัน คุณจะไม่สามารถเข้าถึงข้อมูลของเด็กคนนี้ได้จนกว่าจะถูกเชิญอีกครั้ง"
+        confirmLabel={leaving ? "กำลังออก..." : "ยืนยันออกจากทีม"}
+        cancelLabel="ยกเลิก"
+        variant="destructive"
+        onConfirm={() => {
+          if (!leaving) void handleLeaveCare();
+        }}
+        onCancel={() => {
+          if (!leaving) setIsLeaveConfirmOpen(false);
+        }}
+      />
     </motion.div>
   );
 };

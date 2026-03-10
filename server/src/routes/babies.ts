@@ -326,7 +326,7 @@ babies.get("/:id/caregivers", async (c) => {
 
   return c.json({
     success: true,
-    data: { members, invites },
+    data: { members, invites, myRole: membership.role },
   });
 });
 
@@ -525,13 +525,31 @@ babies.post("/invitations/join", async (c) => {
   // Let's implement logic to "Find Baby by Code" first.
 });
 
-// Remove caregiver (owner only)
+// Remove caregiver (owner only) or allow caregiver to leave with /:id/caregivers/me
 babies.delete("/:id/caregivers/:userId", async (c) => {
   const babyId = c.req.param("id");
   const targetUserId = c.req.param("userId");
   const user = c.get("user");
 
   const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
+
+  if (targetUserId === "me") {
+    if (!membership) {
+      return c.json({ success: false, message: "Forbidden" }, 403);
+    }
+
+    if (membership.role === OWNER_ROLE) {
+      return c.json({ success: false, message: "Owner cannot leave this baby" }, 400);
+    }
+
+    await c.env.baby_tracker_db
+      .prepare("DELETE FROM baby_members WHERE baby_id = ? AND user_id = ? AND lower(trim(role)) = 'caregiver'")
+      .bind(babyId, user.sub)
+      .run();
+
+    return c.json({ success: true, message: "Left caregiver role" });
+  }
+
   if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
