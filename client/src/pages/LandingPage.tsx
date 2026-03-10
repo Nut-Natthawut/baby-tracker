@@ -325,30 +325,30 @@ const LandingPage = () => {
                         <div className="w-16 h-16 mx-auto rounded-2xl bg-papaya/20 flex items-center justify-center mb-2 overflow-hidden">
                           <BabyCareLogo size="lg" />
                         </div>
-                        <p className="font-black text-foreground">น้องมีนา</p>
-                        <p className="text-xs text-muted-foreground">อายุ 3 เดือน</p>
+                        <p className="font-black text-slate-900">น้องมีนา</p>
+                        <p className="text-xs text-slate-500">อายุ 3 เดือน</p>
                       </div>
 
                       <div className="space-y-2 flex-1">
                         <div className="bg-white/80 p-3 rounded-xl border border-white/70 flex items-center gap-3">
                           <div className="w-10 h-10 bg-feeding/20 rounded-lg flex items-center justify-center text-xl">🍼</div>
                           <div>
-                            <p className="font-semibold text-sm text-foreground">ให้นม</p>
-                            <p className="text-xs text-muted-foreground">150ml • 10:30</p>
+                            <p className="font-semibold text-sm text-slate-800">ให้นม</p>
+                            <p className="text-xs text-slate-500">150ml • 10:30</p>
                           </div>
                         </div>
                         <div className="bg-white/80 p-3 rounded-xl border border-white/70 flex items-center gap-3">
                           <div className="w-10 h-10 bg-diaper/20 rounded-lg flex items-center justify-center text-xl">👶</div>
                           <div>
-                            <p className="font-semibold text-sm text-foreground">เปลี่ยนผ้าอ้อม</p>
-                            <p className="text-xs text-muted-foreground">ฉี่ + อึ • 09:15</p>
+                            <p className="font-semibold text-sm text-slate-800">เปลี่ยนผ้าอ้อม</p>
+                            <p className="text-xs text-slate-500">ฉี่ + อึ • 09:15</p>
                           </div>
                         </div>
                         <div className="bg-white/80 p-3 rounded-xl border border-white/70 flex items-center gap-3">
                           <div className="w-10 h-10 bg-sleep/20 rounded-lg flex items-center justify-center text-xl">😴</div>
                           <div>
-                            <p className="font-semibold text-sm text-foreground">นอนหลับ</p>
-                            <p className="text-xs text-muted-foreground">2 ชม. • 07:00</p>
+                            <p className="font-semibold text-sm text-slate-800">นอนหลับ</p>
+                            <p className="text-xs text-slate-500">2 ชม. • 07:00</p>
                           </div>
                         </div>
                       </div>

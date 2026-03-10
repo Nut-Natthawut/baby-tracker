@@ -214,7 +214,7 @@ const CaregiversModal: React.FC<CaregiversModalProps> = ({ babyId, onClose }) =>
                 </p>
                 <div className="mt-3 text-sm text-muted-foreground space-y-1">
                   <p>• ใช้รหัส 6 หลักในการเข้าร่วมห้อง</p>
-                  <p>• รหัสมีอายุการใช้งาน 5 นาที</p>
+                  <p>• รหัสมีอายุการใช้งาน 10 นาที</p>
                   <p>• สร้างรหัสใหม่ได้ตลอดเวลา</p>
                 </div>
               </div>
