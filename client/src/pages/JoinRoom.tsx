@@ -9,11 +9,7 @@ import BabyCareLogo from "@/components/baby/BabyCareLogo";
 
 const JoinRoom = () => {
     const navigate = useNavigate();
-    const { login } = useAuth(); // We might need a way to just set token without full login flow if we do manual handling
-    // actually useAuth 'login' usually takes email/pass.
-    // Here we get a token back directly.
-    // We might need to manually set the token. 
-    // Let's check useAuth hook later. For now assume we save token to localStorage and reload/redirect.
+    const { setToken, refreshMe } = useAuth();
 
     const [step, setStep] = useState<1 | 2>(1);
     const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -78,14 +74,16 @@ const JoinRoom = () => {
             if (result.success) {
                 toast({ title: "เข้าร่วมสำเร็จ!", description: "กำลังพาไปที่หน้าหลัก..." });
 
-                // Manually set token
-                localStorage.setItem("token", result.data.token);
+                if (result?.data?.token) {
+                    setToken(result.data.token);
+                    await refreshMe(result.data.token);
+                }
+                localStorage.removeItem("token");
 
-                // Redirect to baby dashboard
                 if (result.data.babyId) {
-                    window.location.href = `/app/baby/${result.data.babyId}`;
+                    navigate(`/app/baby/${result.data.babyId}`, { replace: true });
                 } else {
-                    window.location.href = "/app";
+                    navigate("/app", { replace: true });
                 }
             } else {
                 toast({

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Baby, LogEntry, LogType } from '@/types/baby';
 import { API_BASE_URL } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
@@ -34,10 +34,29 @@ export const useBabyData = () => {
       const result = await response.json();
 
       if (result.success) {
-        const mappedBabies = result.data.map((b: Baby & { birth_date?: string | Date }) => ({
-          ...b,
-          birthDate: b.birth_date || b.birthDate,
-        }));
+        const mappedBabies = result.data.map(
+          (
+            b: Baby & {
+              birth_date?: string | Date;
+              my_role?: "owner" | "caregiver" | "parent";
+              role?: string;
+            }
+          ) => {
+            const rawRole = String(b.myRole ?? b.my_role ?? b.role ?? "").trim().toLowerCase();
+            const normalizedRole: Baby["myRole"] =
+              rawRole === "owner" || rawRole === "parent"
+                ? "owner"
+                : rawRole === "caregiver"
+                  ? "caregiver"
+                  : undefined;
+
+            return {
+              ...b,
+              birthDate: b.birth_date || b.birthDate,
+              myRole: normalizedRole,
+            };
+          }
+        );
         setBabies(prev => {
           const newStr = JSON.stringify(mappedBabies);
           const oldStr = JSON.stringify(prev);
@@ -128,7 +147,7 @@ export const useBabyData = () => {
 
   // Save baby profile
   const saveBabyProfile = async (babyData: Partial<Baby>) => {
-    if (!token) return false;
+    if (!token) return { success: false as const };
     try {
       const isEdit = !!babyData.id;
       const url = isEdit
@@ -146,40 +165,54 @@ export const useBabyData = () => {
 
       if (response.status === 401) {
         await logout();
-        return false;
+        return { success: false as const };
       }
       const result = await response.json();
 
-      if (result.success) {
-        setBabies(prev => {
-          if (isEdit) {
-            return prev.map(b => b.id === babyData.id ? result.data : b);
-          }
-          return [...prev, result.data];
-        });
+        if (result.success) {
+          setBabies(prev => {
+            if (isEdit) {
+              return prev.map(b =>
+                b.id === babyData.id
+                  ? {
+                    ...b,
+                    ...result.data,
+                    myRole: (result.data.myRole ?? b.myRole) as Baby["myRole"],
+                  }
+                  : b
+              );
+            }
+            return [
+              ...prev,
+              {
+                ...result.data,
+                myRole: (result.data.myRole ?? "owner") as Baby["myRole"],
+              },
+            ];
+          });
 
-        // If this is the first baby, select it
-        if (!currentBabyId || (isEdit && currentBabyId === babyData.id)) {
+        // Always focus the newly created baby. For edits, keep current selection unless edited baby is active.
+        if (!isEdit || !currentBabyId || currentBabyId === babyData.id) {
           setCurrentBabyId(result.data.id);
           localStorage.setItem(STORAGE_KEYS.CURRENT_BABY_ID, result.data.id);
         }
 
-        return true;
+        return { success: true as const, babyId: result.data.id as string };
       }
-      return false;
+      return { success: false as const };
     } catch (error) {
       console.error("Error saving baby profile:", error);
-      return false;
+      return { success: false as const };
     }
   };
 
   // Switch to a different baby
-  const switchBaby = (babyId: string) => {
+  const switchBaby = useCallback((babyId: string) => {
     if (babies.some(b => b.id === babyId)) {
       setCurrentBabyId(babyId);
       localStorage.setItem(STORAGE_KEYS.CURRENT_BABY_ID, babyId);
     }
-  };
+  }, [babies]);
 
   // Delete a baby via API
   const deleteBaby = async (babyId: string) => {

@@ -8,6 +8,16 @@ const babies = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
 
 babies.use("*", requireAuth);
 
+const OWNER_ROLE = "owner";
+const CAREGIVER_ROLE = "caregiver";
+
+function normalizeMemberRole(raw: unknown): typeof OWNER_ROLE | typeof CAREGIVER_ROLE | null {
+  const role = String(raw ?? "").trim().toLowerCase();
+  if (role === OWNER_ROLE || role === "parent") return OWNER_ROLE;
+  if (role === CAREGIVER_ROLE) return CAREGIVER_ROLE;
+  return null;
+}
+
 function nowSeconds() {
   return Math.floor(Date.now() / 1000);
 }
@@ -34,18 +44,40 @@ async function getMembership(
   userId: string
 ): Promise<{ role: string } | null> {
   const membership: any = await db
-    .prepare("SELECT role FROM baby_members WHERE baby_id = ? AND user_id = ?")
+    .prepare(
+      `SELECT
+        CASE
+          WHEN SUM(CASE WHEN lower(trim(role)) IN ('owner', 'parent') THEN 1 ELSE 0 END) > 0 THEN 'owner'
+          WHEN SUM(CASE WHEN lower(trim(role)) = 'caregiver' THEN 1 ELSE 0 END) > 0 THEN 'caregiver'
+          ELSE NULL
+        END AS role
+      FROM baby_members
+      WHERE baby_id = ? AND user_id = ?`
+    )
     .bind(babyId, userId)
     .first();
 
-  return membership ? { role: membership.role } : null;
+  if (!membership) return null;
+  const role = normalizeMemberRole(membership.role);
+  return role ? { role } : null;
 }
 
 babies.get("/", async (c) => {
   const user = c.get("user");
   const result = await c.env.baby_tracker_db
     .prepare(
-      "SELECT b.* FROM babies b INNER JOIN baby_members bm ON bm.baby_id = b.id WHERE bm.user_id = ? ORDER BY b.created_at DESC"
+      `SELECT
+        b.*,
+        CASE
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 2 THEN 'owner'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 1 THEN 'caregiver'
+          ELSE NULL
+        END AS my_role
+      FROM babies b
+      INNER JOIN baby_members bm ON bm.baby_id = b.id
+      WHERE bm.user_id = ? AND lower(trim(bm.role)) IN ('owner', 'parent', 'caregiver')
+      GROUP BY b.id
+      ORDER BY b.created_at DESC`
     )
     .bind(user.sub)
     .all();
@@ -54,8 +86,10 @@ babies.get("/", async (c) => {
     ...b,
     birthDate: b.birth_date,
     createdAt: b.created_at,
+    myRole: b.my_role,
     birth_date: undefined,
     created_at: undefined,
+    my_role: undefined,
   }));
 
   return c.json({
@@ -71,7 +105,17 @@ babies.get("/:id", async (c) => {
 
   const baby: any = await c.env.baby_tracker_db
     .prepare(
-      "SELECT b.* FROM babies b INNER JOIN baby_members bm ON bm.baby_id = b.id WHERE b.id = ? AND bm.user_id = ?"
+      `SELECT
+        b.*,
+        CASE
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 2 THEN 'owner'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 1 THEN 'caregiver'
+          ELSE NULL
+        END AS my_role
+      FROM babies b
+      INNER JOIN baby_members bm ON bm.baby_id = b.id
+      WHERE b.id = ? AND bm.user_id = ? AND lower(trim(bm.role)) IN ('owner', 'parent', 'caregiver')
+      GROUP BY b.id`
     )
     .bind(id, user.sub)
     .first();
@@ -84,8 +128,10 @@ babies.get("/:id", async (c) => {
     ...baby,
     birthDate: baby.birth_date,
     createdAt: baby.created_at,
+    myRole: baby.my_role,
     birth_date: undefined,
     created_at: undefined,
+    my_role: undefined,
   };
 
   return c.json({
@@ -108,14 +154,14 @@ babies.post("/", async (c) => {
 
   await c.env.baby_tracker_db
     .prepare("INSERT INTO baby_members (id, baby_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)")
-    .bind(crypto.randomUUID(), id, user.sub, "owner", now)
+    .bind(crypto.randomUUID(), id, user.sub, OWNER_ROLE, now)
     .run();
 
   return c.json(
     {
       success: true,
       message: "Created baby",
-      data: { id, ...body, created_at: now },
+      data: { id, ...body, myRole: OWNER_ROLE, created_at: now },
     },
     201
   );
@@ -127,7 +173,7 @@ babies.put("/:id", async (c) => {
   const body = await c.req.json();
 
   const membership = await getMembership(c.env.baby_tracker_db, id, user.sub);
-  if (!membership) {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
@@ -140,7 +186,7 @@ babies.put("/:id", async (c) => {
     {
       success: true,
       message: "Updated baby",
-      data: { id, ...body },
+      data: { id, ...body, myRole: membership.role },
     },
     200
   );
@@ -151,7 +197,7 @@ babies.delete("/:id", async (c) => {
   const user = c.get("user");
 
   const membership = await getMembership(c.env.baby_tracker_db, id, user.sub);
-  if (membership?.role !== "owner") {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
@@ -235,7 +281,21 @@ babies.get("/:id/caregivers", async (c) => {
 
   const membersResult = await c.env.baby_tracker_db
     .prepare(
-      "SELECT u.id, u.name, u.email, bm.role, bm.created_at FROM baby_members bm INNER JOIN users u ON u.id = bm.user_id WHERE bm.baby_id = ? ORDER BY bm.created_at ASC"
+      `SELECT
+        u.id,
+        u.name,
+        u.email,
+        CASE
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 2 THEN 'owner'
+          WHEN MAX(CASE WHEN lower(trim(bm.role)) IN ('owner', 'parent') THEN 2 WHEN lower(trim(bm.role)) = 'caregiver' THEN 1 ELSE 0 END) = 1 THEN 'caregiver'
+          ELSE NULL
+        END AS role,
+        MIN(bm.created_at) AS created_at
+      FROM baby_members bm
+      INNER JOIN users u ON u.id = bm.user_id
+      WHERE bm.baby_id = ? AND lower(trim(bm.role)) IN ('owner', 'parent', 'caregiver')
+      GROUP BY u.id, u.name, u.email
+      ORDER BY MIN(bm.created_at) ASC`
     )
     .bind(babyId)
     .all();
@@ -251,7 +311,7 @@ babies.get("/:id/caregivers", async (c) => {
     id: row.id,
     name: row.name,
     email: row.email,
-    role: row.role,
+    role: normalizeMemberRole(row.role) ?? CAREGIVER_ROLE,
     createdAt: row.created_at,
   }));
 
@@ -283,7 +343,7 @@ babies.post("/:id/invitations", async (c) => {
   }
 
   const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
-  if (membership?.role !== "owner") {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
@@ -375,7 +435,7 @@ babies.post("/:id/invitations/:inviteId/revoke", async (c) => {
   const user = c.get("user");
 
   const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
-  if (membership?.role !== "owner") {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
@@ -393,7 +453,7 @@ babies.post("/:id/invite-code", async (c) => {
   const user = c.get("user");
 
   const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
-  if (membership?.role !== "owner") {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
@@ -472,7 +532,7 @@ babies.delete("/:id/caregivers/:userId", async (c) => {
   const user = c.get("user");
 
   const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
-  if (membership?.role !== "owner") {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
@@ -503,7 +563,7 @@ babies.get("/:id/requests", async (c) => {
   const user = c.get("user");
 
   const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
-  if (membership?.role !== "owner") {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
@@ -534,7 +594,7 @@ babies.post("/:id/requests/:requestId/approve", async (c) => {
     const user = c.get("user");
 
     const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
-    if (membership?.role !== "owner") {
+    if (membership?.role !== OWNER_ROLE) {
       return c.json({ success: false, message: "Forbidden" }, 403);
     }
 
@@ -556,11 +616,12 @@ babies.post("/:id/requests/:requestId/approve", async (c) => {
       .first();
 
     if (!existingMember) {
+      const approvedRole = CAREGIVER_ROLE;
       await c.env.baby_tracker_db
         .prepare(
           "INSERT INTO baby_members (id, baby_id, user_id, role, created_at) VALUES (?, ?, ?, ?, ?)"
         )
-        .bind(crypto.randomUUID(), babyId, request.invited_by, request.role, now)
+        .bind(crypto.randomUUID(), babyId, request.invited_by, approvedRole, now)
         .run();
     }
 
@@ -583,7 +644,7 @@ babies.post("/:id/requests/:requestId/reject", async (c) => {
   const user = c.get("user");
 
   const membership = await getMembership(c.env.baby_tracker_db, babyId, user.sub);
-  if (membership?.role !== "owner") {
+  if (membership?.role !== OWNER_ROLE) {
     return c.json({ success: false, message: "Forbidden" }, 403);
   }
 
