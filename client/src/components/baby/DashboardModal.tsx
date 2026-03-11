@@ -1,16 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Droplets, Milk, Moon, Utensils, X } from 'lucide-react';
 import { LogEntry } from '@/types/baby';
 import {
   addMonths,
   eachDayOfInterval,
-  endOfDay,
   endOfMonth,
   format,
   isSameDay,
   isToday,
-  startOfDay,
   startOfMonth,
   subDays,
   subMonths,
@@ -27,6 +25,13 @@ type NormalizedLog = {
   at: Date;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details: Record<string, any>;
+};
+
+type DayTypeCounts = {
+  feedingCount: number;
+  diaperCount: number;
+  sleepCount: number;
+  pumpCount: number;
 };
 
 const toNumber = (value: unknown, fallback = 0) => {
@@ -223,10 +228,20 @@ const getDayStateClass = (day: Date, isSelected: boolean) => {
   return 'bg-white/80 dark:bg-white/5 border-white/70 dark:border-white/10 text-foreground hover:bg-white/90 dark:hover:bg-white/10';
 };
 
+const getDayKey = (date: Date) => format(date, 'yyyy-MM-dd');
+const getMonthKey = (date: Date) => format(date, 'yyyy-MM');
+const createEmptyDayTypeCounts = (): DayTypeCounts => ({
+  feedingCount: 0,
+  diaperCount: 0,
+  sleepCount: 0,
+  pumpCount: 0,
+});
+
 const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const shouldReduceMotion = useReducedMotion();
 
   const normalizedLogs = useMemo(() => {
     if (!Array.isArray(logs)) return [];
@@ -235,57 +250,71 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
       .filter(isDefined);
   }, [logs]);
 
-  const dailyStats = useMemo(() => {
-    const dayStart = startOfDay(selectedDate);
-    const dayEnd = endOfDay(selectedDate);
+  const logIndex = useMemo(() => {
+    const byDay = new Map<string, NormalizedLog[]>();
+    const byMonth = new Map<string, NormalizedLog[]>();
+    const dayTypeCounts = new Map<string, DayTypeCounts>();
 
-    const dayLogs = normalizedLogs.filter((log) => log.at >= dayStart && log.at <= dayEnd);
+    normalizedLogs.forEach((log) => {
+      const dayKey = getDayKey(log.at);
+      const monthKey = dayKey.slice(0, 7);
+
+      const dayLogs = byDay.get(dayKey);
+      if (dayLogs) {
+        dayLogs.push(log);
+      } else {
+        byDay.set(dayKey, [log]);
+      }
+
+      const monthLogs = byMonth.get(monthKey);
+      if (monthLogs) {
+        monthLogs.push(log);
+      } else {
+        byMonth.set(monthKey, [log]);
+      }
+
+      const currentDayCounts = dayTypeCounts.get(dayKey) ?? createEmptyDayTypeCounts();
+      if (log.type === 'feeding') currentDayCounts.feedingCount += 1;
+      if (log.type === 'diaper') currentDayCounts.diaperCount += 1;
+      if (log.type === 'sleep') currentDayCounts.sleepCount += 1;
+      if (log.type === 'pump') currentDayCounts.pumpCount += 1;
+      dayTypeCounts.set(dayKey, currentDayCounts);
+    });
+
+    return { byDay, byMonth, dayTypeCounts };
+  }, [normalizedLogs]);
+
+  const dailyStats = useMemo(() => {
+    const dayLogs = logIndex.byDay.get(getDayKey(selectedDate)) ?? [];
     return {
       totalEntries: dayLogs.length,
       ...computeStats(dayLogs),
     };
-  }, [normalizedLogs, selectedDate]);
+  }, [logIndex, selectedDate]);
 
   const monthlyStats = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-    const dayMap = new Map<string, { feedingCount: number; diaperCount: number; sleepCount: number; pumpCount: number }>();
-
-    normalizedLogs.forEach((log) => {
-      if (log.at < monthStart || log.at > monthEnd) return;
-      const key = format(log.at, 'yyyy-MM-dd');
-      const current = dayMap.get(key) ?? { feedingCount: 0, diaperCount: 0, sleepCount: 0, pumpCount: 0 };
-
-      if (log.type === 'feeding') current.feedingCount += 1;
-      if (log.type === 'diaper') current.diaperCount += 1;
-      if (log.type === 'sleep') current.sleepCount += 1;
-      if (log.type === 'pump') current.pumpCount += 1;
-
-      dayMap.set(key, current);
-    });
-
     return days.map((day) => {
-      const key = format(day, 'yyyy-MM-dd');
-      const stats = dayMap.get(key) ?? { feedingCount: 0, diaperCount: 0, sleepCount: 0, pumpCount: 0 };
+      const key = getDayKey(day);
+      const stats = logIndex.dayTypeCounts.get(key) ?? createEmptyDayTypeCounts();
       return {
         date: day,
         ...stats,
         hasData: stats.feedingCount + stats.diaperCount + stats.sleepCount + stats.pumpCount > 0,
       };
     });
-  }, [normalizedLogs, currentMonth]);
+  }, [logIndex, currentMonth]);
 
   const monthlyTotals = useMemo(() => {
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const monthLogs = normalizedLogs.filter((log) => log.at >= monthStart && log.at <= monthEnd);
+    const monthLogs = logIndex.byMonth.get(getMonthKey(currentMonth)) ?? [];
     return {
       totalEntries: monthLogs.length,
       ...computeStats(monthLogs),
     };
-  }, [normalizedLogs, currentMonth]);
+  }, [logIndex, currentMonth]);
 
   const leadingDays = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
@@ -321,38 +350,38 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
   const monthSleepMins = monthlyTotals.sleepMinutes % 60;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-end sm:justify-center bg-black/40 backdrop-blur-sm px-0 sm:px-4 pb-0 sm:pb-8">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-end sm:justify-center bg-black/50 sm:bg-black/40 sm:backdrop-blur-sm px-0 sm:px-4 pb-0 sm:pb-8">
       <motion.div
-        initial={{ y: "100%", opacity: 0, scale: 0.95 }}
+        initial={shouldReduceMotion ? false : { y: "100%", opacity: 0, scale: 0.95 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
-        exit={{ y: "100%", opacity: 0, scale: 0.95 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative w-full max-w-5xl bg-background/95 backdrop-blur-2xl sm:rounded-[36px] rounded-t-[36px] shadow-2xl border border-white/20 flex flex-col h-[95vh] sm:h-[90vh] overflow-hidden"
+        exit={shouldReduceMotion ? { opacity: 0 } : { y: "100%", opacity: 0, scale: 0.95 }}
+        transition={shouldReduceMotion ? { duration: 0.18 } : { type: "spring", damping: 25, stiffness: 300 }}
+        className="relative w-full max-w-5xl bg-background/98 sm:bg-background/95 sm:backdrop-blur-2xl sm:rounded-[36px] rounded-t-[32px] shadow-xl sm:shadow-2xl border border-white/20 flex flex-col h-[100dvh] sm:h-[90vh] overflow-hidden"
       >
-        <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="pointer-events-none absolute inset-0 -z-10 hidden md:block">
           <motion.div
             className="absolute -top-24 -right-24 h-[320px] w-[320px] rounded-full bg-papaya/25 blur-3xl"
-            animate={{ y: [0, 16, 0], x: [0, -10, 0] }}
-            transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+            animate={shouldReduceMotion ? undefined : { y: [0, 16, 0], x: [0, -10, 0] }}
+            transition={shouldReduceMotion ? undefined : { duration: 18, repeat: Infinity, ease: 'easeInOut' }}
           />
           <motion.div
             className="absolute top-[22%] -left-28 h-[360px] w-[360px] rounded-full bg-sky/25 blur-3xl"
-            animate={{ y: [0, -12, 0], x: [0, 10, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+            animate={shouldReduceMotion ? undefined : { y: [0, -12, 0], x: [0, 10, 0] }}
+            transition={shouldReduceMotion ? undefined : { duration: 20, repeat: Infinity, ease: 'easeInOut' }}
           />
           <motion.div
             className="absolute bottom-0 right-[8%] h-[240px] w-[240px] rounded-full bg-saguaro/20 blur-3xl"
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+            animate={shouldReduceMotion ? undefined : { y: [0, 12, 0] }}
+            transition={shouldReduceMotion ? undefined : { duration: 22, repeat: Infinity, ease: 'easeInOut' }}
           />
         </div>
 
         <div className="relative z-10 flex h-full flex-col">
-          <header className="sticky top-0 z-20 border-b border-white/70 dark:border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur-xl">
-            <div className="mx-auto flex items-center justify-between gap-4 px-4 md:px-8 py-5 max-w-[1200px]">
+          <header className="sticky top-0 z-20 border-b border-white/70 dark:border-white/10 bg-white/95 dark:bg-black/50 sm:bg-white/70 sm:dark:bg-white/5 sm:backdrop-blur-xl">
+            <div className="mx-auto flex items-center justify-between gap-3 sm:gap-4 px-3 sm:px-4 md:px-8 py-4 sm:py-5 max-w-[1200px]">
               <button
                 onClick={onClose}
-                className="flex items-center justify-center size-11 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 text-gray-700 dark:text-gray-200 shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all"
+                className="flex items-center justify-center size-10 sm:size-11 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 text-gray-700 dark:text-gray-200 shadow-sm sm:shadow-[0_10px_25px_-18px_rgba(15,23,42,0.45)] transition-all"
               >
                 <X size={20} />
               </button>
@@ -375,10 +404,10 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
           </header>
 
           <div className="flex-1 overflow-y-auto no-scrollbar">
-            <div className="mx-auto w-full max-w-[1200px] px-4 md:px-8 pb-10">
-              <div className="mt-6 flex flex-col gap-6">
+            <div className="mx-auto w-full max-w-[1200px] px-3 sm:px-4 md:px-8 pb-6 sm:pb-10">
+              <div className="mt-4 sm:mt-6 flex flex-col gap-4 sm:gap-6">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="inline-flex items-center gap-2 rounded-full px-2 py-2 bg-white/80 dark:bg-white/10 backdrop-blur-xl border border-white/70 dark:border-white/10 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
+                  <div className="inline-flex items-center gap-2 rounded-full px-2 py-2 bg-white/90 dark:bg-white/10 sm:backdrop-blur-xl border border-white/70 dark:border-white/10 shadow-sm sm:shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
                     <button
                       onClick={() => handleViewModeChange('daily')}
                       className={`px-5 py-3 rounded-full font-bold text-base transition-colors ${viewMode === 'daily'
@@ -400,7 +429,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                   </div>
 
                   {viewMode === 'daily' ? (
-                    <div className="flex items-center gap-3 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-3 py-2 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
+                    <div className="flex items-center gap-2 sm:gap-3 rounded-full bg-white/90 dark:bg-white/10 border border-white/70 dark:border-white/10 px-2.5 sm:px-3 py-2 shadow-sm sm:shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
                       <button
                         onClick={() => navigateDay('prev')}
                         className="size-11 rounded-full bg-white/90 dark:bg-white/10 flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white transition"
@@ -429,7 +458,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3 rounded-full bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 px-3 py-2 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
+                    <div className="flex items-center gap-2 sm:gap-3 rounded-full bg-white/90 dark:bg-white/10 border border-white/70 dark:border-white/10 px-2.5 sm:px-3 py-2 shadow-sm sm:shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)]">
                       <button
                         onClick={() => navigateMonth('prev')}
                         className="size-11 rounded-full bg-white/90 dark:bg-white/10 flex items-center justify-center text-gray-700 dark:text-gray-200 hover:bg-white transition"
@@ -452,15 +481,15 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                 {viewMode === 'daily' ? (
                   <div className="flex flex-col gap-6">
                     {dailyStats.totalEntries === 0 && (
-                      <div className="rounded-[28px] border border-dashed border-white/70 dark:border-white/10 bg-white/60 dark:bg-white/5 text-center text-sm text-muted-foreground py-10">
+                      <div className="rounded-[24px] sm:rounded-[28px] border border-dashed border-white/70 dark:border-white/10 bg-white/70 dark:bg-white/5 text-center text-sm text-muted-foreground py-8 sm:py-10">
                         ยังไม่มีบันทึกในวันนี้
                       </div>
                     )}
 
-                    <div className="grid gap-6 lg:grid-cols-2">
-                      <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                    <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+                      <div className="relative overflow-hidden rounded-[24px] sm:rounded-[28px] border border-white/70 dark:border-white/10 bg-white/92 dark:bg-white/5 sm:backdrop-blur-xl shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] sm:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                         <div className="absolute inset-0 bg-gradient-to-br from-rose-100/70 dark:from-rose-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
-                        <div className="relative p-6">
+                        <div className="relative p-4 sm:p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="size-11 rounded-2xl bg-rose-100/80 dark:bg-rose-900/20 flex items-center justify-center">
@@ -489,9 +518,9 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                         </div>
                       </div>
 
-                      <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                      <div className="relative overflow-hidden rounded-[24px] sm:rounded-[28px] border border-white/70 dark:border-white/10 bg-white/92 dark:bg-white/5 sm:backdrop-blur-xl shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] sm:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                         <div className="absolute inset-0 bg-gradient-to-br from-amber-100/70 dark:from-amber-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
-                        <div className="relative p-6">
+                        <div className="relative p-4 sm:p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="size-11 rounded-2xl bg-amber-100/80 dark:bg-amber-900/30 flex items-center justify-center">
@@ -505,7 +534,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                             <span className="text-sm font-semibold text-muted-foreground">{dailyStats.diaperCount} ครั้ง</span>
                           </div>
 
-                          <div className="mt-4 grid grid-cols-4 gap-2">
+                          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
                               <p className="text-2xl font-black text-amber-600">{dailyStats.cleanCount}</p>
                               <p className="text-xs sm:text-sm text-muted-foreground mt-1">สะอาด</p>
@@ -526,9 +555,9 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                         </div>
                       </div>
 
-                      <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                      <div className="relative overflow-hidden rounded-[24px] sm:rounded-[28px] border border-white/70 dark:border-white/10 bg-white/92 dark:bg-white/5 sm:backdrop-blur-xl shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] sm:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                         <div className="absolute inset-0 bg-gradient-to-br from-sky-100/70 dark:from-sky-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
-                        <div className="relative p-6">
+                        <div className="relative p-4 sm:p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="size-11 rounded-2xl bg-sky-100/80 dark:bg-sky-900/30 flex items-center justify-center">
@@ -563,9 +592,9 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                         </div>
                       </div>
 
-                      <div className="relative overflow-hidden rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                      <div className="relative overflow-hidden rounded-[24px] sm:rounded-[28px] border border-white/70 dark:border-white/10 bg-white/92 dark:bg-white/5 sm:backdrop-blur-xl shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] sm:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
                         <div className="absolute inset-0 bg-gradient-to-br from-purple-100/70 dark:from-purple-500/10 via-white/80 dark:via-white/5 to-white/60 dark:to-black/20 opacity-90" />
-                        <div className="relative p-6">
+                        <div className="relative p-4 sm:p-6">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="size-11 rounded-2xl bg-purple-100/80 dark:bg-purple-900/30 flex items-center justify-center">
@@ -599,7 +628,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                   </div>
                 ) : (
                   <div className="grid gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-2 rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] p-6">
+                    <div className="lg:col-span-2 rounded-[24px] sm:rounded-[28px] border border-white/70 dark:border-white/10 bg-white/92 dark:bg-white/5 sm:backdrop-blur-xl shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] sm:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] p-4 sm:p-6">
                       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
                         <div>
                           <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Calendar</p>
@@ -668,7 +697,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </div>
                     </div>
 
-                    <div className="rounded-[28px] border border-white/70 dark:border-white/10 bg-white/80 dark:bg-white/5 backdrop-blur-xl shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] p-6">
+                    <div className="rounded-[24px] sm:rounded-[28px] border border-white/70 dark:border-white/10 bg-white/92 dark:bg-white/5 sm:backdrop-blur-xl shadow-[0_12px_30px_-24px_rgba(15,23,42,0.35)] sm:shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] p-4 sm:p-6">
                       <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">Summary</p>
                       <h3 className="text-xl font-black text-foreground">
                         สรุปเดือน {format(currentMonth, 'MMMM', { locale: th })}
