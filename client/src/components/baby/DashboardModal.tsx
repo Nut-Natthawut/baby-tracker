@@ -694,14 +694,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </div>
 
                       <div className="mt-4 rounded-2xl bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 p-4 text-sm text-muted-foreground">
-                        <div className="flex items-center justify-between">
-                          <span>นมขวดรวม</span>
-                          <span className="font-semibold text-foreground">{monthlyTotals.totalBottleMl} มล.</span>
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <span>เข้าเต้ารวม</span>
-                          <span className="font-semibold text-foreground">{monthlyTotals.totalBreastMinutes} นาที</span>
-                        </div>
+                        
                         <div className="flex items-center justify-between mt-2">
                           <span>จำนวนบันทึก</span>
                           <span className="font-semibold text-foreground">{monthlyTotals.totalEntries} รายการ</span>
