@@ -503,7 +503,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">เวลารวม</p>
                               <p className="text-2xl font-black text-sky-600">
-                                {sleepHours}h {sleepMins}m
+                                {sleepHours} h {sleepMins} m
                               </p>
                               <p className="text-sm text-muted-foreground">วันนี้</p>
                             </div>
@@ -545,7 +545,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">เวลาปั๊ม</p>
                               <p className="text-2xl font-black text-purple-500">
-                                {pumpHours > 0 ? `${pumpHours}h ${pumpMins}m` : `${pumpMins}m`}
+                                {pumpHours > 0 ? `${pumpHours}h ${pumpMins}m` : `${pumpMins} m`}
                               </p>
                               <p className="text-sm text-muted-foreground">รวมทั้งหมด</p>
                             </div>
