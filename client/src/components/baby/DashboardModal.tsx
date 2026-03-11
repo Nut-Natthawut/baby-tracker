@@ -17,9 +17,6 @@ import {
 } from 'date-fns';
 import { th } from 'date-fns/locale';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyData = any;
-
 interface DashboardModalProps {
   logs: LogEntry[];
   onClose: () => void;
@@ -28,7 +25,8 @@ interface DashboardModalProps {
 type NormalizedLog = {
   type: 'feeding' | 'diaper' | 'sleep' | 'pump' | 'unknown';
   at: Date;
-  details: Record<string, AnyData>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  details: Record<string, any>;
 };
 
 const toNumber = (value: unknown, fallback = 0) => {
@@ -77,7 +75,47 @@ const normalizeType = (value: unknown): NormalizedLog['type'] => {
   return 'unknown';
 };
 
-const getDetails = (log: AnyData): Record<string, AnyData> => {
+type DiaperStatus = 'clean' | 'pee' | 'poo' | 'mixed' | 'unknown';
+
+const normalizeDiaperStatus = (details: Record<string, unknown> | null | undefined): DiaperStatus => {
+  const raw = String(
+    details?.['status'] ??
+      details?.['diaperType'] ??
+      details?.['kind'] ??
+      details?.['type'] ??
+      ''
+  )
+    .trim()
+    .toLowerCase();
+
+  if (!raw) return 'unknown';
+  if (raw.includes('mixed') || raw.includes('both') || raw.includes('combo') || raw.includes('ผสม')) return 'mixed';
+  if (
+    raw.includes('pee') ||
+    raw.includes('wet') ||
+    raw.includes('urine') ||
+    raw.includes('ปัสสาวะ') ||
+    raw.includes('ฉี่')
+  ) {
+    return 'pee';
+  }
+  if (
+    raw.includes('poo') ||
+    raw.includes('poop') ||
+    raw.includes('dirty') ||
+    raw.includes('stool') ||
+    raw.includes('อุจจาระ') ||
+    raw.includes('อุจจะละ') ||
+    raw.includes('อึ')
+  ) {
+    return 'poo';
+  }
+  if (raw.includes('clean') || raw.includes('dry') || raw.includes('สะอาด')) return 'clean';
+  return 'unknown';
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getDetails = (log: any): Record<string, any> => {
   if (!log) return {};
   const raw = log.details ?? log.detail ?? log.data ?? log;
   if (typeof raw === 'string') {
@@ -92,7 +130,8 @@ const getDetails = (log: AnyData): Record<string, AnyData> => {
 
 const isDefined = <T,>(value: T | null | undefined): value is T => value !== null && value !== undefined;
 
-const normalizeLog = (log: AnyData): NormalizedLog | null => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const normalizeLog = (log: any): NormalizedLog | null => {
   const at = toDate(log?.timestamp ?? log?.time ?? log?.date ?? log?.createdAt ?? log?.created_at);
   if (!at) return null;
   const type = normalizeType(log?.type ?? log?.logType ?? log?.category ?? log?.kind ?? log?.event);
@@ -136,25 +175,11 @@ const computeStats = (entries: NormalizedLog[]) => {
     }
   });
 
-  const peeCount = diaperLogs.filter((log) => {
-    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('pee') || status.includes('wet');
-  }).length;
-
-  const pooCount = diaperLogs.filter((log) => {
-    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('poo') || status.includes('dirty');
-  }).length;
-
-  const mixedCount = diaperLogs.filter((log) => {
-    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('mixed');
-  }).length;
-
-  const cleanCount = diaperLogs.filter((log) => {
-    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('clean');
-  }).length;
+  const diaperStatuses = diaperLogs.map((log) => normalizeDiaperStatus(log.details));
+  const peeCount = diaperStatuses.filter((status) => status === 'pee' || status === 'mixed').length;
+  const pooCount = diaperStatuses.filter((status) => status === 'poo' || status === 'mixed').length;
+  const mixedCount = diaperStatuses.filter((status) => status === 'mixed').length;
+  const cleanCount = diaperStatuses.filter((status) => status === 'clean').length;
 
   const sleepMinutes = sleepLogs.reduce((sum, log) => {
     return sum + toNumber(log.details?.durationMinutes ?? log.details?.duration_minutes ?? log.details?.duration);
@@ -482,34 +507,14 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                             <span className="text-sm font-semibold text-muted-foreground">{dailyStats.diaperCount} ครั้ง</span>
                           </div>
 
-                          <div className="mt-4 grid grid-cols-4 gap-2">
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-2 sm:p-3">
-                              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">ปัสสาวะ</p>
-                              <div className="flex items-baseline gap-1 mt-1">
-                                <p className="text-lg sm:text-2xl font-black text-amber-600">{dailyStats.peeCount}</p>
-                              </div>
-                                <span className="text-[10px] sm:text-sm font-semibold text-amber-600/80">ครั้ง</span>
+                          <div className="mt-4 grid grid-cols-2 gap-3">
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                              <p className="text-2xl font-black text-amber-600">{dailyStats.peeCount}</p>
+                              <p className="text-sm text-muted-foreground mt-1">💧 ฉี่</p>
                             </div>
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-2 sm:p-3">
-                              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">อุจจาระ</p>
-                              <div className="flex items-baseline gap-1 mt-1">
-                                <p className="text-lg sm:text-2xl font-black text-amber-600">{dailyStats.pooCount}</p>
-                              </div>
-                                <span className="text-[10px] sm:text-sm font-semibold text-amber-600/80">ครั้ง</span>
-                            </div>
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-2 sm:p-3">
-                              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">ผสม</p>
-                              <div className="flex items-baseline gap-1 mt-1">
-                                <p className="text-lg sm:text-2xl font-black text-amber-600">{dailyStats.mixedCount}</p>
-                              </div>
-                                <span className="text-[10px] sm:text-sm font-semibold text-amber-600/80">ครั้ง</span>
-                            </div>
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-2 sm:p-3">
-                              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">สะอาด</p>
-                              <div className="flex items-baseline gap-1 mt-1">
-                                <p className="text-lg sm:text-2xl font-black text-amber-600">{dailyStats.cleanCount}</p>
-                              </div>
-                                <span className="text-[10px] sm:text-sm font-semibold text-amber-600/80">ครั้ง</span>
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                              <p className="text-2xl font-black text-amber-600">{dailyStats.pooCount}</p>
+                              <p className="text-sm text-muted-foreground mt-1">💩 อึ</p>
                             </div>
                           </div>
                         </div>
@@ -535,7 +540,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">เวลารวม</p>
                               <p className="text-2xl font-black text-sky-600">
-                                {sleepHours}h {sleepMins}m
+                                {sleepHours} h {sleepMins} m
                               </p>
                               <p className="text-sm text-muted-foreground">วันนี้</p>
                             </div>
@@ -577,7 +582,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                             <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-sm font-semibold text-muted-foreground">เวลาปั๊ม</p>
                               <p className="text-2xl font-black text-purple-500">
-                                {pumpHours > 0 ? `${pumpHours}h ${pumpMins}m` : `${pumpMins}m`}
+                                {pumpHours > 0 ? `${pumpHours}h ${pumpMins}m` : `${pumpMins} m`}
                               </p>
                               <p className="text-sm text-muted-foreground">รวมทั้งหมด</p>
                             </div>
@@ -689,14 +694,7 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                       </div>
 
                       <div className="mt-4 rounded-2xl bg-white/80 dark:bg-white/10 border border-white/70 dark:border-white/10 p-4 text-sm text-muted-foreground">
-                        <div className="flex items-center justify-between">
-                          <span>นมขวดรวม</span>
-                          <span className="font-semibold text-foreground">{monthlyTotals.totalBottleMl} มล.</span>
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <span>เข้าเต้ารวม</span>
-                          <span className="font-semibold text-foreground">{monthlyTotals.totalBreastMinutes} นาที</span>
-                        </div>
+                        
                         <div className="flex items-center justify-between mt-2">
                           <span>จำนวนบันทึก</span>
                           <span className="font-semibold text-foreground">{monthlyTotals.totalEntries} รายการ</span>

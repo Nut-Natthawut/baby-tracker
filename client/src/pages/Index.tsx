@@ -1272,7 +1272,7 @@ const Index = () => {
                         <Milk className="w-9 h-9" />
                       </div>
                       <div>
-                        <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">ปั๊มนม</span>
+                        <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">บันทึกการปั๊มนม</span>
                         <span className="text-sm font-semibold text-purple-500/80 dark:text-pump/80">รายละเอียดการปั๊ม</span>
                       </div>
                     </div>
@@ -1308,9 +1308,9 @@ const Index = () => {
                     <div className="flex items-end justify-between">
                       <span className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
                         {dailySummary.sleepH}
-                        <span className="text-lg text-gray-400 font-medium ml-2">ชม.</span>{" "}
+                        <span className="text-lg text-gray-400 font-medium "> ชม.</span>{" "}
                         {dailySummary.sleepR}
-                        <span className="text-lg text-gray-400 font-medium ml-2">น.</span>
+                        <span className="text-lg text-gray-400 font-medium "> น.</span>
                       </span>
                       <span className="text-sm font-semibold text-gray-400">{dailySummary.sleepCount} ครั้ง</span>
                     </div>
