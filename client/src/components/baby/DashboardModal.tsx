@@ -75,6 +75,45 @@ const normalizeType = (value: unknown): NormalizedLog['type'] => {
   return 'unknown';
 };
 
+type DiaperStatus = 'clean' | 'pee' | 'poo' | 'mixed' | 'unknown';
+
+const normalizeDiaperStatus = (details: Record<string, unknown> | null | undefined): DiaperStatus => {
+  const raw = String(
+    details?.['status'] ??
+      details?.['diaperType'] ??
+      details?.['kind'] ??
+      details?.['type'] ??
+      ''
+  )
+    .trim()
+    .toLowerCase();
+
+  if (!raw) return 'unknown';
+  if (raw.includes('mixed') || raw.includes('both') || raw.includes('combo') || raw.includes('ผสม')) return 'mixed';
+  if (
+    raw.includes('pee') ||
+    raw.includes('wet') ||
+    raw.includes('urine') ||
+    raw.includes('ปัสสาวะ') ||
+    raw.includes('ฉี่')
+  ) {
+    return 'pee';
+  }
+  if (
+    raw.includes('poo') ||
+    raw.includes('poop') ||
+    raw.includes('dirty') ||
+    raw.includes('stool') ||
+    raw.includes('อุจจาระ') ||
+    raw.includes('อุจจะละ') ||
+    raw.includes('อึ')
+  ) {
+    return 'poo';
+  }
+  if (raw.includes('clean') || raw.includes('dry') || raw.includes('สะอาด')) return 'clean';
+  return 'unknown';
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getDetails = (log: any): Record<string, any> => {
   if (!log) return {};
@@ -136,25 +175,11 @@ const computeStats = (entries: NormalizedLog[]) => {
     }
   });
 
-  const peeCount = diaperLogs.filter((log) => {
-    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('pee') || status.includes('wet');
-  }).length;
-
-  const pooCount = diaperLogs.filter((log) => {
-    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('poo') || status.includes('dirty');
-  }).length;
-
-  const mixedCount = diaperLogs.filter((log) => {
-    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('mixed');
-  }).length;
-
-  const cleanCount = diaperLogs.filter((log) => {
-    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('clean');
-  }).length;
+  const diaperStatuses = diaperLogs.map((log) => normalizeDiaperStatus(log.details));
+  const peeCount = diaperStatuses.filter((status) => status === 'pee' || status === 'mixed').length;
+  const pooCount = diaperStatuses.filter((status) => status === 'poo' || status === 'mixed').length;
+  const mixedCount = diaperStatuses.filter((status) => status === 'mixed').length;
+  const cleanCount = diaperStatuses.filter((status) => status === 'clean').length;
 
   const sleepMinutes = sleepLogs.reduce((sum, log) => {
     return sum + toNumber(log.details?.durationMinutes ?? log.details?.duration_minutes ?? log.details?.duration);
