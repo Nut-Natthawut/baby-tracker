@@ -471,11 +471,11 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                           </div>
 
                           <div className="mt-4 grid grid-cols-2 gap-3">
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-2xl font-black text-amber-600">{dailyStats.peeCount}</p>
                               <p className="text-sm text-muted-foreground mt-1">💧 ฉี่</p>
                             </div>
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
                               <p className="text-2xl font-black text-amber-600">{dailyStats.pooCount}</p>
                               <p className="text-sm text-muted-foreground mt-1">💩 อึ</p>
                             </div>
