@@ -24,9 +24,9 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
   const hasNotes = Boolean(notes);
   const hasFeedingAmount = Boolean(
     feedingDetails
-      && feedingDetails.method === 'bottle'
-      && typeof feedingDetails.amountMl === 'number'
-      && feedingDetails.amountMl > 0,
+    && feedingDetails.method === 'bottle'
+    && typeof feedingDetails.amountMl === 'number'
+    && feedingDetails.amountMl > 0,
   );
   const hasPooColor = Boolean(diaperDetails?.pooColor);
   const hasSleepEndTime = Boolean(sleepDetails?.endTime);
@@ -213,13 +213,13 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
                   {(diaperDetails.status === 'pee' || diaperDetails.status === 'mixed') && (
                     <div className="flex items-center gap-2">
                       <span className="text-3xl">💧</span>
-                      <span className="font-bold text-diaper">ฉี่</span>
+                      <span className="font-bold text-diaper">ปัสสาวะ</span>
                     </div>
                   )}
                   {(diaperDetails.status === 'poo' || diaperDetails.status === 'mixed') && (
                     <div className="flex items-center gap-2">
                       <span className="text-3xl">💩</span>
-                      <span className="font-bold text-diaper">อึ</span>
+                      <span className="font-bold text-diaper">อุจจาระ</span>
                     </div>
                   )}
                   {diaperDetails.status === 'clean' && (
@@ -233,7 +233,7 @@ const LogDetailModal: React.FC<LogDetailModalProps> = ({ entry, onClose }) => {
 
               {hasPooColor && (
                 <div className="bg-secondary/50 rounded-2xl p-4">
-                  <p className="text-base text-muted-foreground mb-3">สีอึ</p>
+                  <p className="text-base text-muted-foreground mb-3">สีอุจจาระ</p>
                   <div className="flex items-center gap-3">
                     {(() => {
                       const colorInfo = POO_COLORS.find(c => c.id === diaperDetails.pooColor);
