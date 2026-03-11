@@ -341,7 +341,7 @@ const LandingPage = () => {
                           <div className="w-10 h-10 bg-diaper/20 rounded-lg flex items-center justify-center text-xl">👶</div>
                           <div>
                             <p className="font-semibold text-sm text-slate-800">เปลี่ยนผ้าอ้อม</p>
-                            <p className="text-xs text-slate-500">ฉี่ + อึ • 09:15</p>
+                            <p className="text-xs text-slate-500">ผสม • 09:15</p>
                           </div>
                         </div>
                         <div className="bg-white/80 p-3 rounded-xl border border-white/70 flex items-center gap-3">
