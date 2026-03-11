@@ -186,7 +186,7 @@ function getCurrentRoleLabel(hasBaby: boolean, role: MemberRole | null): string 
   if (!hasBaby) return "ยังไม่ได้เลือกเด็ก";
   if (role === "owner") return "เจ้าของเด็ก";
   if (role === "parent") return "พ่อ/แม่";
-  if (role === "caregiver") return "ผู้ดูแลร่วม";
+  if (role === "caregiver") return "ผู้ช่วยเลี้ยง";
   return "กำลังตรวจสิทธิ์";
 }
 
