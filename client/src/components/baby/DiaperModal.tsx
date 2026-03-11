@@ -161,7 +161,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
                   }`}
               >
                 <span className="text-2xl">💧</span>
-                <span className="text-sm">ฉี่</span>
+                <span className="text-sm">ปัสสาวะ</span>
               </button>
               <button
                 onClick={() => setStatus('poo')}
@@ -171,7 +171,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
                   }`}
               >
                 <span className="text-2xl">💩</span>
-                <span className="text-sm">อึ</span>
+                <span className="text-sm">อุจจาระ</span>
               </button>
               <button
                 onClick={() => setStatus('mixed')}
@@ -181,7 +181,7 @@ const DiaperModal: React.FC<DiaperModalProps> = ({ onClose, onSave, initialData 
                   }`}
               >
                 <span className="text-2xl">💧💩</span>
-                <span className="text-sm">ฉี่+อึ</span>
+                <span className="text-sm">ผสม</span>
               </button>
             </div>
           </div>

@@ -138,12 +138,22 @@ const computeStats = (entries: NormalizedLog[]) => {
 
   const peeCount = diaperLogs.filter((log) => {
     const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('pee') || status.includes('wet') || status.includes('mixed');
+    return status.includes('pee') || status.includes('wet');
   }).length;
 
   const pooCount = diaperLogs.filter((log) => {
     const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('poo') || status.includes('dirty') || status.includes('mixed');
+    return status.includes('poo') || status.includes('dirty');
+  }).length;
+
+  const mixedCount = diaperLogs.filter((log) => {
+    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
+    return status.includes('mixed');
+  }).length;
+
+  const cleanCount = diaperLogs.filter((log) => {
+    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
+    return status.includes('clean');
   }).length;
 
   const sleepMinutes = sleepLogs.reduce((sum, log) => {
@@ -176,6 +186,8 @@ const computeStats = (entries: NormalizedLog[]) => {
     breastCount,
     peeCount,
     pooCount,
+    mixedCount,
+    cleanCount,
     sleepMinutes,
     pumpMinutes,
     pumpMl: Math.round(pumpMl),

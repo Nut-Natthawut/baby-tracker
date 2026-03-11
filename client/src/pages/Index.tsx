@@ -119,14 +119,14 @@ function formatDiaperType(input: any) {
   const key = raw.toLowerCase();
   if (key === "diaper") return "";
   const map: Record<string, string> = {
-    pee: "ฉี่",
-    wet: "ฉี่",
-    urine: "ฉี่",
-    poo: "อึ",
-    poop: "อึ",
-    dirty: "อึ",
-    stool: "อึ",
-    mixed: "ฉี่+อึ",
+    pee: "ปัสสาวะ",
+    wet: "ปัสสาวะ",
+    urine: "ปัสสาวะ",
+    poo: "อุจจาระ",
+    poop: "อุจจาระ",
+    dirty: "อุจจาระ",
+    stool: "อุจจาระ",
+    mixed: "ผสม",
     clean: "สะอาด",
   };
   return map[key] ?? raw;
@@ -1092,7 +1092,7 @@ const Index = () => {
                         {dailySummary.pumpMl} มล.
                       </p>
                     </div>
-                    
+
                   </div>
                 </div>
               </div>
@@ -1225,7 +1225,7 @@ const Index = () => {
                       </div>
                       <div>
                         <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">บันทึกผ้าอ้อม</span>
-                        <span className="text-sm font-semibold text-amber-500/80 dark:text-diaper/80">ฉี่/อึ/ผสม</span>
+                        <span className="text-sm font-semibold text-amber-500/80 dark:text-diaper/80">ปัสสาวะ/อุจจาระ/ผสม</span>
                       </div>
                     </div>
                   </motion.button>
@@ -1371,9 +1371,9 @@ const Index = () => {
                         className="bg-rose-400 h-full rounded-full"
                         style={{ width: `${Math.min(100, Math.round((dailySummary.totalMl / 600) * 100))}%` }}
                       />
-                      
+
                     </div>
-                    
+
                   </div>
 
                   {/* Pumping */}

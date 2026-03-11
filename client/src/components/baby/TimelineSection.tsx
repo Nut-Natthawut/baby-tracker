@@ -49,9 +49,9 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ entry, onViewDetail }) => {
 
     const statusMap: Record<string, string> = {
       clean: 'สะอาด',
-      pee: 'ฉี่',
-      poo: 'อึ',
-      mixed: 'ฉี่ + อึ',
+      pee: 'ปัสสาวะ',
+      poo: 'อุจจาระ',
+      mixed: 'ผสม',
     };
     details = statusMap[d.status] || d.status;
 
