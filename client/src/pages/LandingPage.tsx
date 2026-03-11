@@ -405,7 +405,7 @@ const LandingPage = () => {
             <span className="font-bold text-foreground">Baby Tracker</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2024 Baby Tracker. ออกแบบด้วยความรักสำหรับคุณพ่อคุณแม่ทุกคน 💕
+            © 2026 Baby Tracker. ออกแบบด้วยความรักสำหรับคุณพ่อคุณแม่ทุกคน 💕
           </p>
         </div>
       </footer>

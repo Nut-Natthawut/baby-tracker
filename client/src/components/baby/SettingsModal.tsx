@@ -187,7 +187,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
 
               <div className="pt-2 text-center">
-                <p className="text-base text-muted-foreground">Baby Tracker v1.0</p>
+                <p className="text-base text-muted-foreground">Baby Tracker v1.0.1</p>
                 <p className="text-sm text-muted-foreground mt-1">ระบบบันทึกการดูแลทารก</p>
               </div>
             </div>
