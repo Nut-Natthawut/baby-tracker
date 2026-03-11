@@ -62,7 +62,7 @@ const Signup = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="signup-name" className="text-sm font-semibold text-muted-foreground mb-2 block">
-                ชื่อ (ไม่บังคับ)
+                ชื่อ 
               </label>
               <div className="relative">
                 <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
