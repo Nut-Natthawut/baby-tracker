@@ -78,15 +78,13 @@ const normalizeType = (value: unknown): NormalizedLog['type'] => {
 type DiaperStatus = 'clean' | 'pee' | 'poo' | 'mixed' | 'unknown';
 
 const normalizeDiaperStatus = (details: Record<string, unknown> | null | undefined): DiaperStatus => {
-  const raw = String(
-    details?.['status'] ??
-      details?.['diaperType'] ??
-      details?.['kind'] ??
-      details?.['type'] ??
-      ''
-  )
-    .trim()
-    .toLowerCase();
+  const candidate = details?.['status'] ?? details?.['diaperType'] ?? details?.['kind'] ?? details?.['type'];
+  let raw = '';
+  if (typeof candidate === 'string') {
+    raw = candidate.trim().toLowerCase();
+  } else if (typeof candidate === 'number' || typeof candidate === 'boolean') {
+    raw = String(candidate).toLowerCase();
+  }
 
   if (!raw) return 'unknown';
   if (raw.includes('mixed') || raw.includes('both') || raw.includes('combo') || raw.includes('ผสม')) return 'mixed';
@@ -176,8 +174,8 @@ const computeStats = (entries: NormalizedLog[]) => {
   });
 
   const diaperStatuses = diaperLogs.map((log) => normalizeDiaperStatus(log.details));
-  const peeCount = diaperStatuses.filter((status) => status === 'pee' || status === 'mixed').length;
-  const pooCount = diaperStatuses.filter((status) => status === 'poo' || status === 'mixed').length;
+  const peeCount = diaperStatuses.filter((status) => status === 'pee').length;
+  const pooCount = diaperStatuses.filter((status) => status === 'poo').length;
   const mixedCount = diaperStatuses.filter((status) => status === 'mixed').length;
   const cleanCount = diaperStatuses.filter((status) => status === 'clean').length;
 
@@ -507,14 +505,22 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                             <span className="text-sm font-semibold text-muted-foreground">{dailyStats.diaperCount} ครั้ง</span>
                           </div>
 
-                          <div className="mt-4 grid grid-cols-2 gap-3">
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
-                              <p className="text-2xl font-black text-amber-600">{dailyStats.peeCount}</p>
-                              <p className="text-sm text-muted-foreground mt-1">💧 ฉี่</p>
+                          <div className="mt-4 grid grid-cols-4 gap-2">
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
+                              <p className="text-2xl font-black text-amber-600">{dailyStats.mixedCount}</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground mt-1">ผสม</p>
                             </div>
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3">
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
                               <p className="text-2xl font-black text-amber-600">{dailyStats.pooCount}</p>
-                              <p className="text-sm text-muted-foreground mt-1">💩 อึ</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground mt-1">อึ</p>
+                            </div>
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
+                              <p className="text-2xl font-black text-amber-600">{dailyStats.peeCount}</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground mt-1">ฉี่</p>
+                            </div>
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
+                              <p className="text-2xl font-black text-amber-600">{dailyStats.cleanCount}</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground mt-1">สะอาด</p>
                             </div>
                           </div>
                         </div>
