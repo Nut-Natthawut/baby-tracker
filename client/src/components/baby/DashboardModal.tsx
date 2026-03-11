@@ -17,9 +17,6 @@ import {
 } from 'date-fns';
 import { th } from 'date-fns/locale';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyData = any;
-
 interface DashboardModalProps {
   logs: LogEntry[];
   onClose: () => void;
@@ -28,7 +25,8 @@ interface DashboardModalProps {
 type NormalizedLog = {
   type: 'feeding' | 'diaper' | 'sleep' | 'pump' | 'unknown';
   at: Date;
-  details: Record<string, AnyData>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  details: Record<string, any>;
 };
 
 const toNumber = (value: unknown, fallback = 0) => {
@@ -77,7 +75,8 @@ const normalizeType = (value: unknown): NormalizedLog['type'] => {
   return 'unknown';
 };
 
-const getDetails = (log: AnyData): Record<string, AnyData> => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getDetails = (log: any): Record<string, any> => {
   if (!log) return {};
   const raw = log.details ?? log.detail ?? log.data ?? log;
   if (typeof raw === 'string') {
@@ -92,7 +91,8 @@ const getDetails = (log: AnyData): Record<string, AnyData> => {
 
 const isDefined = <T,>(value: T | null | undefined): value is T => value !== null && value !== undefined;
 
-const normalizeLog = (log: AnyData): NormalizedLog | null => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const normalizeLog = (log: any): NormalizedLog | null => {
   const at = toDate(log?.timestamp ?? log?.time ?? log?.date ?? log?.createdAt ?? log?.created_at);
   if (!at) return null;
   const type = normalizeType(log?.type ?? log?.logType ?? log?.category ?? log?.kind ?? log?.event);
