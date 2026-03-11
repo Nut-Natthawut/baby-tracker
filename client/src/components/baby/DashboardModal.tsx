@@ -138,12 +138,22 @@ const computeStats = (entries: NormalizedLog[]) => {
 
   const peeCount = diaperLogs.filter((log) => {
     const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('pee') || status.includes('wet') || status.includes('mixed');
+    return status.includes('pee') || status.includes('wet');
   }).length;
 
   const pooCount = diaperLogs.filter((log) => {
     const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
-    return status.includes('poo') || status.includes('dirty') || status.includes('mixed');
+    return status.includes('poo') || status.includes('dirty');
+  }).length;
+
+  const mixedCount = diaperLogs.filter((log) => {
+    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
+    return status.includes('mixed');
+  }).length;
+
+  const cleanCount = diaperLogs.filter((log) => {
+    const status = String(log.details?.status ?? log.details?.diaperType ?? log.details?.type ?? '').toLowerCase();
+    return status.includes('clean');
   }).length;
 
   const sleepMinutes = sleepLogs.reduce((sum, log) => {
@@ -176,6 +186,8 @@ const computeStats = (entries: NormalizedLog[]) => {
     breastCount,
     peeCount,
     pooCount,
+    mixedCount,
+    cleanCount,
     sleepMinutes,
     pumpMinutes,
     pumpMl: Math.round(pumpMl),
@@ -470,14 +482,34 @@ const DashboardModal: React.FC<DashboardModalProps> = ({ logs, onClose }) => {
                             <span className="text-sm font-semibold text-muted-foreground">{dailyStats.diaperCount} ครั้ง</span>
                           </div>
 
-                          <div className="mt-4 grid grid-cols-2 gap-3">
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
-                              <p className="text-2xl font-black text-amber-600">{dailyStats.peeCount}</p>
-                              <p className="text-sm text-muted-foreground mt-1">💧 ปัสสาวะ</p>
+                          <div className="mt-4 grid grid-cols-4 gap-2">
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-2 sm:p-3">
+                              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">ปัสสาวะ</p>
+                              <div className="flex items-baseline gap-1 mt-1">
+                                <p className="text-lg sm:text-2xl font-black text-amber-600">{dailyStats.peeCount}</p>
+                              </div>
+                                <span className="text-[10px] sm:text-sm font-semibold text-amber-600/80">ครั้ง</span>
                             </div>
-                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-3 text-center">
-                              <p className="text-2xl font-black text-amber-600">{dailyStats.pooCount}</p>
-                              <p className="text-sm text-muted-foreground mt-1">💩 อุจจาระ</p>
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-2 sm:p-3">
+                              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">อุจจาระ</p>
+                              <div className="flex items-baseline gap-1 mt-1">
+                                <p className="text-lg sm:text-2xl font-black text-amber-600">{dailyStats.pooCount}</p>
+                              </div>
+                                <span className="text-[10px] sm:text-sm font-semibold text-amber-600/80">ครั้ง</span>
+                            </div>
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-2 sm:p-3">
+                              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">ผสม</p>
+                              <div className="flex items-baseline gap-1 mt-1">
+                                <p className="text-lg sm:text-2xl font-black text-amber-600">{dailyStats.mixedCount}</p>
+                              </div>
+                                <span className="text-[10px] sm:text-sm font-semibold text-amber-600/80">ครั้ง</span>
+                            </div>
+                            <div className="rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 p-2 sm:p-3">
+                              <p className="text-xs sm:text-sm font-semibold text-muted-foreground">สะอาด</p>
+                              <div className="flex items-baseline gap-1 mt-1">
+                                <p className="text-lg sm:text-2xl font-black text-amber-600">{dailyStats.cleanCount}</p>
+                              </div>
+                                <span className="text-[10px] sm:text-sm font-semibold text-amber-600/80">ครั้ง</span>
                             </div>
                           </div>
                         </div>
