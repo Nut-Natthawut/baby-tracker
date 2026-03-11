@@ -1272,7 +1272,7 @@ const Index = () => {
                         <Milk className="w-9 h-9" />
                       </div>
                       <div>
-                        <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">ปั๊มนม</span>
+                        <span className="block text-xl font-bold tracking-tight text-gray-900 dark:text-white mb-1">บันทึกการปั๊มนม</span>
                         <span className="text-sm font-semibold text-purple-500/80 dark:text-pump/80">รายละเอียดการปั๊ม</span>
                       </div>
                     </div>
