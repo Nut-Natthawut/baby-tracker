@@ -864,6 +864,16 @@ const Index = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
+                onClick={() => navigate("/join")}
+                className="w-full mt-3 py-3 rounded-2xl bg-white/85 dark:bg-white/10 border border-white/70 dark:border-white/10 text-foreground font-semibold shadow-sm backdrop-blur-xl hover:bg-white dark:hover:bg-white/20 transition-all"
+              >
+                กรอกรหัสเข้าร่วม
+              </motion.button>
+
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
                 onClick={logout}
                 className="w-full mt-4 py-3 text-muted-foreground hover:text-foreground font-bold text-sm transition-colors"
               >
