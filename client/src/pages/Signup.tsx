@@ -95,9 +95,7 @@ const Signup = () => {
                     setError("");
                   }}
                   placeholder="เช่น คุณแม่"
-                  minLength={2}
-                  maxLength={50}
-                  required
+                  aria-required="true"
                   aria-invalid={Boolean(error)}
                   className="w-full bg-card border border-border rounded-2xl py-3.5 pl-11 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
@@ -137,10 +135,8 @@ const Signup = () => {
                     setError("");
                   }}
                   placeholder="ตั้งรหัสผ่าน"
-                  minLength={8}
-                  maxLength={64}
+                  aria-required="true"
                   className="w-full bg-card border border-border rounded-2xl py-3.5 pl-11 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  required
                 />
                 <button
                   type="button"
@@ -168,10 +164,8 @@ const Signup = () => {
                     setError("");
                   }}
                   placeholder="พิมพ์รหัสผ่านอีกครั้ง"
-                  minLength={8}
-                  maxLength={64}
+                  aria-required="true"
                   className="w-full bg-card border border-border rounded-2xl py-3.5 pl-11 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  required
                 />
                 <button
                   type="button"

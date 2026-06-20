@@ -721,16 +721,16 @@ Submit each case and confirm no signup request succeeds:
 
 - [ ] **Step 4: Verify direct API bypass attempts**
 
-Send invalid payloads directly to `/auth/signup` and confirm each returns HTTP 400 with the matching Thai `message`, and confirm no user row is created:
+Send invalid payloads directly to `/api/auth/signup` and confirm each returns HTTP 400 with the matching Thai `message`, and confirm no user row is created:
 
 ```bash
-curl -i -X POST http://localhost:8787/auth/signup \
+curl -i -X POST http://localhost:8787/api/auth/signup \
   -H 'Content-Type: application/json' \
   -d '{"name":" ","email":"space-name@example.com","password":"Abcd1234"}'
 ```
 
 ```bash
-curl -i -X POST http://localhost:8787/auth/signup \
+curl -i -X POST http://localhost:8787/api/auth/signup \
   -H 'Content-Type: application/json' \
   -d '{"name":"สมชาย","email":"thai-password@example.com","password":"รหัสผ่าน123"}'
 ```
@@ -761,4 +761,3 @@ If no corrections are needed, do not create an empty commit.
 | 8. Password shorter than 8 characters must be rejected | Tasks 1, 2, 4, 5, 6 |
 | 9. Password must not exceed 64 characters | Tasks 1, 2, 4, 5, 6 |
 | 10. Thai/non-English password must be rejected | Tasks 1, 2, 4, 5, 6 |
-
