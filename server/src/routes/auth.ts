@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Bindings } from "../types";
 import { hashPassword, signJwt, verifyPassword } from "../lib/auth";
+import { validateSignupInput } from "../lib/signupValidation";
 import { requireAuth, type AuthVariables } from "../middleware/auth";
 
 const auth = new Hono<{ Bindings: Bindings; Variables: AuthVariables }>();
@@ -15,13 +16,13 @@ function normalizeEmail(email: string) {
 
 auth.post("/signup", async (c) => {
   const body = await c.req.json();
-  const email = normalizeEmail(String(body?.email ?? ""));
-  const password = String(body?.password ?? "");
-  const name = body?.name ? String(body.name).trim() : null;
+  const validation = validateSignupInput(body);
 
-  if (!email || !password) {
-    return c.json({ success: false, message: "Email and password are required" }, 400);
+  if (!validation.valid) {
+    return c.json({ success: false, message: validation.message }, 400);
   }
+
+  const { email, password, name } = validation.value;
 
   if (!c.env.JWT_SECRET) {
     return c.json({ success: false, message: "Server misconfigured" }, 500);
