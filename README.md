@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.x-06B6D4?logo=tailwindcss&logoColor=white" />
 </p>
 
-<h1 align="center">👶 Baby Tracker — บันทึกการดูแลลูกน้อย</h1>
+<h1 align="center"> Baby Tracker — บันทึกการดูแลลูกน้อย</h1>
 
 <p align="center">
   ระบบบันทึกการดูแลทารกแบบครบวงจร สำหรับพ่อแม่และผู้ดูแล<br/>
@@ -63,24 +63,24 @@ This project was developed collaboratively by a team of **3 members** for a univ
 |---|---|---|
 | **Nut-Natthawut** | Backend Developer / DevOps Engineer | • Architected serverless backend using **Hono** + **Cloudflare Workers** + **D1**<br/>• Designed database schema with **Drizzle ORM** and wrote migrations<br/>• Implemented **JWT Authentication** with access & refresh tokens<br/>• Built the full **CI/CD pipeline** (GitHub Actions ↔ GitLab sync, auto MR creation)<br/>• Configured deployment: **Vercel** (frontend) + **Cloudflare Workers** (backend)<br/>• Managed version control strategy and repository mirroring |
 | **taechonlakon** | Frontend Developer / UI Designer | • Designed and implemented the **Landing Page** with modern UI/UX<br/>• Built core baby tracking UI: **BabySwitcher**, **SleepModal**, and activity logging components<br/>• Implemented the **Authentication & Invitation UI** system<br/>• Developed **SettingsModal**, **ThemeToggle**, and accessibility enhancements<br/>• Created reusable **shadcn/ui** components and Tailwind CSS styling system<br/>• Integrated frontend with backend API for baby management and activity features |
-| **Khwanchanok Sawangned** | Business Analyst (BA) | • Gathered and analyzed project requirements from stakeholders<br/>• Created user stories, use cases, and acceptance criteria<br/>• Designed application workflow and user journey mapping<br/>• Coordinated between team members to ensure feature alignment<br/>• Documented functional specifications and project deliverables |
+| **Khwanchanok Sawangned** | Manual Tester / Business Analyst | • Defined application scope and analyzed user needs to support development<br/>• Prepared testing artifacts for the Authentication module, including Test Plan, RTM, Test Cases, Bug Reports, and test evidence<br/>• Conducted manual UI testing across core application features to identify usability and functional issues<br/>• Reported defects and coordinated with developers to support system improvement<br/> |
 
 ---
 
-## ✨ Features
+##  Features
 
 | Feature | Description |
 |---|---|
-| 🍼 **Feeding Logs** | Track breast milk and formula feeding times and quantities |
-| 🧷 **Diaper Tracking** | Log diaper changes with type (wet/dirty) and timestamps |
-| 😴 **Sleep Scheduler** | Record sleep start/end times with total duration calculation |
-| 📊 **Dashboard Stats** | Visual summaries of daily activities for easy pattern recognition |
-| 👨‍👩‍👧 **Caregiver Invites** | Share access with family members to collaborate on the baby's profile |
-| 🔐 **Secure Auth** | Stateless JWT authentication with refresh token rotation |
+|  **Feeding Logs** | Track breast milk and formula feeding times and quantities |
+|  **Diaper Tracking** | Log diaper changes with type (wet/dirty) and timestamps |
+|  **Sleep Scheduler** | Record sleep start/end times with total duration calculation |
+|  **Dashboard Stats** | Visual summaries of daily activities for easy pattern recognition |
+|  **Caregiver Invites** | Share access with family members to collaborate on the baby's profile |
+|  **Secure Auth** | Stateless JWT authentication with refresh token rotation |
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```text
 ┌──────────────────────────────┐     ┌──────────────────────────────┐
@@ -106,7 +106,7 @@ This project was developed collaboratively by a team of **3 members** for a univ
 
 ---
 
-## 🗂️ Project Structure
+##  Project Structure
 
 ```text
 baby-tracker/
@@ -139,7 +139,7 @@ baby-tracker/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -188,7 +188,7 @@ The backend API will be available at `http://127.0.0.1:8787`
 
 ---
 
-## 📦 Deployment
+##  Deployment
 
 ### Frontend → Vercel
 
@@ -209,7 +209,7 @@ npm run deploy
 
 ---
 
-## 🛡️ Security
+##  Security
 
 - **Edge JWT Authentication** — Fast, stateless token validation on Cloudflare Edge locations worldwide.
 - **Refresh Token Rotation** — Seamless session renewal with enhanced security.
@@ -218,6 +218,4 @@ npm run deploy
 
 ---
 
-<p align="center">
-  Built with ❤️ using React, Hono, and Cloudflare
-</p>
+
