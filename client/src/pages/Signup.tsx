@@ -25,13 +25,13 @@ const Signup = () => {
     setError("");
 
     const nameResult = validateSignupName(name);
-    if (!nameResult.valid) {
+    if (nameResult.valid === false) {
       setError(nameResult.message);
       return;
     }
 
     const passwordResult = validateSignupPassword(password);
-    if (!passwordResult.valid) {
+    if (passwordResult.valid === false) {
       setError(passwordResult.message);
       return;
     }
