@@ -24,7 +24,7 @@
 
 ---
 
-## 📋 Overview
+##  Overview
 
 **Baby Tracker** is a modern web application designed for parents and caregivers to efficiently track and manage their baby's daily activities. It provides a seamless, collaborative experience for logging feedings, diaper changes, and sleep schedules — complete with insightful statistical summaries.
 
@@ -36,7 +36,7 @@
 
 ---
 
-## � Screenshots
+##  Screenshots
 
 <p align="center">
   <img src="client/public/baby1.png" alt="Landing Page" width="100%" />
@@ -55,7 +55,7 @@
 
 ---
 
-## �👥 Team Contributions
+##  Team Contributions
 
 This project was developed collaboratively by a team of **3 members** for a university DevOps coursework.
 
