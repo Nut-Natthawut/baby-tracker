@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import BabyCareLogo from "@/components/baby/BabyCareLogo";
+import {
+  validateSignupName,
+  validateSignupPassword,
+} from "@/lib/signupValidation";
 
 const Signup = () => {
   const { signup } = useAuth();
@@ -20,6 +24,18 @@ const Signup = () => {
     event.preventDefault();
     setError("");
 
+    const nameResult = validateSignupName(name);
+    if (!nameResult.valid) {
+      setError(nameResult.message);
+      return;
+    }
+
+    const passwordResult = validateSignupPassword(password);
+    if (!passwordResult.valid) {
+      setError(passwordResult.message);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน");
       return;
@@ -27,7 +43,11 @@ const Signup = () => {
 
     setSubmitting(true);
 
-    const success = await signup(email.trim(), password, name.trim() || undefined);
+    const success = await signup(
+      email.trim(),
+      passwordResult.value,
+      nameResult.value
+    );
     if (success) {
       navigate("/app", { replace: true });
     } else {
@@ -70,8 +90,15 @@ const Signup = () => {
                   id="signup-name"
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setError("");
+                  }}
                   placeholder="เช่น คุณแม่"
+                  minLength={2}
+                  maxLength={50}
+                  required
+                  aria-invalid={Boolean(error)}
                   className="w-full bg-card border border-border rounded-2xl py-3.5 pl-11 pr-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
@@ -110,6 +137,8 @@ const Signup = () => {
                     setError("");
                   }}
                   placeholder="ตั้งรหัสผ่าน"
+                  minLength={8}
+                  maxLength={64}
                   className="w-full bg-card border border-border rounded-2xl py-3.5 pl-11 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
                 />
@@ -139,6 +168,8 @@ const Signup = () => {
                     setError("");
                   }}
                   placeholder="พิมพ์รหัสผ่านอีกครั้ง"
+                  minLength={8}
+                  maxLength={64}
                   className="w-full bg-card border border-border rounded-2xl py-3.5 pl-11 pr-12 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
                 />

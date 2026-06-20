@@ -12,7 +12,7 @@ type AuthContextValue = {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (email: string, password: string, name?: string) => Promise<boolean>;
+  signup: (email: string, password: string, name: string) => Promise<boolean>;
   logout: () => Promise<void>;
   refreshMe: (overrideToken?: string) => Promise<AuthUser | null>;
   setToken: (token: string | null) => void;
@@ -159,7 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signup = useCallback(
-    async (email: string, password: string, name?: string) => {
+    async (email: string, password: string, name: string) => {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/signup`, {
           method: "POST",
