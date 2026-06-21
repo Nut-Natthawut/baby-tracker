@@ -8,6 +8,16 @@ const validInput = {
 };
 
 describe("validateSignupInput", () => {
+  it.each(["", " ", "test", "test.com", "test@gmail", "test@localhost", "test@com", "test@.com"])(
+    "rejects invalid email %j",
+    (email) => {
+      expect(validateSignupInput({ ...validInput, email })).toEqual({
+        valid: false,
+        message: "รูปแบบอีเมลไม่ถูกต้อง",
+      });
+    }
+  );
+
   it.each([
     [" ", "กรุณากรอกชื่อ"],
     ["ก", "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"],

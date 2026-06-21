@@ -12,6 +12,7 @@ type ValidationResult =
   | { valid: false; message: string };
 
 const NAME_PATTERN = /^[\p{L}\p{M}]+(?: [\p{L}\p{M}]+)*$/u;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 const PRINTABLE_ASCII_PATTERN = /^[!-~]+$/;
 const ENGLISH_LETTER_PATTERN = /[A-Za-z]/;
 
@@ -44,8 +45,8 @@ export function validateSignupInput(input: SignupInput): ValidationResult {
   if (!NAME_PATTERN.test(name)) {
     return { valid: false, message: "ชื่อมีรูปแบบไม่ถูกต้อง" };
   }
-  if (!email) {
-    return { valid: false, message: "Email is required" };
+  if (!EMAIL_PATTERN.test(email)) {
+    return { valid: false, message: "รูปแบบอีเมลไม่ถูกต้อง" };
   }
   if (passwordLength < 8) {
     return {

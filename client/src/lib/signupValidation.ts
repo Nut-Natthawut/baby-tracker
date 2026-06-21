@@ -3,6 +3,7 @@ export type SignupValidationResult =
   | { valid: false; message: string };
 
 const NAME_PATTERN = /^[\p{L}\p{M}]+(?: [\p{L}\p{M}]+)*$/u;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 const PRINTABLE_ASCII_PATTERN = /^[!-~]+$/;
 const ENGLISH_LETTER_PATTERN = /[A-Za-z]/;
 
@@ -34,6 +35,16 @@ export function validateSignupName(name: string): SignupValidationResult {
   }
 
   return { valid: true, value: normalizedName };
+}
+
+export function validateSignupEmail(email: string): SignupValidationResult {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!EMAIL_PATTERN.test(normalizedEmail)) {
+    return { valid: false, message: "รูปแบบอีเมลไม่ถูกต้อง" };
+  }
+
+  return { valid: true, value: normalizedEmail };
 }
 
 export function validateSignupPassword(

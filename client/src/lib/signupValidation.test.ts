@@ -1,8 +1,35 @@
 import { describe, expect, it } from "vitest";
 import {
+  validateSignupEmail,
   validateSignupName,
   validateSignupPassword,
 } from "./signupValidation";
+
+describe("validateSignupEmail", () => {
+  it.each(["", " ", "test", "test.com", "test@gmail", "test@localhost", "test@com", "test@.com"])(
+    "rejects an invalid email format: %j",
+    (email) => {
+      expect(validateSignupEmail(email)).toEqual({
+        valid: false,
+        message: "รูปแบบอีเมลไม่ถูกต้อง",
+      });
+    }
+  );
+
+  it.each(["test@gmail.com", " Test.User+demo@GMAIL.COM "])(
+    "accepts and normalizes a valid email: %j",
+    (email) => {
+      expect(validateSignupEmail(email).valid).toBe(true);
+    }
+  );
+
+  it("normalizes email casing and surrounding whitespace", () => {
+    expect(validateSignupEmail(" Test.User+demo@GMAIL.COM ")).toEqual({
+      valid: true,
+      value: "test.user+demo@gmail.com",
+    });
+  });
+});
 
 describe("validateSignupName", () => {
   it.each(["", " ", "     ", "\t", "\n"])(

@@ -4,6 +4,7 @@ import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import BabyCareLogo from "@/components/baby/BabyCareLogo";
 import {
+  validateSignupEmail,
   validateSignupName,
   validateSignupPassword,
 } from "@/lib/signupValidation";
@@ -23,6 +24,12 @@ const Signup = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
+
+    const emailResult = validateSignupEmail(email);
+    if (emailResult.valid === false) {
+      setError(emailResult.message);
+      return;
+    }
 
     const nameResult = validateSignupName(name);
     if (nameResult.valid === false) {
@@ -44,7 +51,7 @@ const Signup = () => {
     setSubmitting(true);
 
     const success = await signup(
-      email.trim(),
+      emailResult.value,
       passwordResult.value,
       nameResult.value
     );
