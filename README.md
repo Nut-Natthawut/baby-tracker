@@ -39,14 +39,14 @@
 ##  Screenshots
 
 <p align="center">
-  <img src="client/public/baby1.png" alt="Landing Page" width="100%" />
+  <img src="https://raw.githubusercontent.com/Nut-Natthawut/baby-tracker/main/client/public/baby1.png" alt="Landing Page" width="100%" />
   <br/><em>Landing Page — หน้าแรกของแอปพลิเคชัน</em>
 </p>
 
 <p align="center">
-  <img src="client/public/baby2.png" alt="Add Baby Profile" width="45%" />
+  <img src="https://raw.githubusercontent.com/Nut-Natthawut/baby-tracker/main/client/public/baby2.png" alt="Add Baby Profile" width="45%" />
   &nbsp;&nbsp;
-  <img src="client/public/baby3.png" alt="Feeding Log" width="45%" />
+  <img src="https://raw.githubusercontent.com/Nut-Natthawut/baby-tracker/main/client/public/baby3.png" alt="Feeding Log" width="45%" />
 </p>
 <p align="center">
   <em>เพิ่มข้อมูลลูก</em> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -217,5 +217,4 @@ npm run deploy
 - **Backend Validation** — Server-side input validation ensuring data integrity.
 
 ---
-
 
